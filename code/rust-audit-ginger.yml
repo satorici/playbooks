@@ -1,4 +1,5 @@
 settings:
+  name: audit check performs an audit for crates with security vulnerabilities.
   image: rust
   files: true
   author:
