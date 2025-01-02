@@ -1,0 +1,12 @@
+settings:
+  name: Bearer is a Python SAST
+  image: bearer/bearer
+  example: satori run ./ --playbook="satori://code/python/bearer.yml" --report --output
+
+bearer:
+  help:
+  - bearer --help
+  scan:
+    assertStdoutNotContains: "no failures were detected"
+    run:
+    - bearer scan ./ --hide-progress-bar

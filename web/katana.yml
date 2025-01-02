@@ -1,0 +1,22 @@
+settings:
+  name: "Crawl and spider a website"
+  image: golang
+  author: 
+  - https://github.com/projectdiscovery
+  gallery:
+  - https://files.catbox.moe/0wtbt4.gif
+  example: satori run satori://web/katana.yml -d URL="satori.ci" --output
+
+install:
+  dependencies:
+  - apt install -qy wget git gcc
+  katana:
+  - go install github.com/projectdiscovery/katana/cmd/katana@latest
+
+katana:
+  help:
+  - katana --help
+  test:
+    assertStdout: True
+    run:
+    - katana -u ${{URL}}

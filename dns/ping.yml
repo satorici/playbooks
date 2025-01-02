@@ -1,0 +1,16 @@
+settings:
+  name: "Ping a host with no packet loss"
+  author:
+  - https://github.com/satorici
+  gallery:
+  - https://files.catbox.moe/mw4jlg.png
+  example: satori run satori://monitor/ping.yml -d HOST="satori.ci" --output
+
+install:
+- apt update
+- apt-get install iputils-ping -y -qq
+
+ping:
+    assertStdoutContains: "0.0% packet loss"
+    execute: 
+    - ping -c 4 ${{HOST}}

@@ -1,0 +1,12 @@
+settings:
+  name: "Assert that there is no Python command execution on the code"
+  author:
+  - https://github.com/satorici
+  gallery:
+  - https://files.catbox.moe/p19cst.png
+  example: satori run ./ --playbook="satori://code/python/exec.yml" --output
+  
+exec:
+  assertStdout: False
+  execute:
+  - grep "pexpect.run\|eval(\|exec(\|os\.system\|os\.popen\|execfile\|subprocess\.Popen\|subprocess\.call" * -r --include="*.py"

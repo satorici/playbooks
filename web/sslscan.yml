@@ -1,0 +1,29 @@
+settings:
+  name: "Identify security issues related to SSL/TLS/HTTPS services"
+  description: "It reports the protocol versions, cipher suites, key exchanges, signature algorithms, and certificates in use."
+  image: ubuntu:jammy
+  author:
+  - https://github.com/satorici
+  gallery:
+  - https://files.catbox.moe/o8ey2s.png
+  example: satori run satori://web/sslscan.yml -d HOST="satori.ci:443" --output
+
+install:
+  update:
+  - apt update
+  sslscan:
+  - apt install -qy sslscan
+
+sslscan:
+  help:
+  - sslscan --help
+  test:
+    assertStdoutNotContains:
+    - "TLSv1.0   enabled"
+    - "TLSv1.1   enabled"
+    - "vulnerable=\"1\""
+    - "supported=\"1\" secure=\"0\""
+    run:
+    - sslscan --no-colour --no-cipher-details --xml="${{HOST}}-sslscan.xml" ${{HOST}}
+    xml:
+    - cat ${{HOST}}-sslscan.xml

@@ -1,0 +1,26 @@
+settings:
+  name: "Check dependencies of publicly disclosed vulnerabilities contained within a project's dependencies"
+  author:
+    - https://github.com/jeremylong
+  gallery:
+    - https://files.catbox.moe/4goi2y.gif
+  example: satori run satori://code/javascript/dependencycheck.yml --output
+  
+install:
+  updates:
+  - apt update
+  dependencies:
+  - apt install -qy unzip default-jre wget
+  dependency-check:
+  - wget -q https://github.com/jeremylong/DependencyCheck/releases/download/v7.3.0/dependency-check-7.3.0-release.zip ; unzip dependency-check-7.3.0-release.zip
+
+help:
+- dependency-check/bin/dependency-check.sh --help
+
+scan:
+- dependency-check/bin/dependency-check.sh --scan "./" -f CSV
+
+dependency-check:
+  assertStdout: False
+  highest:
+  - grep HIGHEST dependency-check-report.csv

@@ -1,0 +1,25 @@
+settings:
+  name: "Fetch all the URLs that the Wayback Machine knows about for a domain"
+  author:
+  - https://github.com/tomnomnom
+  gallery:
+  - https://files.catbox.moe/17zqw9.gif
+  example: satori run satori://recon/waybackurls.yml -d URL="https://www.satori.ci" --output
+
+install:
+  update:
+    - apt update 
+  wget:
+    - apt install -qq -y wget
+  go:
+    - wget -q https://go.dev/dl/go1.21.3.linux-amd64.tar.gz
+    - tar -C /usr/local -xzf go1.21.3.linux-amd64.tar.gz
+    - ln -s /usr/local/go/bin/go /usr/local/bin/go
+  waybackurls:
+    - go install github.com/tomnomnom/waybackurls@latest
+
+waybackurls:
+  help:
+  - /root/go/bin/waybackurls -h
+  run:
+  - /root/go/bin/waybackurls ${{URL}}

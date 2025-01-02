@@ -1,0 +1,10 @@
+settings:
+  name: "Verify that the ServerCertificateValidationCallback is not set to True"
+  author:
+  - https://github.com/satorici
+  example: satori run satori://code/vb/ServerCertificateValidationCallback.yml --report --output
+
+test:
+  assertStdout: False
+  ServerCertificateValidationCallback:
+  - grep ServerCertificateValidationCallback.*true * -R --include="*.vb"

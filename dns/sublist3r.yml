@@ -1,0 +1,22 @@
+settings:
+  image: python:2.7.18
+  name: Sublist3r enumerates subdomains using many search engines such as Google, Yahoo, Bing, Baidu and Ask.
+  example: satori run satori://dns/sublist3r.yml -d DOMAIN="satori.ci" --output
+  #github: https://github.com/aboul3la/Sublist3r
+
+install:
+  assertReturnCode: 0
+  git:
+    - apt install -qy git
+  clone:
+    - git clone --depth 1 https://github.com/aboul3la/Sublist3r.git ; pip install -r Sublist3r/requirements.txt
+
+sublist3r:
+  assertStdout: False
+  help:
+    - python Sublist3r/sublist3r.py -h
+  run:
+    - python Sublist3r/sublist3r.py -o results.txt -v -d ${{DOMAIN}} -t 5 -e bing,yahoo
+  read:
+    - ls
+    

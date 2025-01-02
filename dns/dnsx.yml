@@ -1,0 +1,18 @@
+settings:
+  image: golang
+  name: "dnsX: queries all dns records of a domain"
+  author:
+    - https://github.com/projectdiscovery
+  gallery:
+    - https://files.catbox.moe/dtxghb.png
+  example: satori run satori://dns/dnsx.yml -d DOMAIN="satori.ci" --output
+
+install:
+  dnsx:
+    - go install -v github.com/projectdiscovery/dnsx/cmd/dnsx@latest
+
+dnsx:
+  help:
+    - dnsx -h
+  run:
+    - echo ${{DOMAIN}} | dnsx -recon

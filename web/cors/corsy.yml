@@ -1,0 +1,26 @@
+settings:
+  name: Scans for all known misconfigurations in CORS implementations.
+  image: python
+  author: 
+  - https://github.com/s0md3v
+  gallery:
+  - https://files.catbox.moe/lj0oxn.png
+  example: satori run satori://web/cors/corsy.yml -d URL="https://satori.ci" --output
+
+install:
+  update:
+  - apt update
+  dependencies:
+  - apt install -qy git
+  corsy:
+  - git clone https://github.com/s0md3v/Corsy.git
+  requirements:
+  - pip3 install -r Corsy/requirements.txt
+
+corsy:
+  help:
+  - python3 Corsy/corsy.py -h
+  test:
+    assertStdoutContains: "No misconfigurations found"
+    run:
+    - python3 Corsy/corsy.py -u ${{URL}}

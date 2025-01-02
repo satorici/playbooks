@@ -1,0 +1,27 @@
+settings:
+  image: python:bullseye
+  name: WAFW00F allows one to identify and fingerprint Web Application Firewall (WAF) products protecting a website.
+  author:
+    - https://github.com/EnableSecurity
+  gallery:
+    - https://files.catbox.moe/gywp34.png
+  example: satori run satori://web/wafw00f.yml -d URL="satori.ci" --output
+
+install:
+  assertReturnCode: 0
+  update:
+    - apt update
+  dependencies:
+    - apt install -y python3-pip git
+  pipx:
+    - pip install pipx
+    - pipx ensurepath
+  install:
+    - pipx install git+https://github.com/EnableSecurity/wafw00f.git
+
+run:
+  assertReturnCode: 0
+  help:
+    - /root/.local/bin/wafw00f --help
+  execute:
+    - /root/.local/bin/wafw00f ${{URL}}

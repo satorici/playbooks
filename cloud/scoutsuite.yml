@@ -1,0 +1,22 @@
+settings:
+  name: "Multi-cloud security-auditing tool that gathers configuration data for manual inspection and highlights risk areas."
+  files: True
+  example: satori run satori://cloud/scoutsuite.yml -d aws_secret_access_key="TBC" -d aws_access_key_id="TBC" --files --output
+  
+install:
+  scoutsuite:
+  - pip install scoutsuite
+  jq:
+  - apt install -qy jq
+
+scout:
+  run:
+    - scout aws --access-key-id ${{aws_access_key_id}} --secret-access-key ${{aws_secret_access_key}}
+  output:
+    - "set +f; cat scoutsuite-report/scoutsuite-results/scoutsuite_results_aws-*.js"
+  results:
+    assertStdout: False
+    danger:
+      - "tail -n +2 scoutsuite-report/scoutsuite-results/scoutsuite_results_aws-*.js | jq '.services[].findings[] | select(.level == \"danger\")'"
+    # warning:
+    # - "tail -n +2 scoutsuite-report/scoutsuite-results/scoutsuite_results_aws-*.js | jq '.services[].findings[] | select(.level == \"warning\")'"

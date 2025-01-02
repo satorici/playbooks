@@ -1,0 +1,18 @@
+settings:
+  name: Identify potential vulnerabilities on the web pages of a website
+  image: python
+  author: 
+  - https://github.com/satorici
+  gallery:
+  - https://files.catbox.moe/s6ab46.png
+  example: satori run satori://web/parth.yml -d HOST="geeksforgeeks.org" --output
+
+parth:
+  install:
+  - pip3 install requests parth -q
+  help:
+  - parth -h
+  test:
+    assertStdoutContains: "issues"
+    run:
+    - parth -put ${{HOST}}

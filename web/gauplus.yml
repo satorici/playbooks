@@ -1,0 +1,14 @@
+settings:
+  name: Get all urls of a domain
+  image: golang
+  example: satori run satori://web/get_all_urls.yml -d DOMAIN="example.com" --output
+
+gauplus:
+  install:
+  - go install github.com/bp0lr/gauplus@latest
+  help:
+  - gauplus -h
+  test:
+    assertStdout: True
+    run:
+    - gauplus -providers commoncrawl ${{DOMAIN}} | sort -u

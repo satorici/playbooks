@@ -1,0 +1,21 @@
+settings:
+  image: golang
+  name: gobuster-dns brute forces DNS subdomains
+  author:
+    - https://github.com/OJ
+  gallery:
+    - https://files.catbox.moe/kti61x.gif
+  example: satori run satori://dns/gobuster-dns.yml -d DOMAIN="satori.ci" --output
+
+install:
+  gobuster-dns:
+    - go install github.com/OJ/gobuster/v3@latest
+  wordlist:
+    - mkdir -p wordlists
+    - curl -s https://raw.githubusercontent.com/danielmiessler/SecLists/master/Discovery/DNS/subdomains-top1million-5000.txt -o wordlists/subdomains.txt
+
+gobuster-dns:
+  help:
+    - gobuster dns -h
+  run:
+    - gobuster dns -d ${{DOMAIN}} -w wordlists/subdomains.txt --wildcard -v

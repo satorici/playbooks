@@ -1,0 +1,29 @@
+settings:
+  image: ubuntu:jammy
+  name: A tiny web auditor with strong opinions.
+  author:
+    - https://github.com/trailofbits/twa
+  gallery:
+    - https://files.catbox.moe/vasexx.gif
+  example: satori run satori://web/twa.yml -d HOST="satori.ci" --output
+
+install:
+  update:
+    - apt update
+  jq:
+    - apt install jq -qy
+  curl:
+    - apt install curl -qy
+  dnsutils:
+    - apt install dnsutils -qy
+  nc:
+    - apt install netcat -qy
+  git:
+    - apt install git -qy
+  clone:
+    - git clone --depth 1 https://github.com/trailofbits/twa.git
+
+twa:
+  assertStdoutContains: FAIL
+  run:
+    - twa/twa -v ${{HOST}}

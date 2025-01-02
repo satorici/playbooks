@@ -1,0 +1,28 @@
+settings:
+  name: audit check performs an audit for crates with security vulnerabilities.
+  image: rust
+  files: true
+  author:
+  - https://github.com/rustsec
+  example: satori run satori://code/rust-audit-ginger.yml --output
+
+cargo-audit:
+  assertStdoutNotContains:
+  - Severity
+  - advisories
+  setSeverity: 4
+  install:
+  - cargo install cargo-audit >> /dev/null
+  run:
+  - cargo audit | tee audit.txt
+
+cargo-geiger:
+  assertStdoutNotContains: "!  │"
+  setSeverity: 4
+  install:
+  - cargo install cargo-geiger >> /dev/null
+  run:
+  - cargo geiger | tee geiger.txt
+
+rm:
+- rm -fr target/

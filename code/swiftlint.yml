@@ -1,0 +1,12 @@
+settings:
+  name: A tool to enforce Swift style and conventions
+  image: norionomura/swiftlint
+  example: satori run ./ --playbook="satori://code/swiftlint.yml" --output
+
+swiftlint:
+  help:
+  - swiftlint -h
+  analyze:
+  - swiftlint analyze
+  lint:
+  - swiftlint lint

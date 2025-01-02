@@ -1,0 +1,22 @@
+settings:
+  image: golang
+  name: Gotator is a tool to generate DNS wordlists through permutations.
+  author:
+    - https://github.com/Josue87
+  gallery:
+    - https://files.catbox.moe/a35ytq.png
+  example: satori run satori://dns/gotator.yml -d DOMAIN="satori.ci" --output
+
+install:
+  assertReturnCode: 0
+  gotator:
+    - go install github.com/Josue87/gotator@latest
+
+gotator:
+  assertReturnCode: 0
+  help:
+    - gotator -h
+  dom:
+    - echo ${{DOMAIN}} > domain.txt
+  run:
+    - gotator -sub domain.txt 

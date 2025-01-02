@@ -1,0 +1,28 @@
+settings:
+  image: golang
+  name: Puredns is a fast domain resolver and subdomain bruteforcing tool that can accurately filter out wildcard subdomains and DNS poisoned entries.
+  author:
+    - https://github.com/blechschmidt
+  gallery:
+    - https://files.catbox.moe/2i78fz.png
+  example: satori run satori://dns/puredns.yml -d DOMAIN="satori.ci" --output
+
+install:
+  assertReturnCode: 0
+  dependencies:
+    - apt update && apt install -y git make gcc
+  massdns:
+    - git clone https://github.com/blechschmidt/massdns.git
+    - cd massdns && make
+  puredns:
+    - go install github.com/d3mondev/puredns/v2@latest
+  dom:
+    - echo "${{DOMAIN}}" > domains.txt
+
+
+puredns:
+  assertReturnCode: 0
+  help:
+    - puredns -h
+  run:
+    - /go/bin/puredns resolve domains.txt --bin ./massdns/bin/massdns --resolvers ./massdns/lists/resolvers.txt

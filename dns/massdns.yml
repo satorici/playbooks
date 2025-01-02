@@ -1,0 +1,36 @@
+settings:
+  image: ubuntu:jammy
+  name: "MassDNS: enumerates DNS records"
+  author:
+    - https://github.com/blechschmidt
+  gallery:
+    - https://files.catbox.moe/54vy1l.gif
+  example: satori run satori://dns/massdns.yml -d DOMAIN="satori.ci" --output
+  
+install:
+  update:
+    - apt update >> /dev/null
+  dependencies:
+    - apt install git make gcc -qy >> /dev/null
+  clone:
+    - git clone --depth 1 https://github.com/blechschmidt/massdns.git
+    - cd massdns && make
+  domain:
+    - echo "${{DOMAIN}}" > domain.txt
+
+RECORD:
+- - A
+  - AAAA
+  - MX
+  - NS
+  - TXT
+  - CNAME
+  - SOA
+  - SRV
+  - PTR
+
+run:
+  help:
+    - ./massdns/bin/massdns --help
+  run:
+    - ./massdns/bin/massdns -q -r massdns/lists/resolvers.txt -t ${{RECORD}} -o F -w output_${{RECORD}}.txt domain.txt; cat output_${{RECORD}}.txt

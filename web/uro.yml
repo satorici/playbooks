@@ -1,0 +1,19 @@
+settings:
+  image: python
+  name: Using a URL list for security testing can be painful as there are a lot of URLs that have uninteresting/duplicate content; uro aims to solve that.
+  author:
+    - https://github.com/s0md3v
+  gallery:
+    - https://files.catbox.moe/9eflgb.png
+  example: satori run satori://web/uro.yml -d URL="https://satori.ci/page/1/" -d URL="https://satori.ci/page/2/" --output
+
+uro:
+  assertReturnCode: 0
+  install:
+    - pip3 install uro
+  help:
+    - uro -h
+  url:
+    - echo ${{URL}} > urls.txt
+  run:
+    - cat urls.txt | uro

@@ -1,0 +1,20 @@
+settings:
+  name: "Dirb - web directory brute forcer"
+  image: ubuntu:jammy
+  author: 
+  - https://github.com/satorici
+  gallery:
+  - https://files.catbox.moe/siqrj1.png
+  example: satori run satori://web/dirb.yml -d URL="http://example.com" --output
+
+install:
+  assertReturnCode: 0
+  update:
+  - apt update
+  dirb:
+  - apt install -qy dirb
+
+dirb:
+  assertStdoutContains: "DOWNLOADED: 4456"
+  common:
+  - dirb ${{URL}} /usr/share/dirb/wordlists/common.txt -S -r -i

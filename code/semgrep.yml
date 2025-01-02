@@ -1,0 +1,28 @@
+settings:
+    name: "Semgrep: static source code analysis"
+    image: python
+    author:
+    - https://github.com/semgrep
+    gallery:
+    - https://files.catbox.moe/dj0xyt.png
+    example: satori run ./ --playbook="satori://code/semgrep.yml" --output
+
+install:
+  assertReturnCode: 0
+  semgrep:
+  - pip install semgrep -q
+
+error:
+  assertStdout: False
+  semgrep:
+  - semgrep --config auto --severity ERROR -q
+    
+warning:
+  assertStdout: False
+  semgrep:
+  - semgrep --config auto --severity WARNING -q
+    
+info:
+  assertStdout: False
+  semgrep:
+  - semgrep --config auto --severity INFO -q

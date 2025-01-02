@@ -1,0 +1,24 @@
+name: Sync playbooks
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@master
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.ROLE }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      - name: Sync playbooks to S3
+        run: aws s3 sync . s3://$BUCKET --delete --exclude '.git*' --exclude 'README.md'
+        env:
+          BUCKET: ${{ secrets.AWS_S3_BUCKET }}

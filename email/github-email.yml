@@ -1,0 +1,10 @@
+settings:
+  name: github-email gets emails from github accounts
+  example: satori run satori://email/github-email.yml -d ORG=satorici -d GH_ACCESS_TOKEN=TBC --output
+
+install:
+- git clone --depth 1 https://github.com/paulirish/github-email.git
+
+github-email:
+  assertStdoutNotContains: "@"
+  run:

@@ -1,0 +1,37 @@
+settings:
+  image: golang:latest
+  name: tko-subs is a tool that can help you detect and takeover subdomains with dead DNS records
+  author:
+    - https://github.com/anshumanbh
+  example: satori run satori://dns/tko-subs.yml -d DOMAIN="example.com" --output
+
+install:
+  assertReturnCode: 0
+  update:
+    - apt update && apt install -y git
+  go_module:
+    - go mod init tko-subs-project
+  go_packages:
+    - go install github.com/bgentry/heroku-go@latest
+    - go install github.com/gocarina/gocsv@latest
+    - go install github.com/google/go-github/v52@latest
+    - go install github.com/olekukonko/tablewriter@latest
+    - go install golang.org/x/net/publicsuffix@latest
+    - go install golang.org/x/oauth2@latest
+    - go install github.com/miekg/dns@latest
+  tko_subs:
+    - go install github.com/anshumanbh/tko-subs@latest
+
+run:
+  assertReturnCode: 0
+  help:
+    - tko-subs -h
+  find:
+    - find / -name providers-data.csv
+  prepare:
+    - echo "name,cname,string,http" > providers-data.csv
+    - echo "github,github.io,There isn't a GitHub Pages site here,false" >> providers-data.csv
+  run:
+    - tko-subs -domain ${{DOMAIN}} -data /go/pkg/mod/github.com/anshumanbh/tko-subs@*/providers-data.csv
+  read:
+    - cat output.csv

@@ -1,0 +1,17 @@
+settings:
+  image: python
+  name: "Python linter"
+  author:
+  - https://github.com/satorici
+  gallery:
+  - https://files.catbox.moe/fso4nn.gif
+  example: satori run ./ --playbook="satori://code/python/ruff.yml" --output
+
+install:
+- pip3 install ruff
+
+ruff:
+  assertStdout: False
+  assertStderr: False
+  run:
+  - ruff check ./

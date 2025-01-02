@@ -1,0 +1,26 @@
+settings:
+  name: "CORS Test: misconfiguration scanner"
+  image: python
+  author: 
+  - https://github.com/RUB-NDS/CORStest
+  gallery:
+  - https://files.catbox.moe/iaoxhf.png
+  example: satori run satori://web/cors/corstest.yml -d URL="https://satori.ci" --output
+
+install:
+  update:
+  - apt update
+  git:
+  - apt install -qy git
+  corstest:
+  - git clone https://github.com/RUB-NDS/CORStest.git --depth 1
+  infile:
+  - echo "${{URL}}" > infile
+
+CORStest:
+  help:
+  - python3 CORStest/corstest.py --help
+  test:
+    assertStdoutContains: "Not vulnerable"
+    run:
+    - python3 CORStest/corstest.py infile

@@ -1,0 +1,18 @@
+settings:
+  image: python
+  name: "Safety is a tool that checks Python dependencies for known security vulnerabilities using a provided requirements.txt file."
+  description: "URL: https://github.com/pyupio/safety"
+  author:
+  - https://github.com/satorici
+  gallery:
+  -
+  example: satori run ./ --playbook="satori://code/python/safety.yml" --output
+  
+install:
+  - pip3 install safety
+
+safety:
+    assertFileExists: requirements.txt
+    assertStdout: False
+    run:
+    - check -r requirements.txt

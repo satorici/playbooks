@@ -1,0 +1,25 @@
+settings:
+  image: python
+  name: "dnscan: zone transfer & brute forces DNS subdomains"
+  description: "The script will first try to perform a zone transfer using each of the target domain's nameservers. If this fails, it will lookup TXT and MX records for the domain, and then perform a recursive subdomain scan using the supplied wordlist."
+  author:
+  - https://github.com/rbsec
+  gallery:
+  - https://files.catbox.moe/t5vgws.png
+  example: satori run satori://dns/dnscan.yml -d DOMAIN="satori.ci" --output
+  
+install:
+  update: 
+  - apt update
+  git:
+  - apt install -qy git
+  dnscan:
+  - git clone https://github.com/rbsec/dnscan.git
+  requirements:
+  - pip install -r dnscan/requirements.txt
+
+dnscan:
+  help:
+  - python3 dnscan/dnscan.py -h
+  run:
+  - python3 dnscan/dnscan.py -d ${{DOMAIN}}

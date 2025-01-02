@@ -1,0 +1,20 @@
+settings:
+  image: python:2
+  name: WAScan ((W)eb (A)pplication (Scan)ner) is a Open Source web application security scanner. It is designed to find various vulnerabilities using "black-box" method, that means it won't study the source code of web applications but will work like a fuzzer, scanning the pages of the deployed web application, extracting links and forms and attacking the scripts, sending payloads and looking for error messages,..etc. 
+  author:
+    - https://github.com/R3dFruitRollUp
+  gallery:
+    - https://files.catbox.moe/n5nfpj.png
+  example: satori run satori://web/wascan.yml -d URL="satori.ci" --output
+
+install:
+  assertReturnCode: 0
+  clone:
+    - git clone --depth 1 https://github.com/R3dFruitRollUp/WAScan.git ; cd WAScan ; pip install -r requirements.txt
+
+wascan:
+  assertReturnCode: 0
+  #help:
+    #- cd WAScan ; python wascan.py --help
+  run:
+    - cd WAScan ; python wascan.py -u ${{URL}}

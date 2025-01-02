@@ -1,0 +1,17 @@
+settings:
+  image: dockette/nodejs
+  name: Retire.js is to help you detect the use of JS-library versions with known vulnerabilities.
+  example: satori run ./ --playbook="satori://code/javascript/retirejs.yml" --output
+  #github: https://github.com/RetireJS/retire.js
+
+install:
+  assertReturnCode: 0
+  retire:
+    - npm install -g retire
+
+retirejs:
+  assertReturnCode: 0
+  help:
+    - retire --help
+  run:
+    - retire --outputformat cyclonedx

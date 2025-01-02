@@ -1,0 +1,31 @@
+settings:
+  image: rust:bullseye
+  name: Scant3r scans URLs with multiple HTTP methods and tries to look for bugs with basic exploits from Headers and URL parameters
+  author: 
+    - https://github.com/bugBlocker
+  gallery:
+    - https://files.catbox.moe/ur9imn.png
+  example: satori run satori://web/lotus.yml -d URL="http://testphp.vulnweb.com/listproducts.php?cat=1" --output
+  
+  
+install:
+  assertReturnCode: 0
+  update:
+    - apt update
+  jq:
+    - apt install jq -qy
+  packages:
+    - apt install git -qy
+  lua:
+    - apt install -qy lua5.4 liblua5.4-dev
+  cargo:  
+    - cargo install --git=https://github.com/BugBlocker/lotus/
+  clone:
+    - git clone --depth 1 https://github.com/rusty-sec/lotus-scripts
+
+lotus:
+  run:
+    - echo ${{URL}} | lotus scan lotus-scripts/active -o out.json -v
+  read:
+    - cat out.json | jq
+

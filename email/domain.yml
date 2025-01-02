@@ -1,0 +1,20 @@
+settings:
+  image: python
+  name: E-mails, subdomains and names enumeration tool.
+  author: 
+    - https://github.com/laramies/theHarvester
+  gallery:
+    - https://files.catbox.moe/pn0jpc.gif
+  example: satori run satori://email/theharvester.yml -d DOMAIN="umd.edu" --output
+
+install:
+  git:
+    - apt install -qy git
+  theharvest:
+    - git clone --depth 1 https://github.com/laramies/theHarvester ; pip3 install -r theHarvester/requirements/base.txt
+
+theHarvest:
+  help:
+    - python3 theHarvester/theHarvester.py -h
+  run:
+    - python3 theHarvester/theHarvester.py -d ${{DOMAIN}} -b baidu

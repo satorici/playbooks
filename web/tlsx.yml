@@ -1,0 +1,17 @@
+settings:
+  image: golang
+  name: Fast and configurable TLS grabber focused on TLS based data collection.
+  author:
+    - https://github.com/projectdiscovery
+  gallery:
+    - https://files.catbox.moe/b49mxt.png
+  example: satori run satori://web/tlsx.yml -d HOST="satori.ci" --output
+
+tlsx:
+  install:
+    - go install github.com/projectdiscovery/tlsx/cmd/tlsx@latest
+  help:
+    - tlsx -h
+  run:
+    - tlsx -u ${{HOST}}
+  

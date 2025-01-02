@@ -1,0 +1,18 @@
+settings:
+  image: ubuntu
+  name: "Check if a host has a certain IP address"
+  author:
+  - https://github.com/satorici
+  gallery:
+  - https://files.catbox.moe/8d7b4t.png
+  example: satori run satori://monitor/host.yml -d HOST="host_name" -d IP="ip_adress" --output
+
+install:
+  - apt update
+  - apt install -qy dnsutils
+
+
+host:
+  assertStdoutContains: "${{HOST}} has address ${{IP}}"
+  execute: 
+  - host ${{HOST}}
