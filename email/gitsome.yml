@@ -12,4 +12,4 @@ install:
 gitsome:
   assertStdoutNotContains: "@"
   run:
-    - python3 gitSome/gitSome.py -u ${{USER}}
+    - python3 gitSome/gitSome.py -u ${{ORG}}
