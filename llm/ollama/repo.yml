@@ -4,6 +4,7 @@ settings:
   cpu: 16384
   memory: 122880
   timeout: 500
+  example: satori run satori://llm/ollama/repo.yml -d INPUT="donde hay un overflow?" -d REPO="royleekiat/overflow-example" --output
 
 MODEL:
 - - "llama3.2"
