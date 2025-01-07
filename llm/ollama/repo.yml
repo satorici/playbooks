@@ -1,0 +1,28 @@
+settings:
+  name: "Query a repository with Llama 3.2 using Ollama"
+  image: ollama/ollama
+  cpu: 16384
+  memory: 122880
+  timeout: 500
+
+MODEL:
+- - "llama3.2"
+
+install:
+  dependencies:
+  - apt update >> /dev/null
+  - apt install -qy screen jq curl git >> /dev/null
+
+prompt:
+  - echo "${{INPUT}}" > /tmp/prompt.txt
+  - git clone https://github.com/${{REPO}}.git .
+  - echo "This are the files and contents to use:" >> /tmp/prompt.txt
+  - bash -c 'find . -type f -print0 | while IFS= read -r -d "" f; do echo "$f"; cat "$f"; echo; done' >> /tmp/prompt.txt
+
+ollama:
+  serve:
+  - screen -dm ollama serve; sleep 1
+  pull:
+  - ollama pull ${{MODEL}}
+  query:
+  - ollama run ${{MODEL}} "$(cat /tmp/prompt.txt)"
