@@ -4,7 +4,7 @@ settings:
   cpu: 16384
   memory: 122880
   timeout: 400
-  example: satori run satori://code/ollama/repo.yml -d INPUT="what payload overflows the name to write 69 on the age on the example.c program?" -d REPO="royleekiat/overflow-example" --output
+  example: satori run satori://llm/ollama/repo.yml -d INPUT="what payload overflows the name to write 69 on the age on the example.c program?" -d REPO="royleekiat/overflow-example" --output
 
 MODEL:
 - - "artifish/llama3.2-uncensored"
