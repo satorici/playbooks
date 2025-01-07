@@ -3,11 +3,11 @@ settings:
   image: ollama/ollama
   cpu: 16384
   memory: 122880
-  timeout: 500
-  example: satori run satori://llm/ollama/repo.yml -d INPUT="donde hay un overflow?" -d REPO="royleekiat/overflow-example" --output
+  timeout: 400
+  example: satori run satori://code/ollama/repo.yml -d INPUT="what payload overflows the name to write 69 on the age on the example.c program?" -d REPO="royleekiat/overflow-example" --output
 
 MODEL:
-- - "llama3.2"
+- - "artifish/llama3.2-uncensored"
 
 install:
   dependencies:
@@ -15,10 +15,11 @@ install:
   - apt install -qy screen jq curl git >> /dev/null
 
 prompt:
-  - echo "${{INPUT}}" > /tmp/prompt.txt
+  #- echo "${{INPUT}}" > /tmp/prompt.txt
   - git clone https://github.com/${{REPO}}.git .
-  - echo "This are the files and contents to use:" >> /tmp/prompt.txt
+  - echo "I will provide files and their contents to use as reference for a query that I will provide at the end:" >> /tmp/prompt.txt
   - bash -c 'find . -type f -print0 | while IFS= read -r -d "" f; do echo "$f"; cat "$f"; echo; done' >> /tmp/prompt.txt
+  - echo "${{INPUT}}" > /tmp/prompt.txt
 
 ollama:
   serve:
