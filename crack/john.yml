@@ -8,6 +8,6 @@ install:
 - echo '${{PASS}}' > password
 
 john:
-  assertStdoutContains: (?)
+  assertStdoutNotContains: (?)
   run:
   - /jtr/run/john password --pot=john.pot
