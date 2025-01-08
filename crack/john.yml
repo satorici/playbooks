@@ -7,5 +7,7 @@ settings:
 install:
 - echo '${{PASS}}' > password
 
-run:
-- /jtr/run/john password --pot=john.pot
+john:
+  assertStdoutContains: (?)
+  run:
+  - /jtr/run/john password --pot=john.pot
