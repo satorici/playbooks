@@ -9,6 +9,7 @@ settings:
   timeout: 2000
   count: 10
   example: satori run satori://dos/slowhttptest.yml -d URL="satori.ci" --output
+  gallery: https://files.catbox.moe/u8csjx.gif
 
 install:
   update:
