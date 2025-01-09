@@ -2,6 +2,8 @@ settings:
   name: Get all urls of a domain
   image: golang
   example: satori run satori://web/gauplus.yml -d DOMAIN="example.com" --output
+  gallery: https://files.catbox.moe/yj6avp.png
+
 
 gauplus:
   install:
