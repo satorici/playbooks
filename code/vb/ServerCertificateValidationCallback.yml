@@ -2,7 +2,7 @@ settings:
   name: "Verify that the ServerCertificateValidationCallback is not set to True"
   author:
   - https://github.com/satorici
-  example: satori run satori://code/vb/ServerCertificateValidationCallback.yml --report --output
+  example: satori run ./ --playbook="satori://code/vb/ServerCertificateValidationCallback.yml" --output
 
 test:
   assertStdout: False
