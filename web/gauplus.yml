@@ -4,7 +4,6 @@ settings:
   example: satori run satori://web/gauplus.yml -d DOMAIN="example.com" --output
   gallery: https://files.catbox.moe/yj6avp.png
 
-
 gauplus:
   install:
   - go install github.com/bp0lr/gauplus@latest
