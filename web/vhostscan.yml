@@ -3,7 +3,7 @@ settings:
   name: A virtual host scanner that can be used with pivot tools, detect catch-all scenarios, aliases and dynamic default pages.
   author:
     - https://github.com/codingo
-  example: satori run satori://web/vhostscan.yml -d HOST="satori.ci" --output
+  example: satori run satori://web/vhostscan.yml -d DOMAIN="satori.ci" --output
 
 install:
   assertReturnCode: 0
@@ -19,4 +19,4 @@ install:
 help:
   - VHostScan -h
 run:
-  - VHostScan -t ${{HOST}}
+  - VHostScan -t ${{DOMAIN}}
