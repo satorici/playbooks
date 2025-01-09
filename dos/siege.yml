@@ -11,6 +11,7 @@ settings:
   count: 10
   timeout: 300
   example: satori run satori://dos/siege.yml -d URL="satori.ci" --output
+  gallery: https://files.catbox.moe/e4fu1g.png
 
 install:
   update:
