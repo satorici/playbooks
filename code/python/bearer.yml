@@ -1,6 +1,7 @@
 settings:
   name: Bearer is a Python SAST
   image: bearer/bearer
+  gallery: https://files.catbox.moe/2kcimw.png
   example: satori run ./ --playbook="satori://code/python/bearer.yml" --report --output
 
 bearer:
