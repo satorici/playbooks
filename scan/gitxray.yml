@@ -4,8 +4,8 @@ settings:
   image: python
   files: true
   clone: false
-  author:
-  - https://github.com/kulkansecurity
+  author: https://github.com/kulkansecurity
+  example: satori run satori://scan/gitxray.yml -d ORG="satorici" REPO="playbooks" --report --output
 
 install:
 - pip install gitxray >> /dev/null
