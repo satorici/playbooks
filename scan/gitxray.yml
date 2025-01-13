@@ -5,6 +5,7 @@ settings:
   files: true
   clone: false
   author: https://github.com/kulkansecurity
+  gallery: https://files.catbox.moe/0mhike.png
   example: satori run satori://scan/gitxray.yml -d ORG="satorici" -d REPO="playbooks" --report --output
 
 install:
