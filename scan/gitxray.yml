@@ -5,7 +5,7 @@ settings:
   files: true
   clone: false
   author: https://github.com/kulkansecurity
-  example: satori run satori://scan/gitxray.yml -d ORG="satorici" REPO="playbooks" --report --output
+  example: satori run satori://scan/gitxray.yml -d ORG="satorici" -d REPO="playbooks" --report --output
 
 install:
 - pip install gitxray >> /dev/null
