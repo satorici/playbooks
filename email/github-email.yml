@@ -1,5 +1,7 @@
 settings:
   name: github-email gets emails from github accounts
+  author: https://github.com/paulirish
+  #gallery:
   example: satori run satori://email/github-email.yml -d ORG=satorici -d GH_ACCESS_TOKEN=TBC --output
 
 install:
