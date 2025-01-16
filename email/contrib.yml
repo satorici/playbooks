@@ -5,6 +5,7 @@ settings:
   files: true
   clone: false
   author: https://github.com/kulkansecurity
+  gallery: https://files.catbox.moe/v4epas.png
   example: satori run satori://email/contrib.yml -d REPO=satorici/playbooks -d CONTRIBUTOR=Juaniimedina7 --output
 
 install:
