@@ -5,7 +5,7 @@ settings:
   files: true
   clone: false
   author: https://github.com/kulkansecurity
-  example: satori run satori://recon/gitxray.yml -d REPO="satorici" --report --output
+  example: satori run satori://recon/gitxray.yml -d REPO="satorici/playbooks" --report --output
 
 install:
 - git clone https://github.com/kulkansecurity/gitxray.git --depth 1 . >>/dev/null
