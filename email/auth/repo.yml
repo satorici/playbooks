@@ -4,8 +4,8 @@ settings:
   image: python
   files: true
   clone: false
-  author:
-  - https://github.com/kulkansecurity
+  author: https://github.com/kulkansecurity
+  example: satori run satori://email/auth/repo.yml -d REPO=satorici/playbooks -d GH_ACCESS_TOKEN=TBC --output
 
 install:
 - git clone https://github.com/kulkansecurity/gitxray.git --depth 1 . >>/dev/null
