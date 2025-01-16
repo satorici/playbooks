@@ -5,6 +5,7 @@ settings:
   files: true
   clone: false
   author: https://github.com/kulkansecurity
+  gallery: https://files.catbox.moe/qtnkry.png
   example: satori run satori://email/repo.yml -d REPO="satorici/playbooks" --output
 
 install:
