@@ -1,0 +1,14 @@
+settings:
+  name: Octoscan
+  description: A static vulnerability scanner for GitHub action workflows
+  image: ghcr.io/synacktiv/octoscan
+  author:
+  - https://github.com/synacktiv
+  gallery:
+  - https://files.catbox.moe/cakzpb.png
+  example: satori repo udacity/deep-reinforcement-learning run --playbook=octoscan.yml --output
+  cpu: 256
+  memory: 512
+
+octoscan:
+  - find ./ -name "*.yml" | grep "github/workflows" | xargs -IX octoscan scan X
