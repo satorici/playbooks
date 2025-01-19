@@ -2,6 +2,10 @@ settings:
   name: Check github action rules with Semgrep
   description: Semgrep is a static code analysis tool with stable support for C#, Go, Java, JavaScript, JSON, Python, PHP, Ruby, and Scala. It has experimental support for nineteen other languages, as well as a language agnostic mode.
   image: python
+  gallery:
+  - https://files.catbox.moe/ealtzu.png
+  author:
+  - https://github.com/semgrep
   cpu: 256
   memory: 512
     
