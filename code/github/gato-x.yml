@@ -15,4 +15,6 @@ install:
   - cd gato-x; pip install . >> /dev/null
 
 gato-x:
-  - export GH_TOKEN=${{GH_ACCESS_TOKEN}}; gato-x e --repository ${{REPO}} 
+  assertStdoutNotContains: HIGH
+  run:
+    - export GH_TOKEN=${{GH_ACCESS_TOKEN}}; gato-x e --repository ${{REPO}} 
