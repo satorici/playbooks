@@ -9,7 +9,7 @@ settings:
   example: satori run ./ --playbook="satori://code/python/safety.yml" --output
   
 install:
-  - pip3 install safety
+  - pip3 install safety --disable-pip-version-check --root-user-action=ignore
 
 safety:
     assertFileExists: requirements.txt
