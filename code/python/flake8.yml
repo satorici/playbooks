@@ -8,7 +8,7 @@ settings:
 install:
   assertReturnCode: 0
   flake8:
-  - pip install flake8
+  - pip install flake8 --disable-pip-version-check --root-user-action=ignore
   
 flake8:
   assertStdout: False
