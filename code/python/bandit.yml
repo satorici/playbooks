@@ -2,15 +2,15 @@ settings:
   image: python
   name: "Find common security issues in Python code"
   author:
-  - https://github.com/PyCQA
+    - https://github.com/PyCQA
   gallery:
-  -
+    - https://placehold.co/600x400
   example: satori run ./ --playbook="satori://code/python/bandit.yml" --output
 
 install:
-- pip install bandit
+  - pip install bandit
 
 bandit:
   assertStdoutContains: "No issues identified"
   run:
-  - bandit -r ./
+    - bandit -r ./
