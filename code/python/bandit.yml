@@ -8,7 +8,7 @@ settings:
   example: satori run ./ --playbook="satori://code/python/bandit.yml" --output
 
 install:
-  - pip install bandit
+  - pip3 install bandit
 
 bandit:
   assertStdoutContains: "No issues identified"
