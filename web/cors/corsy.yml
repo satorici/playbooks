@@ -15,7 +15,7 @@ install:
   corsy:
   - git clone https://github.com/s0md3v/Corsy.git
   requirements:
-  - pip3 install -r Corsy/requirements.txt
+  - pip3 install -r Corsy/requirements.txt -q --disable-pip-version-check --root-user-action=ignore
 
 corsy:
   help:
