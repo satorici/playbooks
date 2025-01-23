@@ -12,7 +12,7 @@ settings:
 
 install:
   - git clone --depth 1 https://github.com/AdnaneKhan/gato-x
-  - cd gato-x; pip install . --disable-pip-version-check --root-user-action=ignore >> /dev/null
+  - cd gato-x; pip install . -q --disable-pip-version-check --root-user-action=ignore
 
 gato-x:
   assertStdoutNotContains: HIGH
