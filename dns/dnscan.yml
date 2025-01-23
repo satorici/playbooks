@@ -16,7 +16,7 @@ install:
   dnscan:
   - git clone https://github.com/rbsec/dnscan.git
   requirements:
-  - pip install -r dnscan/requirements.txt
+  - pip install -r dnscan/requirements.txt -q --disable-pip-version-check --root-user-action=ignore
 
 dnscan:
   help:
