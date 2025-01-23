@@ -9,7 +9,7 @@ install:
   git:
     - apt install -qy git
   clone:
-    - git clone --depth 1 https://github.com/aboul3la/Sublist3r.git ; pip install -r Sublist3r/requirements.txt
+    - git clone --depth 1 https://github.com/aboul3la/Sublist3r.git ; pip install -r Sublist3r/requirements.txt -q --disable-pip-version-check --root-user-action=ignore
 
 sublist3r:
   assertStdout: False
