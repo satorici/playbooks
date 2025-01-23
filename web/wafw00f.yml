@@ -14,7 +14,7 @@ install:
   dependencies:
     - apt install -y python3-pip git
   pipx:
-    - pip install pipx
+    - pip install pipx -q --disable-pip-version-check --root-user-action=ignore
     - pipx ensurepath
   install:
     - pipx install git+https://github.com/EnableSecurity/wafw00f.git
