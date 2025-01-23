@@ -11,7 +11,7 @@ settings:
     
 install:
   semgrep:
-    - pip install semgrep >> /dev/null
+    - pip install semgrep -q --disable-pip-version-check --root-user-action=ignore
 
 semgrep:
   assertStdout: False
