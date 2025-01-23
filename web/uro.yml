@@ -10,7 +10,7 @@ settings:
 uro:
   assertReturnCode: 0
   install:
-    - pip3 install uro
+    - pip3 install uro -q --disable-pip-version-check --root-user-action=ignore
   help:
     - uro -h
   url:
