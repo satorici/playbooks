@@ -7,7 +7,7 @@ settings:
 
 install:
   - git clone --depth 1 https://github.com/chm0dx/gitSome.git
-  - cd gitSome; pip install -r requirements.txt >> /dev/null
+  - cd gitSome; pip install -r requirements.txt -q --disable-pip-version-check --root-user-action=ignore
 
 gitsome:
   assertStdoutNotContains: "@"
