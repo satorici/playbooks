@@ -11,9 +11,9 @@ install:
   git:
   - apt install -qy git
   knock:
-  - pip install git+https://github.com/guelfoweb/knock.git
+  - pip install git+https://github.com/guelfoweb/knock.git -q --disable-pip-version-check --root-user-action=ignore
   requirements:
-  - cd knock && pip install .
+  - cd knock && pip install . -q --disable-pip-version-check --root-user-action=ignore
 
 knockpy:
   assertReturnCode: 0
