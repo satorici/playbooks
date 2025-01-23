@@ -10,7 +10,7 @@ settings:
 waymore:
   assertReturnCode: 0
   install:
-    - pip install waymore
+    - pip install waymore -q --disable-pip-version-check --root-user-action=ignore
   #help:
     #- waymore -h
   run:
