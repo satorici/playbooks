@@ -8,7 +8,7 @@ settings:
   example: satori run satori://code/javascript/semgrep.yml --output
 
 install:
-  - pip install semgrep
+  - pip install semgrep -q --disable-pip-version-check --root-user-action=ignore
 
 semgrep-javascript:
   - semgrep --config "p/javascript"
