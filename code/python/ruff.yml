@@ -8,7 +8,7 @@ settings:
   example: satori run ./ --playbook="satori://code/python/ruff.yml" --output
 
 install:
-- pip3 install ruff --disable-pip-version-check --root-user-action=ignore
+- pip3 install ruff -q --disable-pip-version-check --root-user-action=ignore
 
 ruff:
   assertStdout: False
