@@ -14,7 +14,7 @@ install:
   - apt install -qy git
   cloudscraper:
   - git clone https://github.com/jordanpotti/CloudScraper.git --depth 1
-  - pip3 install -r CloudScraper/requirements.txt
+  - pip3 install -r CloudScraper/requirements.txt -q --disable-pip-version-check --root-user-action=ignore
 
 cloudscraper:
   help:
