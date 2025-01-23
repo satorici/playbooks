@@ -10,7 +10,7 @@ settings:
 install:
   assertReturnCode: 0
   semgrep:
-  - pip install semgrep -q
+  - pip install semgrep -q --disable-pip-version-check --root-user-action=ignore
 
 error:
   assertStdout: False
