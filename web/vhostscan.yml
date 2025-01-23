@@ -12,9 +12,9 @@ install:
   git:
     - apt install git -qy
   numpy:
-    - pip install numpy python-Levenshtein
+    - pip install numpy python-Levenshtein -q --disable-pip-version-check --root-user-action=ignore
   clone:
-    - git clone --depth 1 https://github.com/codingo/VHostScan.git ; cd VHostScan ; pip install .
+    - git clone --depth 1 https://github.com/codingo/VHostScan.git ; cd VHostScan ; pip install . -q --disable-pip-version-check --root-user-action=ignore
 
 help:
   - VHostScan -h
