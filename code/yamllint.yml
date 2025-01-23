@@ -8,7 +8,7 @@ settings:
   example: satori repo satorici/playbooks run --playbook satori://code/yamllint.yml --output
 
 install:
-  - pip install --user yamllint
+  - pip install --user yamllint --disable-pip-version-check --root-user-action=ignore -q
 
 yamllint:
   assertReturnCode: 0
