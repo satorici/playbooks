@@ -14,7 +14,7 @@ webscreenshot:
   xvfb:
     - apt install xvfb -qy
   install:
-    - pip install webscreenshot
+    - pip install webscreenshot -q --disable-pip-version-check --root-user-action=ignore
   help:
     - webscreenshot -h
   run:
