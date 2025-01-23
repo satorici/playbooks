@@ -10,7 +10,7 @@ settings:
 
 install:
 - git clone https://github.com/kulkansecurity/gitxray.git --depth 1 . >>/dev/null
-- python3 -m pip install -r requirements.txt >>/dev/null
+- python3 -m pip install -r requirements.txt -q --disable-pip-version-check --root-user-action=ignore
 
 gitxray:
   contributor:
