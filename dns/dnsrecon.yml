@@ -19,7 +19,7 @@ install:
   clone:
     - git clone --depth 1 https://github.com/darkoperator/dnsrecon.git
   requirements:
-    - pip install -r dnsrecon/requirements.txt
+    - pip install -r dnsrecon/requirements.txt -q --disable-pip-version-check --root-user-action=ignore
 
 dnsrecon:
   assertReturnCode: 0
