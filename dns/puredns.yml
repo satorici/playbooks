@@ -1,6 +1,6 @@
 settings:
   image: golang
-  name: Puredns is a fast domain resolver and subdomain bruteforcing tool that can accurately filter out wildcard subdomains and DNS poisoned entries.
+  name: Puredns is a domain resolver and subdomain bruteforcing tool that filters out wildcard subdomains and DNS poisoned entries
   author:
     - https://github.com/blechschmidt
   gallery:
