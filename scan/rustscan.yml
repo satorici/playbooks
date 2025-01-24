@@ -1,6 +1,6 @@
 settings:
   image: rustscan/rustscan:2.1.1
-  name: The Modern Port Scanner. Find ports quickly (3 seconds at its fastest). Run scripts through our scripting engine (Python, Lua, Shell supported).
+  name: Rustscan - Network port scanner
   author: 
     - https://github.com/RustScan
   gallery: 
