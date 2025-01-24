@@ -1,5 +1,5 @@
 settings:
-  name: "Scan your NPM project for vulnerabilities"
+  name: NPM audit your project for depdencencies vulnerabilities
   example: satori run ./ --playbook="satori://code/javascript/npmaudit.yml" --output
   
 install:
