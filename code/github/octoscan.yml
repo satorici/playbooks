@@ -1,6 +1,5 @@
 settings:
-  name: Octoscan
-  description: A static vulnerability scanner for GitHub action workflows
+  name: Octoscan - scanner for GitHub action workflows
   image: ghcr.io/synacktiv/octoscan
   author:
   - https://github.com/synacktiv
