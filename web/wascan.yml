@@ -1,6 +1,6 @@
 settings:
   image: python:2
-  name: WAScan ((W)eb (A)pplication (Scan)ner) is a Open Source web application security scanner. It is designed to find various vulnerabilities using "black-box" method, that means it won't study the source code of web applications but will work like a fuzzer, scanning the pages of the deployed web application, extracting links and forms and attacking the scripts, sending payloads and looking for error messages,..etc. 
+  name: WAScan - Web Application Scanner that fuzzes, scans pages, extracts links/forms and sends payloads to looking for error messages 
   author:
     - https://github.com/R3dFruitRollUp
   gallery:
