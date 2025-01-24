@@ -1,6 +1,6 @@
 settings:
   image: python
-  name: "Safety is a tool that checks Python dependencies for known security vulnerabilities using a provided requirements.txt file."
+  name: Safety - check Python dependencies for known security vulnerabilities in their requirements.txt file
   description: "URL: https://github.com/pyupio/safety"
   author:
   - https://github.com/satorici
