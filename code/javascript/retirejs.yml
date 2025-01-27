@@ -1,6 +1,6 @@
 settings:
   image: node
-  name: Retire.js is to help you detect the use of JS-library versions with known vulnerabilities.
+  name: Retire.js: helps you detect the use of JS-library versions with known vulnerabilities.
   author: https://github.com/RetireJS
   gallery: https://files.catbox.moe/86vziv.png
   example: satori run ./ --playbook="satori://code/javascript/retirejs.yml" --output
