@@ -1,6 +1,6 @@
 settings:
   image: python
-  name: "Python linter"
+  name: "Ruff: Python linter"
   author:
   - https://github.com/astral-sh
   gallery:
