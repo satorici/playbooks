@@ -2,7 +2,7 @@ settings:
   image: python
   name: "Python linter"
   author:
-  - https://github.com/satorici
+  - https://github.com/astral-sh
   gallery:
   - https://files.catbox.moe/fso4nn.gif
   example: satori run ./ --playbook="satori://code/python/ruff.yml" --output
