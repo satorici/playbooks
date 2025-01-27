@@ -1,6 +1,6 @@
 settings:
   image: python
-  name: "Static Source Code Analysis with Semgrep"
+  name: "Semgrep: Static Source Code Analysis for Javascript"
   author:
     - https://github.com/semgrep
   gallery:
