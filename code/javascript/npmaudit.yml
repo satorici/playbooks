@@ -1,5 +1,5 @@
 settings:
-  name: NPM audit your project for depdencencies vulnerabilities
+  name: NPM audit: check for vulnerabilities in dependencies
   example: satori run ./ --playbook="satori://code/javascript/npmaudit.yml" --output
   
 install:
