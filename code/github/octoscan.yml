@@ -1,5 +1,5 @@
 settings:
-  name: Octoscan: scanner for GitHub action workflows
+  name: "Octoscan: scanner for GitHub action workflows"
   image: ghcr.io/synacktiv/octoscan
   author:
   - https://github.com/synacktiv
