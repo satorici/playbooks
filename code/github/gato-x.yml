@@ -1,5 +1,5 @@
 settings:
-  name: GitHub Attack Toolkit
+  name: "Gato-X: GitHub Attack Toolkit"
   description: A static analysis and exploit toolkit for GitHub Actions
   author: https://github.com/AdnaneKhan
   gallery:
