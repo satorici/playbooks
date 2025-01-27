@@ -3,12 +3,13 @@ settings:
   description: A static analysis and exploit toolkit for GitHub Actions
   author: https://github.com/AdnaneKhan
   gallery:
-  - https://files.catbox.moe/o7f9sf.png
+    - https://files.catbox.moe/o7f9sf.png
   image: python
   cpu: 256
   memory: 512
   example: satori run satori://code/github/gato-x.yml -d GH_ACCESS_TOKEN=TBC -d REPO=udacity/deep-reinforcement-learning --output
-  redacted: GH_ACCESS_TOKEN
+  redacted: 
+    - GH_ACCESS_TOKEN
 
 install:
   - git clone --depth 1 https://github.com/AdnaneKhan/gato-x
