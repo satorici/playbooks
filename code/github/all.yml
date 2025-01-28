@@ -1,25 +1,28 @@
 settings:
-  name: "GH SAST & DAST Workflow Audit: octoscan, gato-x, gh-workflow-auditor, semgrep"
+  name: "GH Workflow Audit: octoscan, gato-x, gh-workflow-auditor, semgrep"
   image: golang
   redacted:
   - GH_ACCESS_TOKEN
+  timeout: 600
 
 install:
-  dependencies:
+  # dependencies
   - apt-get update -qq; apt-get install python3-pip -qqy >>/dev/null
-  octoscan:
+  # octoscan
   - cd /tmp; git clone --depth 1 https://github.com/synacktiv/octoscan.git 2>>/dev/null; cd octoscan; go mod tidy 2>>/dev/null; go build
-  gato-x:
+  # gato-x
   - cd /tmp; git clone --depth 1 https://github.com/AdnaneKhan/gato-x 2>>/dev/null; cd gato-x; python3 -m pip install . -q --disable-pip-version-check --root-user-action=ignore --break-system-packages 
-  gh-workflow-auditor:
+  # gh-workflow-auditor
   - cd /tmp; git clone --depth 1 https://github.com/TinderSec/gh-workflow-auditor.git 2>>/dev/null; python3 -m pip install requests PyYAML -q --disable-pip-version-check --root-user-action=ignore --break-system-packages 
-  semgrep:
+  # semgrep
   - pip install semgrep -q --disable-pip-version-check --root-user-action=ignore --break-system-packages 
-  repo:
+  # clone repo
   - git clone --depth 1 https://github.com/${{REPO}}.git
 
 sast:
   assertStdout: False
+  secrets:
+    - cd */.github/workflows; semgrep --config 'p/secrets' -q --max-chars-per-line 1024
   octoscan:
     - find ./ -name "*.yml" | grep "github/workflows" | xargs -IX /tmp/octoscan/octoscan scan X
   semgrep:
@@ -27,7 +30,10 @@ sast:
 
 dast:
   gato-x:
-    assertStdoutNotContains: HIGH
+    assertStdoutNotContains:
+      - HIGH
+      - MEDIUM
+      - LOW
     run:
       - export GH_TOKEN=${{GH_ACCESS_TOKEN}}; gato-x e --repository ${{REPO}} 
   gh-workflow-auditor:
