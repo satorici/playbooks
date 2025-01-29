@@ -1,7 +1,8 @@
 settings:
   name: "Gato-X: GitHub Attack Toolkit"
   description: A static analysis and exploit toolkit for GitHub Actions
-  author: https://github.com/AdnaneKhan
+  author: 
+    - https://github.com/AdnaneKhan
   gallery:
     - https://files.catbox.moe/o7f9sf.png
   image: python
