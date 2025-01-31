@@ -1,5 +1,6 @@
 settings:
-  name: "Assert that there is no Python command execution on the code"
+  name: "Find Python command or code execution"
+  description: "Search for strings that are used in Python to execute OS commands or Python code"
   author:
   - https://github.com/satorici
   gallery:
