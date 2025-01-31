@@ -1,5 +1,6 @@
 settings:
   name: "Octoscan: scanner for GitHub action workflows"
+  description: "Octoscan is a reconnaissance tool that automates the process of scanning GitHub organizations and repositories for potential security issues in Github Workflows."
   image: ghcr.io/synacktiv/octoscan
   author:
   - https://github.com/synacktiv
