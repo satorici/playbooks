@@ -1,6 +1,6 @@
 settings:
   name: "Gato-X: GitHub Attack Toolkit"
-  description: A static analysis and exploit toolkit for GitHub Actions
+  description: "Gato-X is a scanning and attack tool for GitHub Actions pipelines. You can use it to identify Pwn Requests, Actions Injection, TOCTOU Vulnerabilities, and Self-Hosted Runner takeover at scale using just a single API token. Gato-X is an operator focused tool that is tuned to avoid false negatives. It will have a higher false positive rate than SAST tools like CodeQL, but Gato-X will give you everything you need to quickly determine if something is a true positive or not."
   author: 
     - https://github.com/AdnaneKhan
   gallery:
