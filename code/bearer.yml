@@ -1,0 +1,17 @@
+settings:
+  name: "Bearer: SAST"
+  description: "Bearer is a static application security testing (SAST) tool designed to scan your source code and analyze data flows to identify, filter, and prioritize security and privacy risks."
+  image: bearer/bearer
+  gallery: 
+  - https://files.catbox.moe/2kcimw.png
+  author:
+  - https://github.com/Bearer
+  example: satori run ./ --playbook="satori://code/bearer.yml" --report --output
+
+bearer:
+  help:
+  - bearer --help
+  scan:
+    assertStdoutNotContains: "no failures were detected"
+    run:
+    - bearer scan ./ --hide-progress-bar
