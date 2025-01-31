@@ -1,5 +1,6 @@
 settings:
   name: "NPM audit: check for vulnerabilities in dependencies"
+  description: "The audit command submits a description of the dependencies configured in your project to your default registry and asks for a report of known vulnerabilities. If any vulnerabilities are found, then the impact and appropriate remediation will be calculated. It may be useful in CI environments to include the --audit-level parameter to specify the minimum vulnerability level that will cause the command to fail. This option does not filter the report output, it simply changes the command's failure threshold."
   example: satori run ./ --playbook="satori://code/javascript/npmaudit.yml" --output
   
 install:
