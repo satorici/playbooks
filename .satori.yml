@@ -1,0 +1,14 @@
+tests:
+  assertStdout: False
+  name:
+  - find . -type f -name "*.yml" -exec grep -L "name:" {} \;
+  description:
+  - find . -type f -name "*.yml" -exec grep -L "description:" {} \;
+  author:
+  - find . -type f -name "*.yml" -exec grep -L "author:" {} \;
+  example:
+  - find . -type f -name "*.yml" -exec grep -L "example:" {} \;
+  gallery:
+  - find . -type f -name "*.yml" -exec grep -L "gallery:" {} \;
+  image:
+  - find . -type f -name "*.yml" -exec grep -L "image:" {} \;
