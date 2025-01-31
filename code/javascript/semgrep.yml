@@ -1,6 +1,7 @@
 settings:
   image: python
   name: "Semgrep: Static Source Code Analysis for Javascript"
+  description: "Semgrep is a static code analysis tool with stable support for C#, Go, Java, JavaScript, JSON, Python, PHP, Ruby, and Scala. It has experimental support for nineteen other languages, as well as a language agnostic mode. The following playbook focuses on JavaScript files."
   author:
     - https://github.com/semgrep
   gallery:
