@@ -6,8 +6,7 @@ settings:
   example: satori run ./ --playbook="satori://code/python/pylint.yml" --output
   
 install:
-- apt update
-- apt install -qy pylint
+- apt update >>/dev/null; apt install -qqy pylint
   
 pylint:
   assertReturncCode: 0
