@@ -8,10 +8,8 @@ settings:
   example: satori run satori://code/javascript/dependencycheck.yml --output
   
 install:
-  updates:
-  - apt update
   dependencies:
-  - apt install -qqy unzip default-jre wget
+  - apt update >>/dev/null; apt install -qqy unzip default-jre wget
   dependency-check:
   - wget -q https://github.com/jeremylong/DependencyCheck/releases/download/v7.3.0/dependency-check-7.3.0-release.zip ; unzip dependency-check-7.3.0-release.zip
 
