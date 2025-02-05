@@ -15,7 +15,7 @@ install:
   jq:
   - apt install -qy jq python3 python3-pip
   mobsfscan:
-  - pip3 install mobsfscan --break-system-packages --disable-pip-version-check --root-user-action=ignore
+  - pip3 install mobsfscan --break-system-packages --disable-pip-version-check
 
 mobsfscan:
   assertStdout: False
