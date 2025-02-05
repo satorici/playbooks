@@ -5,7 +5,7 @@ settings:
   
 install:
   npm:
-  - apt install -qy npm
+  - apt install -qqy npm
   package-lock-only:
   - "if [ ! -e package-lock.json ]; then npm i --package-lock-only; fi; ls -l package-lock.json"
 
