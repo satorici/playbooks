@@ -12,6 +12,6 @@ install:
   - pip install semgrep -q --disable-pip-version-check
 
 semgrep:
-  assertStdout: False
+  assertStdoutContains: "0 findings"
   javascript:
   - semgrep --config "p/javascript"
