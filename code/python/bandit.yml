@@ -9,7 +9,7 @@ settings:
   example: satori run ./ --playbook="satori://code/python/bandit.yml" --output
 
 install:
-  - pip install bandit -q --disable-pip-version-check --root-user-action=ignore
+  - pip install bandit -q --disable-pip-version-check
 
 bandit:
   assertStdoutContains: "No issues identified"
