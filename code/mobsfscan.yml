@@ -11,7 +11,7 @@ settings:
   
 install:
   jq:
-  - apt install -qqy jq
+  - apt update >>/dev/null; apt install -qqy jq
   mobsfscan:
   - pip3 install mobsfscan --break-system-packages --disable-pip-version-check
 
