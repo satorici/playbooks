@@ -12,7 +12,6 @@ install:
   - pip3 install safety -q --disable-pip-version-check
 
 safety:
-    assertFileExists: requirements.txt
     assertStdout: False
     run:
-    - check -r requirements.txt
+    - safety check -r requirements.txt
