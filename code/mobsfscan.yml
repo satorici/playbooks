@@ -10,7 +10,7 @@ settings:
   example: satori run ./ --playbook="satori://code/mobsfscan.yml" --output
   
 install:
-  jq:
+  dependencies:
   - apt update >>/dev/null; apt install -qqy jq
   mobsfscan:
   - pip3 install mobsfscan -q --disable-pip-version-check
