@@ -17,4 +17,4 @@ install:
 flake8:
   assertStdout: False
   run:
-  - flake8 * --ignore=E501
+  - find . -type f -name "*.py" -exec flake8 --ignore=E501 {} +
