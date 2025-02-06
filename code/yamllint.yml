@@ -8,14 +8,14 @@ settings:
   example: satori repo satorici/playbooks run --playbook satori://code/yamllint.yml --output
 
 install:
-  - pip install --user yamllint --disable-pip-version-check --no-warn-script-location -q
+  - pip install --disable-pip-version-check --no-warn-script-location -q
 
 yamllint:
   assertReturnCode: 0
   help:
-    - /root/.local/bin/yamllint --help
+    - yamllint --help
   test:
     assertStdoutNotContains: "error"
     run:
-      - /root/.local/bin/yamllint . -f colored --no-warnings | grep -v line-length
+      - yamllint . -f colored --no-warnings | grep -v line-length
 
