@@ -9,9 +9,7 @@ settings:
   example: satori run ./ --playbook="satori://code/javascript/retirejs.yml" --output
 
 install:
-  assertReturnCode: 0
-  retire:
-    - npm install -g retire
+  - npm install -g retire
 
 retirejs:
   assertReturnCode: 0
