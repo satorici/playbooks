@@ -11,4 +11,4 @@ install:
 pylint:
   assertReturncCode: 0
   run:
-  - pylint *
+  - find . -type f -name "*.py" -exec pylint {} +
