@@ -10,7 +10,6 @@ install:
   - "if [ ! -e package-lock.json ]; then npm i --package-lock-only; fi; ls -l package-lock.json"
 
 npm:
-  assertReturnCode: 0
-  assertStdout: False
+  assertStdoutContains: "0 vulnerabilities"
   audit:
   - /usr/bin/npm audit
