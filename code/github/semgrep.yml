@@ -10,8 +10,7 @@ settings:
   memory: 512
     
 install:
-  semgrep:
-    - pip install semgrep -q --disable-pip-version-check
+  - pip install semgrep -q --disable-pip-version-check
 
 semgrep:
   assertStdout: False
