@@ -6,6 +6,9 @@ settings:
   - https://github.com/rustsec
   example: satori run satori://code/rust-audit-ginger.yml --output
 
+install:
+  - apt install -qqy pkg-config libssl-dev
+  
 cargo-audit:
   assertStdoutNotContains:
   - Severity
