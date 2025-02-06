@@ -7,7 +7,6 @@ settings:
   author:
   - https://github.com/PyCQA
   example: satori run ./ --playbook="satori://code/python/flake8.yml" --output
-  
 
 install:
   - pip install flake8 -q --disable-pip-version-check
