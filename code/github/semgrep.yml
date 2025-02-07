@@ -8,6 +8,7 @@ settings:
   - https://github.com/semgrep
   cpu: 256
   memory: 512
+  example: satori run ./ --playbook=satori://code/github/semgrep.yml --report --output
     
 install:
   - pip install semgrep -q --disable-pip-version-check
