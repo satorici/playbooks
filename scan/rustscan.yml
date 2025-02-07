@@ -1,9 +1,9 @@
 settings:
   image: rustscan/rustscan:2.1.1
   name: Rustscan - Network port scanner
-  author: 
+  author:
     - https://github.com/RustScan
-  gallery: 
+  gallery:
     - https://files.catbox.moe/4ng16r.png
   example: satori run satori://scan/rustscan.yml -d HOST="satori.ci" --output
 

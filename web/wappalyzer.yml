@@ -6,7 +6,7 @@ settings:
   gallery:
     - https://files.catbox.moe/0pp2iq.gif
   example: satori run satori://web/wappalyzer.yml -d URL="https://satori.ci" --output
-  
+
 install:
   assertReturnCode: 0
   update:

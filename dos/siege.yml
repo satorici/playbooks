@@ -15,18 +15,18 @@ settings:
 
 install:
   update:
-  - apt update
+    - apt update
   curl:
-  - apt install -qy curl
+    - apt install -qy curl
   siege:
-  - apt install -qy siege
+    - apt install -qy siege
 
 host:
   assertReturnCode: 0
   setSeverity: 4
   before_siege:
-  - curl -s ${{URL}} -m 3
+    - curl -s ${{URL}} -m 3
   siege:
-  - siege -c 100 -t 30s ${{URL}}
+    - siege -c 100 -t 30s ${{URL}}
   after_siege:
-  - curl -s ${{URL}} -m 3
+    - curl -s ${{URL}} -m 3

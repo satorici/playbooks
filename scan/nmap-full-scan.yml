@@ -1,22 +1,18 @@
 settings:
-  name: Full network scan
+  name: "Nmap: full network scan"
+  description: "Nmap is short for Network Mapper. It is an open-source Linux command-line tool that is used to scan IP addresses and ports in a network and to detect installed applications. Nmap allows network admins to find which devices are running on their network, discover open ports and services, and detect vulnerabilities."
   author:
-  - https://github.com/satorici
+    - https://github.com/satorici
   gallery:
-  - https://files.catbox.moe/xd763c.gif
+    - https://files.catbox.moe/xd763c.gif
   example: satori run satori://scan/nmap-full-scan.yml -d HOST="satori.ci" --output
 
 install:
-  assertReturnCode: 0
-  update:
-  - apt update
-  nmap:
-  - apt install -y nmap
-
+  - apt update >>/dev/null; apt install -qqy nmap
 
 scan:
   assertStdoutContains: "Nmap done"
   UDP:
-  - nmap --top-ports 100 -sU -A -sC -sV -oN UDP_nmap.txt ${{HOST}}
+    - nmap --top-ports 100 -sU -A -sC -sV -oN UDP_nmap.txt ${{HOST}}
   TCP:
-  - nmap -p- -sS -A -sC -sV -oN TCP_nmap.txt ${{HOST}} 
+    - nmap -p- -sS -A -sC -sV -oN TCP_nmap.txt ${{HOST}} 

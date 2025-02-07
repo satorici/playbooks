@@ -1,18 +1,19 @@
 settings:
-  name: "httpx is a fast and multi-purpose HTTP toolkit that allows running multiple probes using the retryablehttp library"
+  name: "httpx: performs multiple web probes"
+  description: "Identify and analyze web server configurations, verify HTTP responses, and diagnose potential vulnerabilities or misconfigurations"
   image: golang
   author: 
-  - https://github.com/projectdiscovery
+    - https://github.com/projectdiscovery
   gallery:
-  - https://files.catbox.moe/83do15.png
+    - https://files.catbox.moe/83do15.png
   example: satori run satori://web/httpx.yml -d URL="satori.ci" --output
 
 httpx:
   install:
-  - go install github.com/projectdiscovery/httpx/cmd/httpx@latest
+    - go install github.com/projectdiscovery/httpx/cmd/httpx@latest
   help:
   - httpx -h
   test:
     assertStdoutContains: "SUCCESS"
     run:
-    - httpx -u ${{URL}} -no-color -ip -cdn -cname -stats -title -retries 3 -threads 450 -timeout 3 -location -tls-grab -csp-probe -web-server -tech-detect -content-type -response-time -content-length -follow-redirects -follow-host-redirects -silent -probe -json
+      - httpx -u ${{URL}} -no-color -ip -cdn -cname -stats -title -retries 3 -threads 450 -timeout 3 -location -tls-grab -csp-probe -web-server -tech-detect -content-type -response-time -content-length -follow-redirects -follow-host-redirects -silent -probe -json

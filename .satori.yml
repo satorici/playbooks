@@ -5,21 +5,23 @@ settings:
 tests:
   assertStdout: False
   name:
-  - find . -name "*.yml" ! -path "./.*" -exec grep -L "name:" {} \;
+    - find . -name "*.yml" ! -path "./.*" -exec grep -L "name:" {} \;
   description:
-  - find . -name "*.yml" ! -path "./.*" -exec grep -L "description:" {} \;
+    - find . -name "*.yml" ! -path "./.*" -exec grep -L "description:" {} \;
   author:
-  - find . -name "*.yml" ! -path "./.*" -exec grep -L "author:" {} \;
+    - find . -name "*.yml" ! -path "./.*" -exec grep -L "author:" {} \;
   author_item:
-  - find . -name "*.yml" ! -path "./.*" -exec grep -H "author:" -A1 {} \; | grep ":.*\-"|grep -v "https"
+    - find . -name "*.yml" ! -path "./.*" -exec grep -H "author:" -A1 {} \; | grep ":.*\-"|grep -v "https"
   example:
-  - find . -name "*.yml" ! -path "./.*" -exec grep -L "example:" {} \;
+    - find . -name "*.yml" ! -path "./.*" -exec grep -L "example:" {} \;
   gallery:
-  - find . -name "*.yml" ! -path "./.*" -exec grep -L "gallery:" {} \;
+    - find . -name "*.yml" ! -path "./.*" -exec grep -L "gallery:" {} \;
   gallery_item:
-  - find . -name "*.yml" ! -path "./.*" -exec grep -H "gallery:" -A1 {} \; | grep "\-"|grep -v "gallery\|https"
+    - find . -name "*.yml" ! -path "./.*" -exec grep -H "gallery:" -A1 {} \; | grep "\-"|grep -v "gallery\|https"
   image:
-  - find . -name "*.yml" ! -path "./.*" -exec grep -L "image:" {} \;
+    - find . -name "*.yml" ! -path "./.*" -exec grep -L "image:" {} \;
+  clone:
+    - grep "git clone" * -R | grep -v "depth"
 
 import:
-- satori://code/yamllint.yml
+  - satori://code/yamllint.yml

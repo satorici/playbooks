@@ -1,16 +1,15 @@
 settings:
   name: "Ppmap - scanner/exploitation tool that exploits known and existing gadgets (checks for specific variables in the global context) to perform XSS via Prototype Pollution"
-  image: ubuntu:jammy
+  image: golang
   author: 
-  - https://github.com/kleiton0x00
+    - https://github.com/kleiton0x00
   gallery:
-  - https://files.catbox.moe/deptae.png
+    - https://files.catbox.moe/deptae.png
   example: satori run satori://web/ppmap.yml -d URL="https://satori.ci" --output
   
 install:
-  - apt update
-  - apt install -qy git golang sudo
-  - git clone https://github.com/kleiton0x00/ppmap.git
+  - apt update >>/dev/null; apt install -qy git sudo
+  - git clone --depth 1 https://github.com/kleiton0x00/ppmap.git
   - cd ppmap/ && bash setup.sh
 
 ppmap:

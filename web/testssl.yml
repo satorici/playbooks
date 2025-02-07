@@ -1,20 +1,21 @@
 settings:
-  name: "Checks TLS/SSL ciphers and protocols for security flaws"
+  name: "TestSSL: Checks TLS/SSL ciphers and protocols for security flaws"
+  description: "Check a server's service on any port for the support of TLS/SSL ciphers, protocols as well as some cryptographic flaws."
   image: ubuntu:jammy
-  gallery: https://files.catbox.moe/44b58j.gif
+  gallery: 
+    - https://files.catbox.moe/44b58j.gif
+  author:
+    - https://github.com/testssl
   example: satori run satori://web/testssl.yml -d HOST="satori.ci" --output
   
   
 install:
-  update:
-  - apt update >> /dev/null
-  testssl:
-  - apt install -qy testssl.sh >> /dev/null
+  - apt update >>/dev/null; apt install -qqy testssl.sh
 
 testssl:
   run:
-  - testssl -p -s -f -U -S -P --csvfile=log ${{HOST}}
+    - testssl -p -s -f -U -S -P --csvfile=log ${{HOST}}
   log:
     assertStdoutNotRegex: ("LOW"|"MEDIUM"|"HIGH"|"CRITICAL"|"FATAL")
     run:
-    - cat log
+      - cat log

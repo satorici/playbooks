@@ -1,25 +1,23 @@
 settings:
-  name: "Cloud Scraper enumerates targets in search of cloud resources. S3 Buckets, Azure Blobs, Digital Ocean Storage Space"
+  name: "Cloud Scraper: enumerates targets in search of cloud resources (S3 Buckets, Azure Blobs, Digital Ocean Storage Space)"
   image: python
   author:
-  - https://github.com/jordanpotti
+    - https://github.com/jordanpotti
   gallery:
-  - https://files.catbox.moe/jsjtnv.png
+    - https://files.catbox.moe/jsjtnv.png
   example: satori run satori://web/cloudscraper.yml --output -d URL="http://example.com" --report --output
 
 install:
-  update:
-  - apt update
   dependencies:
-  - apt install -qy git
+  - apt update >>/dev/null; apt install -qqy git
   cloudscraper:
-  - git clone https://github.com/jordanpotti/CloudScraper.git --depth 1
-  - pip3 install -r CloudScraper/requirements.txt -q --disable-pip-version-check --root-user-action=ignore
+  - git clone https://github.com/jordanpotti/CloudScraper.git --depth 1; pip3 install -r CloudScraper/requirements.txt -q --disable-pip-version-check
 
 cloudscraper:
+  assertReturnCode: 0
   help:
-  - python3 CloudScraper/CloudScraper.py --help
+    - python3 CloudScraper/CloudScraper.py --help
   test:
     assertStdoutContains: "There were no matches!"
     run:
-    - python3 CloudScraper/CloudScraper.py -u ${{URL}}
+      - python3 CloudScraper/CloudScraper.py -u ${{URL}}

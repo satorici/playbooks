@@ -1,15 +1,18 @@
 settings:
   image: golang
-  name: Fast and configurable TLS grabber focused on TLS based data collection.
+  name: "TLSX: TLS grabber"
+  description: "TLSX is a command-line tool designed for comprehensive TLS data collection and analysis. It supports multiple connection modes, customizable cipher suites, and SNI configurations. TLSX can enumerate supported TLS versions and ciphers, detect misconfigurations such as expired or self-signed certificates, and generate JARM and JA3 fingerprints. It accepts various input formats, including IP addresses, domain names, and CIDR ranges, and outputs results in text or JSON formats. TLSX is suitable for security assessments and network diagnostics."
   author:
     - https://github.com/projectdiscovery
   gallery:
     - https://files.catbox.moe/b49mxt.png
   example: satori run satori://web/tlsx.yml -d HOST="satori.ci" --output
 
+install:
+  - go install github.com/projectdiscovery/tlsx/cmd/tlsx@latest
+
 tlsx:
-  install:
-    - go install github.com/projectdiscovery/tlsx/cmd/tlsx@latest
+  assertReturnCode: 0
   help:
     - tlsx -h
   run:

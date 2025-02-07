@@ -4,14 +4,15 @@ settings:
   author:
     - https://github.com/xnl-h4ck3r
   gallery:
-    - https://files.catbox.moe/y6sbh6.gif 
+    - https://files.catbox.moe/y6sbh6.gif
   example: satori run satori://web/waymore.yml -d URL="satori.ci" --output
+
+install:
+  - pip install waymore -q --disable-pip-version-check --root-user-action=ignore
 
 waymore:
   assertReturnCode: 0
-  install:
-    - pip install waymore -q --disable-pip-version-check --root-user-action=ignore
-  #help:
-    #- waymore -h
+  help:
+    - waymore -h
   run:
     - waymore -i ${{URL}} -mode U

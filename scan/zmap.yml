@@ -1,14 +1,14 @@
 settings:
-  name: Zmap is a fast single packet network scanner designed for Internet-wide network surveys
+  name: "Zmap: fast single packet network scanner"
+  description: "ZMap is a fast single-packet network scanner optimized for Internet-wide network surveys. On a computer with a gigabit connection, ZMap can scan the entire public IPv4 address space on a single port in under 45 minutes. With a 10gigE connection and PF_RING, ZMap can scan the IPv4 address space in 5 minutes."
   author:
-  - https://github.com/satorici
+    - https://github.com/satorici
   gallery:
-  - https://files.catbox.moe/tuoctj.png
+    - https://files.catbox.moe/tuoctj.png
   example: satori run satori://scan/zmap.yml -d PORT="1234" -d HOST="host" --output
 
 install:
-- apt update
-- apt install -qq -y zmap net-tools
+  - apt update >>/dev/null; apt install -qqy zmap net-tools
 
 route:
 - route
@@ -16,10 +16,9 @@ route:
 ifconfig:
 - ifconfig
 
-zmap_help:
-- zmap -h
-
 zmap:
   assertStdout: True
+  help:
+    - zmap -h
   run:
-  - zmap -i eth1 -p ${{PORT}} ${{HOST}}
+    - zmap -i eth1 -p ${{PORT}} ${{HOST}}

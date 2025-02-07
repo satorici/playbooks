@@ -2,9 +2,9 @@ settings:
   name: "Nmap checks for vulnerabilities on the most common 100 ports"
   description: "Nmap is a highly powerful network scanning tool with a variety of options for different scanning methods and output formats. While it does have some vulnerability scanning capabilities, especially when used with the Nmap Scripting Engine (NSE), it is not a dedicated vulnerability scanning tool like Nessus or OpenVAS. Nevertheless, it can still provide valuable information about potential vulnerabilities on a network."
   author:
-  - https://github.com/satorici
+    - https://github.com/satorici
   gallery:
-  - https://files.catbox.moe/3sdyoy.gif  
+    - https://files.catbox.moe/3sdyoy.gif
   example: satori run satori://scan/nmap-vulns.yml -d HOST="satori.ci" --output
 
 install:

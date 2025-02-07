@@ -2,18 +2,17 @@ settings:
   name: Pass in a list of URLs, and get back a list of deduplicated (unique) URL and query string combination
   image: ubuntu:jammy
   author:
-  - https://github.com/ameenmaali
+    - https://github.com/ameenmaali
   gallery:
-  - https://files.catbox.moe/l0rcrt.png
+    - https://files.catbox.moe/l0rcrt.png
   example: satori run satori://web/urldedupe.yml -d URL="https://google.com/home?qs=value\nhttps://google.com/home?qs=secondValue" --output
 
 install:
-- apt update
-- apt install -qy git build-essential make cmake
-
-build:
-- git clone https://github.com/ameenmaali/urldedupe.git
-- cd urldedupe ; cmake CMakeLists.txt ; make
+  - apt update >>/dev/null; apt install -qqy git build-essential make cmake
+  - git clone --depth 1 https://github.com/ameenmaali/urldedupe.git
+  - cd urldedupe ; cmake CMakeLists.txt ; make
 
 urldedupe:
-- echo "${{URL}}" | urldedupe/urldedupe
+  assertReturnCode: 0
+  run:
+    - echo "${{URL}}" | urldedupe/urldedupe

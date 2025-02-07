@@ -1,6 +1,7 @@
 settings:
   image: python:2
-  name: WAScan - Web Application Scanner that fuzzes, scans pages, extracts links/forms and sends payloads to looking for error messages 
+  name: "WAScan - Web Application Scanner"
+  description: "WAScan fuzzes, scans pages, extracts links/forms and sends payloads to looking for error messages"
   author:
     - https://github.com/R3dFruitRollUp
   gallery:
@@ -8,9 +9,7 @@ settings:
   example: satori run satori://web/wascan.yml -d URL="satori.ci" --output
 
 install:
-  assertReturnCode: 0
-  clone:
-    - git clone --depth 1 https://github.com/R3dFruitRollUp/WAScan.git ; cd WAScan ; pip install -r requirements.txt -q --disable-pip-version-check --root-user-action=ignore
+  - git clone --depth 1 https://github.com/R3dFruitRollUp/WAScan.git ; cd WAScan ; pip install -r requirements.txt -q --disable-pip-version-check --root-user-action=ignore
 
 wascan:
   assertReturnCode: 0

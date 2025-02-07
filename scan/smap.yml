@@ -1,24 +1,18 @@
 settings:
   name: "A port scanner built with shodan.io's free API"
+  image: golang
   author:
-  - https://github.com/s0md3v
+    - https://github.com/s0md3v
   gallery:
-  - https://files.catbox.moe/5b50gj.png
+    - https://files.catbox.moe/5b50gj.png
   example: satori run satori://scan/smap.yml -d HOST="satori.ci" --output
 
 install:
-  update:
-    - apt update
-  wget:
-    - apt install -qq -y wget
-  go:
-    - wget -q https://go.dev/dl/go1.21.3.linux-amd64.tar.gz
-    - tar -C /usr/local -xzf go1.21.3.linux-amd64.tar.gz
-    - ln -s /usr/local/go/bin/go /usr/local/bin/go
-  smap:
-    - go install github.com/s0md3v/smap/cmd/smap@latest
+  - go install github.com/s0md3v/smap/cmd/smap@latest
 
-help:
-  - /root/go/bin/smap -h
 smap:
-  - /root/go/bin/smap ${{HOST}}
+  assertReturnCode: 0
+  help:
+    - smap -h
+  smap:
+    - smap ${{HOST}}
