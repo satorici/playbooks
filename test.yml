@@ -1,13 +1,13 @@
 settings:
   name: Hello and Bye Test
   description: "This playbook is designed to test the output of two commands to ensure it contains the phrase **Hello World**. It defines a parent test named `test`, which includes an assertion on two echoes. The assertion, `assertStdoutContains: Hello World`, checks that the standard output from the executed commands contains the string **Hello World**.\n\nThe playbook defines two command blocks: `hello` and `whatever`. The `hello` block executes the command `echo Hello World`, which prints **Hello World**. Similarly, the `whatever` block executes the command `echo ${{WHAT}}`, which prints whatever the value of the `WHAT` variable is.\n\nFor example, if `WHAT` is set to **Hello World**, the commands will again output *Hello World* and the parent assertion will pass."
-  author: 
+  author:
     - https://github.com/satorici
-  gallery: 
+  gallery:
     - https://files.catbox.moe/ouicn2.png
     - https://files.catbox.moe/83gexg.png
   example: satori run satori://test.yml -d WHAT="Hello World" --report --output
-  
+
 test:
   assertStdoutContains: Hello World
   hello:
