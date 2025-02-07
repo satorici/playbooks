@@ -1,8 +1,10 @@
 settings:
-  name: "gitSome gets emails associated with a Github account"
+  name: "gitSome: gets emails associated with a Github account"
   image: python
-  author: https://github.com/chm0dx
-  gallery: https://files.catbox.moe/bnkkxg.png
+  author: 
+    - https://github.com/chm0dx
+  gallery: 
+    - https://files.catbox.moe/bnkkxg.png
   example: satori run satori://email/gitsome.yml -d USER=octocat --output
 
 install:

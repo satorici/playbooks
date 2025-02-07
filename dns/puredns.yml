@@ -12,7 +12,7 @@ install:
   dependencies:
     - apt update && apt install -y git make gcc
   massdns:
-    - git clone https://github.com/blechschmidt/massdns.git
+    - git clone --depth 1 https://github.com/blechschmidt/massdns.git
     - cd massdns && make
   puredns:
     - go install github.com/d3mondev/puredns/v2@latest

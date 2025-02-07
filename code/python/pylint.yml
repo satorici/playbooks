@@ -1,14 +1,17 @@
 settings:
   image: python
-  name: "Pylint is a static code analyser for Python"
+  name: "Pylint: linter for Python"
   description: "It analyses your code without actually running it. It checks for errors, enforces a coding standard, looks for code smells, and can make suggestions about how the code could be refactored." 
-  gallery: https://files.catbox.moe/ge78zy.png
+  author:
+    - https://github.com/pylint-dev/
+  gallery: 
+    - https://files.catbox.moe/ge78zy.png
   example: satori run ./ --playbook="satori://code/python/pylint.yml" --output
   
 install:
-- apt update >>/dev/null; apt install -qqy pylint
+  - apt update >>/dev/null; apt install -qqy pylint
   
 pylint:
   assertReturncCode: 0
   run:
-  - find . -type f -name "*.py" -exec pylint {} +
+    - find . -type f -name "*.py" -exec pylint {} +

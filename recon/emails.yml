@@ -1,29 +1,26 @@
 settings:
-  name: Get all urls of a domain and search for email addresses
+  name: "Gauplus+Nuclei: Get all urls of a domain and search for email addresses"
+  image: golang
   author:
-  - https://github.com/bp0lr
-  - https://github.com/projectdiscovery
+    - https://github.com/bp0lr
+    - https://github.com/projectdiscovery
   gallery:
-  - https://files.catbox.moe/7tozqa.png
+    - https://files.catbox.moe/7tozqa.png
   example: satori run satori://recon/emails.yml -d DOMAIN="satori.ci" --output
 
 install:
-  update:
-  - apt update
-  wget:
-  - apt install -qy wget git
-  go:
-  - wget -q https://go.dev/dl/go1.21.3.linux-amd64.tar.gz
-  - tar -C /usr/local -xzf go1.21.3.linux-amd64.tar.gz
-  - ln -s /usr/local/go/bin/go /usr/local/bin/go
+  dependencies:
+    - apt update >>/dev/null; apt install -qqy git
   gauplus:
-  - go install github.com/bp0lr/gauplus@latest
+    - go install github.com/bp0lr/gauplus@latest
   nuclei:
-  - go install github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest
+    - go install github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest
   3p-templates:
-  - git clone https://github.com/panch0r3d/nuclei-templates.git
+    - git clone --depth 1 https://github.com/panch0r3d/nuclei-templates.git
 
-gauplus:
-- /root/go/bin/gauplus -providers commoncrawl -o output ${{DOMAIN}}
-nuclei:
-- /root/go/bin/nuclei -l output -t ./nuclei-templates/email-extraction.yaml
+emails:
+  assertReturnCode: 0
+  gauplus:
+    - gauplus -providers commoncrawl -o output ${{DOMAIN}}
+  nuclei:
+    - nuclei -l output -t ./nuclei-templates/email-extraction.yaml

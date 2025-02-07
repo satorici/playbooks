@@ -9,15 +9,14 @@ settings:
   timeout: 2000
   count: 10
   example: satori run satori://dos/slowhttptest.yml -d URL="satori.ci" --output
-  gallery: https://files.catbox.moe/u8csjx.gif
+  gallery: 
+    - https://files.catbox.moe/u8csjx.gif
 
 install:
-  update:
-    - apt update
-  slowhttptest:
-    - apt install -qy slowhttptest curl
-  before_slowhttptest:
-    - curl -s ${{URL}} -w 3
+  - apt update >>/dev/null; apt install -qqy slowhttptest curl
+
+before_slowhttptest:
+  - curl -s ${{URL}} -w 3
 
 slowhttptest:
   assertStdoutNotContains: "service available:   NO"
@@ -33,7 +32,7 @@ slowhttptest:
     - slowhttptest -c 1000 -g -o slowloris_post_b -i 110 -r 200 -s 8192 -t POST -x 10 -p 3 -u ${{URL}} -B 
     - slowhttptest -c 1000 -g -o slowloris_post_r -i 110 -r 200 -s 8192 -t POST -x 10 -p 3 -u ${{URL}} -R 
 
-test:
+after_slowhttptest:
   assertReturnCode: 0
-  after_slowhttptest:
+  run:
     - curl -s ${{URL}} -w 3

@@ -5,27 +5,25 @@ settings:
   memory: 122880
   timeout: 400
   example: satori run satori://llm/ollama/repo.yml -d INPUT="what payload overflows the name to write 69 on the age on the example.c program?" -d REPO="royleekiat/overflow-example" --output
-  gallery: https://files.catbox.moe/e2ft61.png
+  gallery: 
+    - https://files.catbox.moe/e2ft61.png
   
 MODEL:
 - - "artifish/llama3.2-uncensored"
 
 install:
-  dependencies:
-  - apt update >> /dev/null
-  - apt install -qy screen jq curl git >> /dev/null
+  - apt update >> /dev/null; apt install -qqy screen jq curl git >> /dev/null
 
 prompt:
-  #- echo "${{INPUT}}" > /tmp/prompt.txt
-  - git clone https://github.com/${{REPO}}.git .
+  - git clone --depth 1 https://github.com/${{REPO}}.git .
   - echo "I will provide files and their contents to use as reference for a query that I will provide at the end:" >> /tmp/prompt.txt
   - bash -c 'find . -type f -print0 | while IFS= read -r -d "" f; do echo "$f"; cat "$f"; echo; done' >> /tmp/prompt.txt
   - echo "${{INPUT}}" > /tmp/prompt.txt
 
 ollama:
   serve:
-  - screen -dm ollama serve; sleep 1
+    - screen -dm ollama serve; sleep 1
   pull:
-  - ollama pull ${{MODEL}}
+    - ollama pull ${{MODEL}}
   query:
-  - ollama run ${{MODEL}} "$(cat /tmp/prompt.txt)"
+    - ollama run ${{MODEL}} "$(cat /tmp/prompt.txt)"

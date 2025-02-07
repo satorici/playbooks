@@ -1,14 +1,14 @@
 settings:
   image: golang
   name: Find domains and subdomains potentially related to a given domain.
-  author: https://github.com/tomnomnom
-  gallery: https://files.catbox.moe/cvmny4.png
+  author: 
+    - https://github.com/tomnomnom
+  gallery: 
+    - https://files.catbox.moe/cvmny4.png
   example: satori run satori://web/assetfinder.yml -d DOMAIN="satori.ci" --output
 
 install:
-  assertReturnCode: 0
-  tool:
-    - go install github.com/tomnomnom/assetfinder@latest
+  - go install github.com/tomnomnom/assetfinder@latest
 
 assetfinder:
   assertReturnCode: 0

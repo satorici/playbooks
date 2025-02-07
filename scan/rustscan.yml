@@ -1,6 +1,7 @@
 settings:
   image: rustscan/rustscan:2.1.1
-  name: Rustscan - Network port scanner
+  name: "Rustscan: Network port scanner"
+  description: "RustScan is a modern port scanner that rapidly scans all 65,535 ports in approximately 3 seconds. It features a scripting engine supporting languages like Python, Lua, and Shell, allowing users to automate tasks such as piping results into Nmap for detailed analysis. RustScan also employs adaptive learning to optimize its scanning process based on the environment."
   author:
     - https://github.com/RustScan
   gallery:

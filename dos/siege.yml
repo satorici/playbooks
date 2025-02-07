@@ -11,15 +11,11 @@ settings:
   count: 10
   timeout: 300
   example: satori run satori://dos/siege.yml -d URL="satori.ci" --output
-  gallery: https://files.catbox.moe/e4fu1g.png
+  gallery: 
+    - https://files.catbox.moe/e4fu1g.png
 
 install:
-  update:
-    - apt update
-  curl:
-    - apt install -qy curl
-  siege:
-    - apt install -qy siege
+  - apt update >>/dev/null; apt install -qqy curl siege
 
 host:
   assertReturnCode: 0
