@@ -1,14 +1,18 @@
 tests:
   assertStdout: False
   name:
-  - find . -type f -name "*.yml" -exec grep -L "name:" {} \;
+  - find . -name "*.yml" ! -path "./.*" -exec grep -L "name:" {} \;
   description:
-  - find . -type f -name "*.yml" -exec grep -L "description:" {} \;
+  - find . -name "*.yml" ! -path "./.*" -exec grep -L "description:" {} \;
   author:
-  - find . -type f -name "*.yml" -exec grep -L "author:" {} \;
+  - find . -name "*.yml" ! -path "./.*" -exec grep -L "author:" {} \;
+  author_item:
+  - find . -name "*.yml" ! -path "./.*" -exec grep -H "author:" -A1 {} \; | grep ":.*\-"|grep -v "https"
   example:
-  - find . -type f -name "*.yml" -exec grep -L "example:" {} \;
+  - find . -name "*.yml" ! -path "./.*" -exec grep -L "example:" {} \;
   gallery:
-  - find . -type f -name "*.yml" -exec grep -L "gallery:" {} \;
+  - find . -name "*.yml" ! -path "./.*" -exec grep -L "gallery:" {} \;
+  gallery_item:
+  - find . -name "*.yml" ! -path "./.*" -exec grep -H "gallery:" -A1 {} \; | grep "\-"|grep -v "gallery\|https"
   image:
-  - find . -type f -name "*.yml" -exec grep -L "image:" {} \;
+  - find . -name "*.yml" ! -path "./.*" -exec grep -L "image:" {} \;
