@@ -1,5 +1,6 @@
 settings:
   name: Satori CI Playbooks
+  image: python
 
 tests:
   assertStdout: False
