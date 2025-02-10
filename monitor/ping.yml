@@ -7,10 +7,9 @@ settings:
   example: satori run satori://monitor/ping.yml -d HOST="satori.ci" --output
 
 install:
-- apt update
-- apt-get install iputils-ping -y -qq
+  - apt update >>/dev/null; apt-get install iputils-ping -y -qq
 
 ping:
-    assertStdoutContains: "0.0% packet loss"
-    execute: 
+  assertStdoutContains: "0.0% packet loss"
+  execute: 
     - ping -c 4 ${{HOST}}

@@ -1,23 +1,20 @@
 settings:
-  name: Find domains and subdomains potentially related to a given domain.
+  name: "AssetFinder: find domains and subdomains potentially related to a domain"
   author: 
-  - https://github.com/tomnomnom/assetfinder 
+    - https://github.com/tomnomnom/assetfinder 
   gallery:
-  - https://files.catbox.moe/f3apgb.pn
+    - https://files.catbox.moe/f3apgb.pn
   example: satori run satori://recon/assetfinder.yml -d DOMAIN="satori.ci" --output
 
 install:
-  update:
-  - apt update
-  wget:
-  - apt install -qq -y wget
+  dependencies:
+  - apt update >>/dev/null; apt install -qqy wget
   assetfinder:
-  - wget -q https://github.com/tomnomnom/assetfinder/releases/download/v0.1.1/assetfinder-linux-amd64-0.1.1.tgz
-  tar:
-  - tar -zxf assetfinder-linux-amd64-0.1.1.tgz
+  - wget -q https://github.com/tomnomnom/assetfinder/releases/download/v0.1.1/assetfinder-linux-amd64-0.1.1.tgz; tar -zxf assetfinder-linux-amd64-0.1.1.tgz
 
-help:
-- ./assetfinder --help
-
-assetfinder_subs:
-- ./assetfinder -subs-only ${{DOMAIN}} | sort -u
+assetFinder:
+  assertReturnCode: 0
+  help:
+    - ./assetfinder --help
+  subs:
+    - ./assetfinder -subs-only ${{DOMAIN}} | sort -u

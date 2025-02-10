@@ -1,6 +1,6 @@
 settings:
   image: ubuntu
-  name: "Check if a host has a certain IP address"
+  name: "Host: Check if a host has a certain IP address"
   author:
   - https://github.com/satorici
   gallery:
@@ -8,11 +8,10 @@ settings:
   example: satori run satori://monitor/host.yml -d HOST="host_name" -d IP="ip_adress" --output
 
 install:
-  - apt update
-  - apt install -qy dnsutils
+  - apt update >>/dev/null; apt install -qqy dnsutils
 
 
 host:
   assertStdoutContains: "${{HOST}} has address ${{IP}}"
   execute: 
-  - host ${{HOST}}
+    - host ${{HOST}}
