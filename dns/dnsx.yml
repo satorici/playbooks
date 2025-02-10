@@ -1,6 +1,7 @@
 settings:
   image: golang
   name: "dnsX: queries all dns records of a domain"
+  description: "dnsx is a DNS toolkit for performing DNS queries and collecting DNS-related information. It supports subdomain enumeration, wildcard filtering, and DNS resolution. The tool allows users to customize queries and extract specific DNS records."
   author:
     - https://github.com/projectdiscovery
   gallery:
@@ -8,10 +9,11 @@ settings:
   example: satori run satori://dns/dnsx.yml -d DOMAIN="satori.ci" --output
 
 install:
-  dnsx:
-    - go install -v github.com/projectdiscovery/dnsx/cmd/dnsx@latest
+  - go install github.com/projectdiscovery/dnsx/cmd/dnsx@latest
+  - find / -name dnsx
 
 dnsx:
+  assertReturnCode: 0
   help:
     - dnsx -h
   run:

@@ -1,6 +1,7 @@
 settings:
   image: golang
-  name: gobuster-dns brute forces DNS subdomains
+  name: "gobuster-dns: brute forces DNS subdomains"
+  description: "Gobuster performs brute-force enumeration of URLs, DNS subdomains, and virtual host names. It supports wordlist-based scanning for directories and files on web servers, subdomains in DNS, and virtual hosts. The tool allows users to specify extensions, HTTP methods, and authentication options."
   author:
     - https://github.com/OJ
   gallery:
@@ -11,10 +12,12 @@ install:
   gobuster-dns:
     - go install github.com/OJ/gobuster/v3@latest
   wordlist:
-    - mkdir -p wordlists
-    - curl -s https://raw.githubusercontent.com/danielmiessler/SecLists/master/Discovery/DNS/subdomains-top1million-5000.txt -o wordlists/subdomains.txt
+    - mkdir -p wordlists; curl -s https://raw.githubusercontent.com/danielmiessler/SecLists/master/Discovery/DNS/subdomains-top1million-5000.txt -o wordlists/subdomains.txt
+  find:
+    - find / -name gobuster
 
 gobuster-dns:
+  assertReturnCode: 0
   help:
     - gobuster dns -h
   run:
