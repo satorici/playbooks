@@ -8,14 +8,11 @@ settings:
   example: satori run satori://dns/massdns.yml -d DOMAIN="satori.ci" --output
   
 install:
-  update:
-    - apt update >> /dev/null
   dependencies:
-    - apt install git make gcc -qy >> /dev/null
-  clone:
-    - git clone --depth 1 https://github.com/blechschmidt/massdns.git
-    - cd massdns && make
-  domain:
+    - apt update >> /dev/null; apt install git make gcc -qy >> /dev/null
+  massdns:
+    - git clone https://github.com/blechschmidt/massdns.git; cd massdns && make
+  input_file:
     - echo "${{DOMAIN}}" > domain.txt
 
 RECORD:
@@ -30,6 +27,7 @@ RECORD:
   - PTR
 
 run:
+  assertReturnCode: 0
   help:
     - ./massdns/bin/massdns --help
   run:
