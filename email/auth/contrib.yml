@@ -1,20 +1,20 @@
 settings:
-  name: Gitxray - Github Contributor' Emails Authenticated
-  description: Gitxray (short for Git X-Ray) is a multifaceted security tool designed for use on GitHub repositories. It serves various use cases, including OSINT, forensics, and security teams, as well as developers looking to secure their repositories, organizations, and related contributors. Gitxray leverages public GitHub REST APIs to gather information that would otherwise be very time-consuming to obtain manually. Additionally, it seeks out information in unconventional places.
+  name: "Gitxray: Get Github contributors' emails authenticated"
+  description: "Gitxray (short for Git X-Ray) is a multifaceted security tool designed for use on GitHub repositories. It serves various use cases, including OSINT, forensics, and security teams, as well as developers looking to secure their repositories, organizations, and related contributors. Gitxray leverages public GitHub REST APIs to gather information that would otherwise be very time-consuming to obtain manually. Additionally, it seeks out information in unconventional places."
   image: python
   files: true
   clone: false
-  author: https://github.com/kulkansecurity
+  author: 
+    - https://github.com/kulkansecurity
   example: satori run satori://email/auth/contrib.yml -d REPO=org/repo -d CONTRIBUTOR=whatever -d GH_ACCESS_TOKEN=$GH_ACCESS_TOKEN --output
   redacted: 
     - GH_ACCESS_TOKEN
 
 install:
-- git clone https://github.com/kulkansecurity/gitxray.git --depth 1 . >>/dev/null
-- python3 -m pip install -r requirements.txt -q --disable-pip-version-check --root-user-action=ignore
+  - git clone https://github.com/kulkansecurity/gitxray.git --depth 1 >>/dev/null
+  - python3 -m pip install -r gitxray/requirements.txt -q --disable-pip-version-check --root-user-action=ignore
 
 gitxray:
+  assertReturnCode: 0
   contributor:
-    - export GH_ACCESS_TOKEN=${{GH_ACCESS_TOKEN}}; cd src; python3 -m gitxray.gitxray -r https://github.com/${{REPO}} -c ${{CONTRIBUTOR}} -f emails -outformat text -out ../filters.log
-  output:
-    - cat filters.log
+    - export GH_ACCESS_TOKEN=${{GH_ACCESS_TOKEN}}; cd gitxray/src; python3 -m gitxray.gitxray -r https://github.com/${{REPO}} -c ${{CONTRIBUTOR}} -f emails -outformat text --shush

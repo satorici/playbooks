@@ -4,16 +4,17 @@ settings:
   image: python
   files: true
   clone: false
-  author: https://github.com/kulkansecurity
-  gallery: https://files.catbox.moe/qtnkry.png
+  author: 
+    - https://github.com/kulkansecurity
+  gallery: 
+    - https://files.catbox.moe/qtnkry.png
   example: satori run satori://email/repo.yml -d REPO="satorici/playbooks" --output
 
 install:
-- git clone https://github.com/kulkansecurity/gitxray.git --depth 1 . >>/dev/null
-- python3 -m pip install -r requirements.txt -q --disable-pip-version-check --root-user-action=ignore
+  - git clone https://github.com/kulkansecurity/gitxray.git --depth 1 >>/dev/null
+  - python3 -m pip install -r gitxray/requirements.txt -q --disable-pip-version-check --root-user-action=ignore
 
 gitxray:
+  assertReturnCode: 0
   repo:
-    - cd src; python3 -m gitxray.gitxray -r https://github.com/${{REPO}} -f emails -outformat text -out ../filters.log >>/dev/null
-  output:
-    - cat filters.log
+    - cd gitxray/src; python3 -m gitxray.gitxray -r https://github.com/${{REPO}} -f emails -outformat text --shush
