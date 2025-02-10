@@ -13,8 +13,6 @@ install:
     - go install github.com/OJ/gobuster/v3@latest
   wordlist:
     - mkdir -p wordlists; curl -s https://raw.githubusercontent.com/danielmiessler/SecLists/master/Discovery/DNS/subdomains-top1million-5000.txt -o wordlists/subdomains.txt
-  find:
-    - find / -name gobuster
 
 gobuster-dns:
   assertReturnCode: 0

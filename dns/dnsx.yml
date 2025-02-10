@@ -10,7 +10,6 @@ settings:
 
 install:
   - go install github.com/projectdiscovery/dnsx/cmd/dnsx@latest
-  - find / -name dnsx
 
 dnsx:
   assertReturnCode: 0

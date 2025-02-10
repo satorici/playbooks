@@ -1,21 +1,18 @@
 settings:
   image: golang
-  name: shuffleDNS enumerates valid subdomains using active bruteforce as well as resolve subdomains with wildcard handling
-  author: https://github.com/projectdiscovery
+  name: "shuffleDNS: enumerate valid subdomains using active bruteforce as well as resolve subdomains with wildcard handling"
+  author: 
+    - https://github.com/projectdiscovery
   example: satori run satori://dns/shuffledns.yml -d DOMAIN="satori.ci" --output
 
 install:
-  assertReturnCode: 0
   shuffledns:
     - go install -v github.com/projectdiscovery/shuffledns/cmd/shuffledns@latest
   massdns:
     dependencies:
-      - apt update
-      - apt install git make gcc -qy >> /dev/null
+      - apt update >>/dev/null; apt install git make gcc -qy >> /dev/null
     clone:
-      - git clone --depth 1 https://github.com/projectdiscovery/shuffledns.git
-      - git clone --depth 1 https://github.com/blechschmidt/massdns.git
-      - cd massdns && make
+      - git clone https://github.com/blechschmidt/massdns.git; cd massdns && make
 
 shuffledns:
   assertReturnCode: 0
