@@ -1,13 +1,26 @@
 settings:
-  image: cyberwatch/wapiti
-  name: Web vulnerability scanner written in Python3
+  #image: cyberwatch/wapiti
+  name: "Wapiti: Web vulnerability scanner"
+  description: "Wapiti is a web vulnerability scanner that performs black-box testing to identify security issues like SQL injection, XSS, file inclusion, command execution, and more by crawling and injecting payloads into web applications."
+  image: python
   author:
     - https://github.com/wapiti-scanner
   gallery:
     - https://files.catbox.moe/z8gws6.png
   example: satori run satori://web/wapiti.yml -d URL="https://example.com" --output
 
+install:
+  - apt update && apt install -y python3.11 python3.11-dev python3-pip libffi-dev zlib1g-dev && python3.11 -m pip install --break-system-packages --upgrade pip setuptools wheel cffi && python3.11 -m pip install --break-system-packages wapiti3
+  #dependencies:
+  #  - apt update >>/dev/null; apt install -qqy git
+  #pip:
+  #  - pip install wapiti3
+  #  #- pip install httpx aiocache sqlalchemy browser_cookie3 bs4 tld loguru yaswfp mitmproxy
+  #wapiti:
+  #  - git clone --depth 1 https://github.com/wapiti-scanner/wapiti.git
+
 wapiti:
+  assertReturnCode: 0
   help:
     - wapiti -h
   run:

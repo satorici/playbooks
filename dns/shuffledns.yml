@@ -7,7 +7,7 @@ settings:
 
 install:
   shuffledns:
-    - go install -v github.com/projectdiscovery/shuffledns/cmd/shuffledns@latest
+    - go install github.com/projectdiscovery/shuffledns/cmd/shuffledns@latest
   massdns:
     dependencies:
       - apt update >>/dev/null; apt install git make gcc -qy >> /dev/null
