@@ -15,5 +15,6 @@ install:
   - python3 -m pip install -r gitxray/requirements.txt -q --disable-pip-version-check --root-user-action=ignore
 
 gitxray:
+  assertReturnCode: 0
   contributor:
     - cd gitxray/src; python3 -m gitxray.gitxray -r https://github.com/${{REPO}} -c ${{CONTRIBUTOR}} -f emails -outformat text --shush
