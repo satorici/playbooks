@@ -10,7 +10,7 @@ settings:
 install:
   - apt update >>/dev/null; apt install -qqy nmap
 
-scan:
+nmap-full-scan:
   assertStdoutContains: "Nmap done"
   UDP:
     - nmap --top-ports 100 -sU -A -sC -sV -oN UDP_nmap.txt ${{HOST}}
