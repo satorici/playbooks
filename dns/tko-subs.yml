@@ -18,13 +18,13 @@ install:
     - go install golang.org/x/net/publicsuffix@latest
     - go install golang.org/x/oauth2@latest
     - go install github.com/miekg/dns@latest
-  tko_subs:
+  tko-subs:
     - go install github.com/anshumanbh/tko-subs@latest
   providers:
     - echo "name,cname,string,http" > providers-data.csv
     - echo "github,github.io,There isn't a GitHub Pages site here,false" >> providers-data.csv
 
-run:
+tko-subs:
   assertReturnCode: 0
   help:
     - tko-subs -h
