@@ -8,5 +8,10 @@ settings:
     - https://files.catbox.moe/4ng16r.png
   example: satori run satori://scan/rustscan.yml -d HOST="satori.ci" --output
 
+install:
+  - ! which rustscan &> /dev/null && cargo install rustscan
+
 rustscan:
-  - rustscan -a ${{HOST}}
+  assertReturnCode: 0
+  run:
+    - rustscan -a ${{HOST}}
