@@ -15,5 +15,3 @@ john:
   assertStdoutNotContains: "?"
   run:
     - john hash.txt
-  show:
-    - john --show hash.txt
