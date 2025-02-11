@@ -1,10 +1,11 @@
 settings:
-  name: "Verify that the ServerCertificateValidationCallback is not set to True"
+  name: "ServerCertificateValidationCallback: Verify that is not set to True"
+  image: debian
   author:
-  - https://github.com/satorici
+    - https://github.com/satorici
   example: satori run ./ --playbook="satori://code/vb/ServerCertificateValidationCallback.yml" --output
 
-test:
+ServerCertificateValidationCallback:
   assertStdout: False
-  ServerCertificateValidationCallback:
-  - grep ServerCertificateValidationCallback.*true * -R --include="*.vb"
+  run:
+    - grep ServerCertificateValidationCallback.*true * -R --include="*.vb"

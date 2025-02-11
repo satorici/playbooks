@@ -2,8 +2,11 @@ settings:
   name: "GitHub Workflow Auditor: dynamically identify vulnerabilities in Github Workflows"
   description: "GitHub Workflow Auditor identifies vulnerability in GitHub Workflows. It does so by scanning the workflow files for anti-patterns such as ingesting user inputs in an unsafe manner or using malicious commits in build process. The tool supports scanning individual repositories or all accessibe repositories of a user or organization."
   image: python
+  author:
+    - https://github.com/TinderSec
+  example: satori run satori://code/github/gh-workflow-auditor.yml -d GITHUB_PAT=TBC -d REPO=All-Hands-AI/OpenHands --report --output
   redacted: 
-    - GH_ACCESS_TOKEN
+    - GITHUB_PAT
 
 install:
   - git clone --depth 1 https://github.com/TinderSec/gh-workflow-auditor.git
@@ -12,4 +15,4 @@ install:
 gh-workflow-auditor:
   assertStderrNotContains: WARNING
   run:
-    - export PAT=${{GH_ACCESS_TOKEN}}; cd gh-workflow-auditor; python main.py --type repo ${{REPO}}
+    - export PAT=${{GITHUB_PAT}}; cd gh-workflow-auditor; python main.py --type repo ${{REPO}}

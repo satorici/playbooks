@@ -1,19 +1,24 @@
 settings:
-  image: ubuntu:jammy
   name: "Scoutsuite: Multi-cloud security-auditing tool"
   description: "ScoutSuite is a multi-cloud security auditing tool that identifies and analyze potential misconfigurations and vulnerabilities across various cloud environments, including AWS, Azure, GCP, and more. It uses read-only credentials to collect configuration data, then generates a comprehensive report highlighting key security findings and suggesting remediation steps. Built for simplicity and scalability, ScoutSuite offers an agentless approach that allows security teams to efficiently evaluate their cloud infrastructure without the complexity of additional software or persistent agents. Its web-based interactive reports provide a clear overview of risk areas, enabling faster and more informed decision-making to strengthen overall cloud security posture."
+  image: debian
   files: True
-  example: satori run satori://cloud/scoutsuite.yml -d aws_secret_access_key="TBC" -d aws_access_key_id="TBC" --files --output
+  author:
+    - https://github.com/nccgroup
+  example: satori run satori://cloud/scoutsuite.yml -d AWS_ACCESS_KEY_ID=TBC -d AWS_SECRET_ACCESS_KEY=TBC --files --report --output
+  redacted:
+    - AWS_ACCESS_KEY_ID
+    - AWS_SECRET_ACCESS_KEY
   
 install:
   dependencies:
   - apt update >>/dev/null; apt install -qqy python3 python3-pip jq
   scoutsuite:
-  - pip3 install scoutsuite -q --disable-pip-version-check --root-user-action=ignore
+  - pip3 install scoutsuite -q --disable-pip-version-check --break-system-packages
 
 scout:
   run:
-    - scout aws --access-key-id ${{aws_access_key_id}} --secret-access-key ${{aws_secret_access_key}}
+    - scout aws --access-key-id ${{AWS_ACCESS_KEY_ID}} --secret-access-key ${{AWS_SECRET_ACCESS_KEY}}
   output:
     - "set +f; cat scoutsuite-report/scoutsuite-results/scoutsuite_results_aws-*.js"
   results:

@@ -1,14 +1,15 @@
 settings:
+  name: "Sublist3r: enumerate subdomains using search engines such as Google, Yahoo, Bing, Baidu and Ask"
+  description: "Sublist3r automates subdomain enumeration by querying search engines, certificate transparency logs, and other sources to gather subdomains for a given domain, aiding in security assessments and reconnaissance."
   image: python:2.7.18
-  name: Sublist3r enumerates subdomains using many search engines such as Google, Yahoo, Bing, Baidu and Ask.
-  author: https://github.com/aboul3la
+  author:
+    - https://github.com/aboul3la
   example: satori run satori://dns/sublist3r.yml -d DOMAIN="satori.ci" --output
 
 install:
-  assertReturnCode: 0
-  git:
-    - apt install -qy git
-  clone:
+  dependencies:
+    - apt install -qqy git
+  sublist3r:
     - git clone --depth 1 https://github.com/aboul3la/Sublist3r.git ; pip install -r Sublist3r/requirements.txt -q --disable-pip-version-check --root-user-action=ignore
 
 sublist3r:
@@ -18,5 +19,4 @@ sublist3r:
   run:
     - python Sublist3r/sublist3r.py -o results.txt -v -d ${{DOMAIN}} -t 5 -e bing,yahoo
   read:
-    - ls
-    
+    - cat results.txt

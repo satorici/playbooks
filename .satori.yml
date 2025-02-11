@@ -2,6 +2,9 @@ settings:
   name: Satori CI Playbooks
   image: python
 
+playbooks:
+- pip install satori-ci; satori playbooks --public
+
 tests:
   assertStdout: False
   name:

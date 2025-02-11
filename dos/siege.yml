@@ -8,11 +8,14 @@ settings:
                 The tool has three modes, in which it can operate – regression, internet simulation and brute force.
                 Siege must only be ran against servers you own or on such you have explicit permission to test. "
   mitigation: "Use an anti DDoS service such as CloudFlare to prevent network attacks"
+  image: debian
   count: 10
   timeout: 300
-  example: satori run satori://dos/siege.yml -d URL="satori.ci" --output
+  author:
+    - https://github.com/JoeDog
   gallery: 
     - https://files.catbox.moe/e4fu1g.png
+  example: satori run satori://dos/siege.yml -d URL="satori.ci" --output
 
 install:
   - apt update >>/dev/null; apt install -qqy curl siege

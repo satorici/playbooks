@@ -5,12 +5,15 @@ settings:
                 - Slow HTTP POST
                 - Slow Read attack (based on TCP persist timer exploit) by draining concurrent connections pool
                 - Apache Range Header attack by causing very significant memory and CPU usage on the server."
+  image: debian
   files: true
   timeout: 2000
   count: 10
-  example: satori run satori://dos/slowhttptest.yml -d URL="satori.ci" --output
+  author:
+    - https://github.com/shekyan
   gallery: 
     - https://files.catbox.moe/u8csjx.gif
+  example: satori run satori://dos/slowhttptest.yml -d URL="satori.ci" --output
 
 install:
   - apt update >>/dev/null; apt install -qqy slowhttptest curl

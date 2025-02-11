@@ -1,6 +1,7 @@
 settings:
-  image: ubuntu:jammy
   name: "MassDNS: enumerates DNS records"
+  description: "MassDNS is a DNS resolver that performs bulk domain lookups, supports recursive queries, and conducts brute-force subdomain enumeration using multiple resolvers for query execution."
+  image: debian
   author:
     - https://github.com/blechschmidt
   gallery:
@@ -26,7 +27,7 @@ RECORD:
   - SRV
   - PTR
 
-run:
+massdns:
   assertReturnCode: 0
   help:
     - ./massdns/bin/massdns --help

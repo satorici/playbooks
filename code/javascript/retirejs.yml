@@ -1,11 +1,11 @@
 settings:
-  image: node
   name: "Retire.js: detect JS libraries with known vulnerabilities"
   description: "Scan a web app or node app for use of known vulnerable JavaScript libraries and/or Node.JS modules"
+  image: node
   author: 
-  - https://github.com/RetireJS
+    - https://github.com/RetireJS
   gallery: 
-  - https://files.catbox.moe/86vziv.png
+    - https://files.catbox.moe/86vziv.png
   example: satori run ./ --playbook="satori://code/javascript/retirejs.yml" --output
 
 install:

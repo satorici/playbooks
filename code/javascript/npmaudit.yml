@@ -1,15 +1,18 @@
 settings:
   name: "NPM audit: check for vulnerabilities in dependencies"
   description: "The audit command submits a description of the dependencies configured in your project to your default registry and asks for a report of known vulnerabilities. If any vulnerabilities are found, then the impact and appropriate remediation will be calculated. It may be useful in CI environments to include the --audit-level parameter to specify the minimum vulnerability level that will cause the command to fail. This option does not filter the report output, it simply changes the command's failure threshold."
+  image: public.ecr.aws/h8o5p8e3/satori/base-image:latest
+  author:
+    - https://github.com/npm
   example: satori run ./ --playbook="satori://code/javascript/npmaudit.yml" --output
   
 install:
   npm:
-  - apt install -qqy npm
+    - apt update >>/dev/null; apt install -qqy npm
   package-lock-only:
-  - "if [ ! -e package-lock.json ]; then npm i --package-lock-only; fi; ls -l package-lock.json"
+    - "if [ ! -e package-lock.json ]; then npm i --package-lock-only; fi; ls -l package-lock.json"
 
 npm:
   assertStdoutContains: "0 vulnerabilities"
   audit:
-  - /usr/bin/npm audit
+    - /usr/bin/npm audit

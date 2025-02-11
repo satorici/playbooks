@@ -8,9 +8,9 @@ settings:
   image: python
   cpu: 256
   memory: 512
-  example: satori run satori://code/github/gato-x.yml -d GH_ACCESS_TOKEN=TBC -d REPO=udacity/deep-reinforcement-learning --output
+  example: satori run satori://code/github/gato-x.yml -d GITHUB_PAT=TBC -d REPO=udacity/deep-reinforcement-learning --output
   redacted: 
-    - GH_ACCESS_TOKEN
+    - GITHUB_PAT
 
 install:
   - git clone --depth 1 https://github.com/AdnaneKhan/gato-x
@@ -19,4 +19,4 @@ install:
 gato-x:
   assertStdoutNotContains: HIGH
   run:
-    - export GH_TOKEN=${{GH_ACCESS_TOKEN}}; gato-x e --repository ${{REPO}} 
+    - export GH_TOKEN=${{GITHUB_PAT}}; gato-x e --repository ${{REPO}} 

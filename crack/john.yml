@@ -2,9 +2,11 @@ settings:
   name: "John the Ripper: Crack passwords"
   image: phocean/john_the_ripper_jumbo
   files: true
-  example: satori run satori://crack/john.yml -d PASS='$2b$10$heqvAkYMez.Va6Et2uXInOnkCT6/uQj1brkrbyG3LpopDklcq7ZOS' --cpu 16384 --memory 32768 --output
+  author:
+    - https://github.com/openwall
   gallery: 
     - https://files.catbox.moe/ej8f1n.png
+  example: satori run satori://crack/john.yml -d PASS='$2b$10$heqvAkYMez.Va6Et2uXInOnkCT6/uQj1brkrbyG3LpopDklcq7ZOS' --cpu 16384 --memory 32768 --output
   
 install:
   - echo '${{PASS}}' > password

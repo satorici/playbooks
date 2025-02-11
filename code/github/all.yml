@@ -3,9 +3,14 @@ settings:
   description: "Gato-X, Octoscan, Semgrep and GitHub Workflow Auditor are security tools designed to analyze, audit, and detect vulnerabilities in GitHub Actions workflows. These tools focus on identifying misconfigurations, security flaws, and potential attack vectors that could lead to privilege escalation, unauthorized code execution, or repository takeover. Together, they help security teams and developers ensure the security and integrity of their CI/CD pipelines by preventing unauthorized access and exploitation of GitHub Actions."
   image: golang
   redacted:
-    - GH_ACCESS_TOKEN
+    - GITHUB_PAT
   timeout: 600
-  example: satori run satori://code/github/all.yml -d REPO=satorici/satori-cli -d GH_ACCESS_TOKEN=TBC --report --output
+  author:
+    - https://github.com/AdnaneKhan
+    - https://github.com/TinderSec
+    - https://github.com/synacktiv
+    - https://github.com/semgrep
+  example: satori run satori://code/github/all.yml -d REPO=satorici/satori-cli -d GITHUB_PAT=TBC --report --output
 
 install:
   # dependencies
@@ -38,9 +43,9 @@ dast:
       - LOW
       - UNKNOWN
     run:
-      - export GH_TOKEN=${{GH_ACCESS_TOKEN}}; gato-x e --repository ${{REPO}} 
+      - export GH_TOKEN=${{GITHUB_PAT}}; gato-x e --repository ${{REPO}} 
   gh-workflow-auditor:
     assertStderrNotContains: WARNING
     run:
-      - export PAT=${{GH_ACCESS_TOKEN}}; cd /tmp/gh-workflow-auditor; python3 main.py --type repo ${{REPO}}
+      - export PAT=${{GITHUB_PAT}}; cd /tmp/gh-workflow-auditor; python3 main.py --type repo ${{REPO}}
 

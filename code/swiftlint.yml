@@ -1,6 +1,9 @@
 settings:
-  name: A tool to enforce Swift style and conventions
+  name: "SwiftLint: enforce Swift style and conventions"
+  description: "Enforces Swift style and conventions by analyzing code and flagging violations based on predefined or custom rules, helping maintain consistency and best practices in Swift projects."
   image: norionomura/swiftlint
+  author:
+    - https://github.com/realm
   example: satori run ./ --playbook="satori://code/swiftlint.yml" --output
 
 swiftlint:

@@ -1,5 +1,6 @@
 settings:
   name: "AssetFinder: find domains and subdomains potentially related to a domain"
+  image: debian
   author: 
     - https://github.com/tomnomnom/assetfinder 
   gallery:
@@ -8,9 +9,9 @@ settings:
 
 install:
   dependencies:
-  - apt update >>/dev/null; apt install -qqy wget
+    - apt update >>/dev/null; apt install -qqy wget
   assetfinder:
-  - wget -q https://github.com/tomnomnom/assetfinder/releases/download/v0.1.1/assetfinder-linux-amd64-0.1.1.tgz; tar -zxf assetfinder-linux-amd64-0.1.1.tgz
+    - wget -q https://github.com/tomnomnom/assetfinder/releases/download/v0.1.1/assetfinder-linux-amd64-0.1.1.tgz; tar -zxf assetfinder-linux-amd64-0.1.1.tgz
 
 assetFinder:
   assertReturnCode: 0
