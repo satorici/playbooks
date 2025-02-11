@@ -1,0 +1,20 @@
+settings:
+  name: Gitxray - Github Contributors' Emails
+  description: Gitxray (short for Git X-Ray) is a multifaceted security tool designed for use on GitHub repositories. It serves various use cases, including OSINT, forensics, and security teams, as well as developers looking to secure their repositories, organizations, and related contributors. Gitxray leverages public GitHub REST APIs to gather information that would otherwise be very time-consuming to obtain manually. Additionally, it seeks out information in unconventional places.
+  image: python
+  files: true
+  clone: false
+  author: 
+    - https://github.com/kulkansecurity
+  gallery: 
+    - https://files.catbox.moe/qtnkry.png
+  example: satori run satori://email/repo.yml -d REPO="satorici/playbooks" --output
+
+install:
+  - git clone https://github.com/kulkansecurity/gitxray.git --depth 1 >>/dev/null
+  - python3 -m pip install -r gitxray/requirements.txt -q --disable-pip-version-check --root-user-action=ignore
+
+gitxray:
+  assertReturnCode: 0
+  repo:
+    - cd gitxray/src; python3 -m gitxray.gitxray -r https://github.com/${{REPO}} -f emails -outformat text --shush

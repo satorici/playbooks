@@ -1,0 +1,18 @@
+settings:
+  name: "Github-Email: Gets emails from github accounts"
+  description: "github-email retrieves a GitHub user’s email address, even if it’s not publicly listed, by aggregating information from various sources such as GitHub profiles, NPM, commit activities, and owned repositories."
+  image: debian
+  author:
+    - https://github.com/paulirish
+  example: satori run satori://email/github-email.yml -d USER=satorici -d GITHUB_PAT=TBC --output
+
+install:
+  dependencies:
+    - apt update >>/dev/null; apt install -qqy git curl jq
+  github-email:
+    - git clone --depth 1 https://github.com/paulirish/github-email.git
+
+github-email:
+  assertStdoutNotContains: "@"
+  run:
+    - export GH_EMAIL_TOKEN={{GITHUB_PAT}}; github-email/github-email.sh ${{USER}}
