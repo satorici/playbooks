@@ -14,7 +14,7 @@ install:
 
 testssl:
   run:
-    - testssl -p -s -f -U -S -P --csvfile=log ${{HOST}}
+    - testssl -p -s -f -U -S -P --csvfile=log --ip ${{HOST}}
   log:
     assertStdoutNotRegex: ("LOW"|"MEDIUM"|"HIGH"|"CRITICAL"|"FATAL")
     run:
