@@ -2,7 +2,7 @@ settings:
   name: "Parth: Identify potential web vulnerabilities"
   description: "Some HTTP parameter names are more commonly associated with one functionality than the others. For example, the parameter ?url= usually contains URLs as the value and hence often falls victim to file inclusion, open redirect and SSRF attacks. Parth can go through your burp history, a list of URLs or it's own discovered URLs to find such parameter names and the risks commonly associated with them. Parth is designed to aid web security testing by helping in prioritization of components for testing."
   image: python
-  author: 
+  author:
     - https://github.com/s0md3v
   gallery:
     - https://files.catbox.moe/s6ab46.png

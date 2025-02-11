@@ -2,7 +2,7 @@ settings:
   name: "Katana: Crawl and spider a website"
   description: "Katana is a web crawling and spidering tool that supports headless browsing, JavaScript execution, automatic form filling, and regex-based scope control. It processes input from standard input, URLs, or file lists and outputs to standard output, files, or JSON. Passive crawling from external sources has been moved to a separate tool called URLFinder."
   image: golang
-  author: 
+  author:
     - https://github.com/projectdiscovery
   gallery:
     - https://files.catbox.moe/0wtbt4.gif

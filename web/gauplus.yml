@@ -1,20 +1,20 @@
 settings:
   name: "Gauplus: Get all urls of a domain"
   description: "Fetch known URLs from sources like AlienVault’s Open Threat Exchange, the Wayback Machine, and Common Crawl."
+  image: golang
   author:
     - https://github.com/bp0lr
-  image: golang
-  example: satori run satori://web/gauplus.yml -d DOMAIN="example.com" --output
-  gallery: 
+  gallery:
     - https://files.catbox.moe/yj6avp.png
+  example: satori run satori://web/gauplus.yml -d DOMAIN="example.com" --output
 
 install:
   - go install github.com/bp0lr/gauplus@latest
 
 gauplus:
   help:
-  - gauplus -h
+    - gauplus -h
   test:
     assertStdout: True
     run:
-    - gauplus -providers commoncrawl ${{DOMAIN}} | sort -u
+      - gauplus -providers commoncrawl ${{DOMAIN}} | sort -u

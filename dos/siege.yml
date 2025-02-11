@@ -13,7 +13,7 @@ settings:
   timeout: 300
   author:
     - https://github.com/JoeDog
-  gallery: 
+  gallery:
     - https://files.catbox.moe/e4fu1g.png
   example: satori run satori://dos/siege.yml -d URL="satori.ci" --output
 

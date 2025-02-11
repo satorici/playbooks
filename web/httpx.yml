@@ -2,17 +2,18 @@ settings:
   name: "httpx: performs multiple web probes"
   description: "Identify and analyze web server configurations, verify HTTP responses, and diagnose potential vulnerabilities or misconfigurations"
   image: golang
-  author: 
+  author:
     - https://github.com/projectdiscovery
   gallery:
     - https://files.catbox.moe/83do15.png
   example: satori run satori://web/httpx.yml -d URL="satori.ci" --output
 
+install:
+  - go install github.com/projectdiscovery/httpx/cmd/httpx@latest
+
 httpx:
-  install:
-    - go install github.com/projectdiscovery/httpx/cmd/httpx@latest
   help:
-  - httpx -h
+    - httpx -h
   test:
     assertStdoutContains: "SUCCESS"
     run:

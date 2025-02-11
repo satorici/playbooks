@@ -1,7 +1,7 @@
 settings:
   name: "Nikto: Tests web servers for over 6700 security threats"
   image: ubuntu:jammy
-  author: 
+  author:
     - https://github.com/sullo
   gallery:
     - https://files.catbox.moe/lkx3qy.png
@@ -9,11 +9,11 @@ settings:
 
 install:
   dependencies:
-  - apt update >>/dev/null; apt install -qy wget build-essential cpanminus libssl-dev zlib1g-dev
+    - apt update >>/dev/null; apt install -qy wget build-essential cpanminus libssl-dev zlib1g-dev
   cpan:
-  - cpanm Time::Local ; cpanm Net::hostent ; cpanm Time::HiRes ; cpanm Net::SSLeay ; cpanm IO::Socket::SSL
+    - cpanm Time::Local ; cpanm Net::hostent ; cpanm Time::HiRes ; cpanm Net::SSLeay ; cpanm IO::Socket::SSL
   nikto:
-  - wget -qO nikto.tar.gz https://github.com/sullo/nikto/archive/master.tar.gz; tar xf nikto.tar.gz --strip-components=2 -C ./ nikto-master/program
+    - wget -qO nikto.tar.gz https://github.com/sullo/nikto/archive/master.tar.gz; tar xf nikto.tar.gz --strip-components=2 -C ./ nikto-master/program
 
 nikto:
   assertReturnCode: 0

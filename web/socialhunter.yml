@@ -1,7 +1,7 @@
 settings:
   name: Socialhunter crawls the given URL and finds broken social media links that can be hijacked
   image: golang
-  author: 
+  author:
     - https://github.com/utkusen
   gallery:
     - https://files.catbox.moe/1knj4c.png

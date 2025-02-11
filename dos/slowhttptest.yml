@@ -11,7 +11,7 @@ settings:
   count: 10
   author:
     - https://github.com/shekyan
-  gallery: 
+  gallery:
     - https://files.catbox.moe/u8csjx.gif
   example: satori run satori://dos/slowhttptest.yml -d URL="satori.ci" --output
 
@@ -27,13 +27,13 @@ slowhttptest:
   run:
     - slowhttptest -c 1000 -g -o slowloris_get -i 110 -r 200 -s 8192 -t GET -x 10 -p 3 -u ${{URL}}
     - slowhttptest -c 1000 -g -o slowloris_get_h -i 110 -r 200 -s 8192 -t GET -x 10 -p 3 -u ${{URL}} -H
-    - slowhttptest -c 1000 -g -o slowloris_get_x -i 110 -r 200 -s 8192 -t GET -x 10 -p 3 -u ${{URL}} -X 
-    - slowhttptest -c 1000 -g -o slowloris_get_b -i 110 -r 200 -s 8192 -t GET -x 10 -p 3 -u ${{URL}} -B 
-    - slowhttptest -c 1000 -g -o slowloris_get_r -i 110 -r 200 -s 8192 -t GET -x 10 -p 3 -u ${{URL}} -R 
-    - slowhttptest -c 1000 -g -o slowloris_post_h -i 110 -r 200 -s 8192 -t POST -x 10 -p 3 -u ${{URL}} -H 
-    - slowhttptest -c 1000 -g -o slowloris_post_x -i 110 -r 200 -s 8192 -t POST -x 10 -p 3 -u ${{URL}} -X 
-    - slowhttptest -c 1000 -g -o slowloris_post_b -i 110 -r 200 -s 8192 -t POST -x 10 -p 3 -u ${{URL}} -B 
-    - slowhttptest -c 1000 -g -o slowloris_post_r -i 110 -r 200 -s 8192 -t POST -x 10 -p 3 -u ${{URL}} -R 
+    - slowhttptest -c 1000 -g -o slowloris_get_x -i 110 -r 200 -s 8192 -t GET -x 10 -p 3 -u ${{URL}} -X
+    - slowhttptest -c 1000 -g -o slowloris_get_b -i 110 -r 200 -s 8192 -t GET -x 10 -p 3 -u ${{URL}} -B
+    - slowhttptest -c 1000 -g -o slowloris_get_r -i 110 -r 200 -s 8192 -t GET -x 10 -p 3 -u ${{URL}} -R
+    - slowhttptest -c 1000 -g -o slowloris_post_h -i 110 -r 200 -s 8192 -t POST -x 10 -p 3 -u ${{URL}} -H
+    - slowhttptest -c 1000 -g -o slowloris_post_x -i 110 -r 200 -s 8192 -t POST -x 10 -p 3 -u ${{URL}} -X
+    - slowhttptest -c 1000 -g -o slowloris_post_b -i 110 -r 200 -s 8192 -t POST -x 10 -p 3 -u ${{URL}} -B
+    - slowhttptest -c 1000 -g -o slowloris_post_r -i 110 -r 200 -s 8192 -t POST -x 10 -p 3 -u ${{URL}} -R
 
 after_slowhttptest:
   assertReturnCode: 0

@@ -7,16 +7,13 @@ settings:
     - https://github.com/utkusen
   example: satori run satori://web/urlhunter.yml -d URL="satori.ci" --output
 
+install:
+  - go install github.com/utkusen/urlhunter@latest
+  - echo "${{URL}}" > keywords.txt
+
 urlhunter:
   assertReturnCode: 0
-  install:
-    - go install github.com/utkusen/urlhunter@latest
-  prepare:
-    - echo "${{URL}}" > keywords.txt
   help:
     - /go/bin/urlhunter -h
   run:
-    - /go/bin/urlhunter --keywords keywords.txt --date latest -o /go/bin/urlhunter/out.txt
-  cat:
-    - cat out.txt
-
+    - /go/bin/urlhunter --keywords keywords.txt --date latest -o /go/bin/urlhunter/out.txt; cat out.txt

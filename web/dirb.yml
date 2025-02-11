@@ -2,7 +2,7 @@ settings:
   name: "Dirb: web directory brute forcer"
   description: "DIRB is a command-line web content scanner that performs dictionary-based attacks to discover hidden directories and files on web servers. It works by systematically requesting URLs from a provided wordlist and analyzing the server’s HTTP responses to identify existing or hidden web objects. DIRB comes with preconfigured wordlists but also allows the use of custom lists."
   image: ubuntu:jammy
-  author: 
+  author:
     - https://github.com/v0re
   gallery:
     - https://files.catbox.moe/siqrj1.png
@@ -14,4 +14,4 @@ install:
 dirb:
   assertStdoutContains: "DOWNLOADED: 4456"
   common:
-  - dirb ${{URL}} /usr/share/dirb/wordlists/common.txt -S -r -i
+    - dirb ${{URL}} /usr/share/dirb/wordlists/common.txt -S -r -i

@@ -4,6 +4,8 @@ settings:
   cpu: 16384
   memory: 122880
   timeout: 300
+  author:
+    - https://github.com/ollama
   example: satori run satori://llm/ollama/llama3_mistral.yml -d INPUT="Hello World" --output
 
 MODEL:

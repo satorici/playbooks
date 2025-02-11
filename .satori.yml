@@ -3,7 +3,7 @@ settings:
   image: python
 
 playbooks:
-- pip install satori-ci; satori playbooks --public
+  - pip install satori-ci >>/dev/null 2>>/dev/null; satori playbooks --public
 
 tests:
   assertStdout: False

@@ -7,14 +7,14 @@ settings:
   gallery:
     - https://files.catbox.moe/q58rym.png
   example: satori run satori://scan/naabu.yml -d HOST="satori.ci" --output
-                                                                                                                 
+
 install:
   - apt update >>/dev/null; apt install -qqy libpcap-dev
-  - go install github.com/projectdiscovery/naabu/v2/cmd/naabu@latest                                             
+  - go install github.com/projectdiscovery/naabu/v2/cmd/naabu@latest
 
 naabu:
-  assertReturnCode: 0  
-  help:                                                                                                            
+  assertReturnCode: 0
+  help:
     - naabu --help
-  run:                                                                                                           
+  run:
     - naabu -host ${{HOST}}

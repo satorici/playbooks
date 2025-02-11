@@ -11,7 +11,7 @@ settings:
 install:
   dependencies:
     - apt update >>/dev/null; apt install -qqy jq git lua5.4 liblua5.4-dev libluajit-5.1-dev pkg-config
-  cargo:  
+  cargo:
     - cargo install --git=https://github.com/BugBlocker/lotus/
   clone:
     - git clone --depth 1 https://github.com/rusty-sec/lotus-scripts
@@ -22,4 +22,3 @@ lotus:
     - echo ${{URL}} | lotus scan lotus-scripts/active -o out.json -v
   read:
     - cat out.json | jq
-

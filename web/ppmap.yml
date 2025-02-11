@@ -1,5 +1,6 @@
 settings:
-  name: "Ppmap - scanner/exploitation tool that exploits known and existing gadgets (checks for specific variables in the global context) to perform XSS via Prototype Pollution"
+  name: "Ppmap: perform XSS via Prototype Pollution"
+  description: "ppmap is a tool that scans for client-side Prototype Pollution vulnerabilities and exploits them to achieve cross-site scripting (XSS) by leveraging known gadgets. It identifies if a website is vulnerable to Prototype Pollution by performing heuristic scans and checks for specific variables in the global context. Upon finding a vulnerability, it fingerprints known gadgets to determine the appropriate exploitation method and displays the final XSS payload that can be used."
   image: golang
   author: 
     - https://github.com/kleiton0x00
@@ -14,7 +15,7 @@ install:
 
 ppmap:
   assertStdoutNotContains: 
-  - "VULN"
-  - "EXPL"
+    - "VULN"
+    - "EXPL"
   run:
-  - echo '${{URL}}' | ppmap
+    - echo '${{URL}}' | ppmap

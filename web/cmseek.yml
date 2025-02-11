@@ -1,25 +1,23 @@
 settings:
-  image: python
   name: "CMSeek: CMS Detection and Exploitation suite"
   description: "Scan WordPress, Joomla, Drupal and over 180 other CMSs"
+  image: python
   author: 
-  - https://github.com/Tuhinshubhra
+    - https://github.com/Tuhinshubhra
   gallery:
-  - https://files.catbox.moe/gthwl0.gif
+    - https://files.catbox.moe/gthwl0.gif
   example: satori run satori://web/cmseek.yml -d URL="https://satori.ci" --output
 
 install:
-  update:
-  - apt update
-  git:
-  - apt install -qy git
+  dependencies:
+    - apt update >>/dev/null; apt install -qqy git
   cmseek:
-  - git clone https://github.com/Tuhinshubhra/CMSeeK.git --depth 1; pip3 install -r CMSeeK/requirements.txt -q --disable-pip-version-check --root-user-action=ignore
+    - git clone https://github.com/Tuhinshubhra/CMSeeK.git --depth 1; pip3 install -r CMSeeK/requirements.txt -q --disable-pip-version-check --root-user-action=ignore
 
 cmseek:
   help:
-  - python3 CMSeeK/cmseek.py --help
+    - python3 CMSeeK/cmseek.py --help
   test:
     assertStdoutContains: "CMS Detection failed"
     run:
-    - python3 CMSeeK/cmseek.py --batch -u ${{URL}}
+      - python3 CMSeeK/cmseek.py --batch -u ${{URL}}

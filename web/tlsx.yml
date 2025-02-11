@@ -17,4 +17,3 @@ tlsx:
     - tlsx -h
   run:
     - tlsx -u ${{HOST}}
-  
