@@ -6,10 +6,14 @@ settings:
   gallery:
   - https://files.catbox.moe/6km2wy.png
   example: satori run satori://dns/subfinder.yml  -d DOMAIN="satori.ci" --output
-subfinder:
-  install:
+
+install:
   - go install github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest
-  help:
+
+help:
   - subfinder --help
+
+subfinder:
+  assertReturnCode: 0
   run:
   - subfinder -d ${{DOMAIN}}

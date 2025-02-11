@@ -8,11 +8,12 @@ settings:
   example: satori run satori://dns/hakrevdns.yml -d IP="54.210.33.205" -d IP="3.93.207.195" --output
 
 install:
-  hakrevdns:
-    - go install github.com/hakluke/hakrevdns@latest
+  - go install github.com/hakluke/hakrevdns@latest
+
+help:
+  - hakrevdns -h
 
 hakrevdns:
-  help:
-    - hakrevdns -h
+  assertReturnCode: 0
   run:
     - echo "${{IP}}" | hakrevdns -r 1.1.1.1

@@ -1,28 +1,24 @@
 settings:
-    name: "Semgrep: static source code analysis"
-    image: python
-    author:
+  name: "Semgrep: static source code analysis"
+  description: "Semgrep is a code analysis tool that searches for patterns in source code to detect vulnerabilities, enforce best practices, and identify code structure issues. It supports multiple programming languages and allows users to define custom rules for static analysis."
+  image: python
+  author:
     - https://github.com/semgrep
-    gallery:
+  gallery:
     - https://files.catbox.moe/dj0xyt.png
-    example: satori run ./ --playbook="satori://code/semgrep.yml" --output
+  example: satori run ./ --playbook="satori://code/semgrep.yml" --output
 
 install:
-  assertReturnCode: 0
-  semgrep:
   - pip install semgrep -q --disable-pip-version-check
 
-error:
+help:
+  - semgrep --help
+
+semgrep:
   assertStdout: False
-  semgrep:
-  - semgrep --config auto --severity ERROR -q
-    
-warning:
-  assertStdout: False
-  semgrep:
-  - semgrep --config auto --severity WARNING -q
-    
-info:
-  assertStdout: False
-  semgrep:
-  - semgrep --config auto --severity INFO -q
+  error:
+    - semgrep --config auto --severity ERROR -q
+  warning:
+    - semgrep --config auto --severity WARNING -q
+  info:
+    - semgrep --config auto --severity INFO -q

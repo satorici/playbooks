@@ -13,14 +13,14 @@ MODEL:
   - "mistral"
 
 install:
-  dependencies:
   - apt update >> /dev/null
   - apt install -qy screen jq curl >> /dev/null
 
 ollama:
+  assertReturnCode: 0
   serve:
-  - screen -dm ollama serve; sleep 1
+    - screen -dm ollama serve; sleep 1
   pull:
-  - ollama pull ${{MODEL}}
+    - ollama pull ${{MODEL}}
   generate:
-  - "curl -s http://localhost:11434/api/generate -d '{\"model\": \"${{MODEL}}\",\"prompt\":\"${{INPUT}}\"}' | grep \"model.*response\" | jq -r 'select(.done==false) | .response' | tr -d '\\n'"
+    - "curl -s http://localhost:11434/api/generate -d '{\"model\": \"${{MODEL}}\",\"prompt\":\"${{INPUT}}\"}' | grep \"model.*response\" | jq -r 'select(.done==false) | .response' | tr -d '\\n'"

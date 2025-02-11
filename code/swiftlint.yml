@@ -6,9 +6,11 @@ settings:
     - https://github.com/realm
   example: satori run ./ --playbook="satori://code/swiftlint.yml" --output
 
-swiftlint:
-  help:
+help:
   - swiftlint -h
+
+swiftlint:
+  assertReturnCode: 0
   analyze:
   - swiftlint analyze
   lint:

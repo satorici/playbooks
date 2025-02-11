@@ -23,6 +23,7 @@ prompt:
   - echo "${{INPUT}}" > /tmp/prompt.txt
 
 ollama:
+  assertReturnCode: 0
   serve:
     - screen -dm ollama serve; sleep 1
   pull:

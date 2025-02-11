@@ -23,6 +23,8 @@ tests:
     - find . -name "*.yml" ! -path "./.*" -exec grep -H "gallery:" -A1 {} \; | grep "\-"|grep -v "gallery\|https"
   image:
     - find . -name "*.yml" ! -path "./.*" -exec grep -L "image:" {} \;
+  assert:
+    - find . -name "*.yml" ! -path "./.*" -exec grep -L "assert" {} \;
 
 import:
   - satori://code/yamllint.yml

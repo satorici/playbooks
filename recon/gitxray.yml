@@ -14,6 +14,7 @@ install:
   - python3 -m pip install -r requirements.txt >>/dev/null
 
 gitxray:
+  assertReturnCode: 0
   repo:
     - cd src; python3 -m gitxray.gitxray -r https://github.com/${{REPO}} -outformat text -out ../output.log >>/dev/null
   output:

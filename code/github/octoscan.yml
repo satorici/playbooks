@@ -11,4 +11,6 @@ settings:
   memory: 512
 
 octoscan:
-  - find ./ -name "*.yml" | grep "github/workflows" | xargs -IX octoscan scan X
+  assertStdout: False
+  run:
+    - find ./ -name "*.yml" | grep "github/workflows" | xargs -IX octoscan scan X
