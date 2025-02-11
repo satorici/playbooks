@@ -5,8 +5,8 @@ settings:
   author:
     - https://github.com/satorici
   gallery:
-    - https://files.catbox.moe/ouicn2.png
-    - https://files.catbox.moe/83gexg.png
+    - https://files.catbox.moe/mi53i2.png
+    - https://files.catbox.moe/ueuh1a.png
   example: satori run satori://test.yml -d INPUT="Hello World" --report --output
 
 test:
