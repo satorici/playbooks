@@ -1,17 +1,19 @@
 settings:
   name: "John the Ripper: Crack passwords"
-  image: phocean/john_the_ripper_jumbo
+  image: debian
   files: true
   author:
     - https://github.com/openwall
-  gallery: 
-    - https://files.catbox.moe/ej8f1n.png
-  example: satori run satori://crack/john.yml -d PASS='$2b$10$heqvAkYMez.Va6Et2uXInOnkCT6/uQj1brkrbyG3LpopDklcq7ZOS' --cpu 16384 --memory 32768 --output
-  
+  example: satori run satori://crack/john.yml -d PASS='$2b$10$heqvAkYMez.Va6Et2uXInOnkCT6/uQj1brkrbyG3LpopDklcq7ZOS' --cpu 16384 --memory 32768 --report --output
+
 install:
-  - echo '${{PASS}}' > password
+  - apt-get update >>/dev/null; apt-get install -qy john wget >>/dev/null
+  - echo '${{PASS}}' > hash.txt
+  - wget -qO 10k-most-common.txt https://raw.githubusercontent.com/danielmiessler/SecLists/master/Passwords/Common-Credentials/10k-most-common.txt
 
 john:
-  assertStdoutNotContains: (?)
+  assertStdoutNotContains: "?"
   run:
-    - /jtr/run/john password --pot=john.pot
+    - john hash.txt
+  show:
+    - john --show hash.txt
