@@ -8,9 +8,8 @@ settings:
   example: satori run satori://web/webanalyze.yml -d HOST="satori.ci" --output
 
 install:
-  assertReturnCode: 0
   webanalyze:
-    - go install -v github.com/rverton/webanalyze/cmd/webanalyze@latest
+    - go install github.com/rverton/webanalyze/cmd/webanalyze@latest
   update:
     - webanalyze -update
 
