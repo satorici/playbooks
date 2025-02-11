@@ -8,22 +8,19 @@ settings:
 
 install:
   - apt install -qqy pkg-config libssl-dev
-  
+  - cargo install cargo-geiger cargo-audit >> /dev/null
+   
 cargo-audit:
   assertStdoutNotContains:
   - Severity
   - advisories
   setSeverity: 4
-  install:
-  - cargo install cargo-audit >> /dev/null
   run:
   - cargo audit | tee audit.txt
 
 cargo-geiger:
   assertStdoutNotContains: "!  │"
   setSeverity: 4
-  install:
-  - cargo install cargo-geiger >> /dev/null
   run:
   - cargo geiger | tee geiger.txt
 

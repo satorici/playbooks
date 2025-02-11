@@ -7,11 +7,11 @@ settings:
   gallery:
     - https://files.catbox.moe/ouicn2.png
     - https://files.catbox.moe/83gexg.png
-  example: satori run satori://test.yml -d WHAT="Hello World" --report --output
+  example: satori run satori://test.yml -d INPUT="Hello World" --report --output
 
 test:
   assertStdoutContains: Hello World
   hello:
     - echo Hello World
   whatever:
-    - echo ${{WHAT}}
+    - echo ${{INPUT}}
