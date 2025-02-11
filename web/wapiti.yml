@@ -9,7 +9,9 @@ settings:
   example: satori run satori://web/wapiti.yml -d URL="https://example.com" --output
 
 install:
-  - apt update && apt install -y python3.11 python3.11-dev python3-pip libffi-dev zlib1g-dev && python3.11 -m pip install --break-system-packages --upgrade pip setuptools wheel cffi && python3.11 -m pip install --break-system-packages wapiti3
+  - apt update >>/dev/null; apt install -qqy python3.11 python3.11-dev python3-pip libffi-dev zlib1g-dev
+  - python3.11 -m pip install --break-system-packages setuptools wheel cffi
+  - python3.11 -m pip install --break-system-packages wapiti3
 
 wapiti:
   assertReturnCode: 0
