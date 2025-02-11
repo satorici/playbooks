@@ -1,9 +1,12 @@
 settings:
   name: "John the Ripper: Crack passwords"
+  description: "John the Ripper is a password cracking tool that tests password strength and recovers lost credentials by performing dictionary attacks, brute-force attacks, and cryptanalysis on various password hash types."
   image: debian
   files: true
   author:
     - https://github.com/openwall
+  gallery:
+    - https://files.catbox.moe/nkmd7e.png
   example: satori run satori://crack/john.yml -d PASS='$2b$10$heqvAkYMez.Va6Et2uXInOnkCT6/uQj1brkrbyG3LpopDklcq7ZOS' --cpu 16384 --memory 32768 --report --output
 
 install:
