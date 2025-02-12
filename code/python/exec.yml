@@ -12,13 +12,13 @@ KEYWORD:
 - - "pexpect.run"
   - "eval("
   - "exec("
-  - "os\.system"
-  - "os\.popen"
+  - "os.system"
+  - "os.popen"
   - "execfile"
-  - "subprocess\.Popen"
-  - "subprocess\.call"
+  - "subprocess.Popen"
+  - "subprocess.call"
 
 python_exec:
   assertStdout: False
   find:
-    - grep "{{KEYWORD}}" * -r --include="*.py"
+    - grep '{{KEYWORD}}' * -r --include="*.py"
