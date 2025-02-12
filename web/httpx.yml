@@ -9,7 +9,7 @@ settings:
   example: satori run satori://web/httpx.yml -d URL="satori.ci" --output
 
 install:
-  - go install github.com/projectdiscovery/httpx/cmd/httpx@latest
+  - go install github.com/projectdiscovery/httpx/cmd/httpx@latest 2>>/dev/null
 
 httpx:
   help:

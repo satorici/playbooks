@@ -12,7 +12,7 @@ install:
   dependencies:
     - apt install -qy wget git gcc
   katana:
-    - go install github.com/projectdiscovery/katana/cmd/katana@latest
+    - go install github.com/projectdiscovery/katana/cmd/katana@latest 2>>/dev/null
 
 katana:
   help:

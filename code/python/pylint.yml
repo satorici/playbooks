@@ -9,7 +9,10 @@ settings:
   example: satori run ./ --playbook="satori://code/python/pylint.yml" --output
   
 install:
-  - apt update >>/dev/null; apt install -qqy pylint
+  - apt update >>/dev/null; apt install -qy pylint >>/dev/null
+
+help:
+  - pylint --help
   
 pylint:
   assertReturncCode: 0

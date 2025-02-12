@@ -15,5 +15,5 @@ install:
 
 semgrep:
   assertStdout: False
-  github:
+  github_action:
   - semgrep --config 'p/github-actions' -q --max-chars-per-line 1024

@@ -14,7 +14,7 @@ MODEL:
 - - "artifish/llama3.2-uncensored"
 
 install:
-  - apt update >> /dev/null; apt install -qqy screen jq curl git >> /dev/null
+  - apt update >> /dev/null; apt install -qy screen jq curl git >> /dev/null
 
 prompt:
   - git clone --depth 1 https://github.com/${{REPO}}.git .

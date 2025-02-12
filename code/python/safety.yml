@@ -9,6 +9,9 @@ settings:
 install:
   - pip3 install safety -q --disable-pip-version-check
 
+help:
+  - safety --help
+
 safety:
     assertStdout: False
     run:

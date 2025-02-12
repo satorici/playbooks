@@ -14,6 +14,6 @@ install:
 urlhunter:
   assertReturnCode: 0
   help:
-    - /go/bin/urlhunter -h
+    - urlhunter -h
   run:
-    - /go/bin/urlhunter --keywords keywords.txt --date latest -o /go/bin/urlhunter/out.txt; cat out.txt
+    - urlhunter --keywords keywords.txt --date latest -o /go/bin/urlhunter/out.txt; cat out.txt

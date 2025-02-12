@@ -1,7 +1,7 @@
 settings:
   name: "Wapiti: Web vulnerability scanner"
   description: "Wapiti is a web vulnerability scanner that performs black-box testing to identify security issues like SQL injection, XSS, file inclusion, command execution, and more by crawling and injecting payloads into web applications."
-  image: python
+  image: debian
   author:
     - https://github.com/wapiti-scanner
   gallery:
@@ -9,13 +9,15 @@ settings:
   example: satori run satori://web/wapiti.yml -d URL="https://example.com" --output
 
 install:
-  - apt update >>/dev/null; apt install -qqy python3.11 python3.11-dev python3-pip libffi-dev zlib1g-dev
-  - python3.11 -m pip install --break-system-packages setuptools wheel cffi
-  - python3.11 -m pip install --break-system-packages wapiti3
+  - apt install -qy software-properties-common >>/dev/null 2>>/dev/null
+  - add-apt-repository ppa:deadsnakes/ppa -y >>/dev/null 2>>/dev/null
+  - apt update >>/dev/null
+  - apt install -qy python3.11 python3.11-dev python3-pip libffi-dev zlib1g-dev wapiti >>/dev/null 2>>/dev/null
 
 wapiti:
-  assertReturnCode: 0
   help:
     - wapiti -h
-  run:
-    - wapiti -u ${{URL}}
+  test:
+    assertReturnCode: 0
+    run:
+      - wapiti -u ${{URL}}

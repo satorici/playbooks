@@ -9,7 +9,7 @@ settings:
 
 install:
   dependencies:
-    - apt install -qqy git
+    - apt install -qy git >>/dev/null
   theharvest:
     - git clone --depth 1 https://github.com/laramies/theHarvester ; pip3 install -r theHarvester/requirements/base.txt -q --disable-pip-version-check --root-user-action=ignore
 

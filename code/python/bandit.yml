@@ -12,6 +12,9 @@ install:
   - pip install bandit -q --disable-pip-version-check
 
 bandit:
+  - bandit --help
+
+bandit:
   assertStdoutContains: "No issues identified"
   run:
     - bandit -r ./

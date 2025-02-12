@@ -10,6 +10,9 @@ settings:
   cpu: 256
   memory: 512
 
+help:
+  - octoscan --help
+
 octoscan:
   assertStdout: False
   run:

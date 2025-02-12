@@ -10,9 +10,9 @@ settings:
 
 install:
   dependencies:
-    - apt update >>/dev/null; apt install -qqy jq git lua5.4 liblua5.4-dev libluajit-5.1-dev pkg-config
+    - apt update >>/dev/null; apt install -qy jq git lua5.4 liblua5.4-dev libluajit-5.1-dev pkg-config >>/dev/null
   cargo:
-    - cargo install --git=https://github.com/BugBlocker/lotus/
+    - cargo install --git=https://github.com/BugBlocker/lotus/ 2>>/dev/null
   clone:
     - git clone --depth 1 https://github.com/rusty-sec/lotus-scripts
 

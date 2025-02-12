@@ -9,7 +9,7 @@ settings:
   example: satori run satori://scan/nmap-full-scan.yml -d HOST="satori.ci" --output
 
 install:
-  - apt update >>/dev/null; apt install -qqy nmap
+  - apt update >>/dev/null; apt install -qy nmap >>/dev/null
 
 nmap-full-scan:
   assertStdoutContains: "Nmap done"

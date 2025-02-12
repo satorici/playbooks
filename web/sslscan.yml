@@ -9,11 +9,12 @@ settings:
   example: satori run satori://web/sslscan.yml -d HOST="satori.ci:443" --output
 
 install:
-  - apt update >>/dev/null; apt install -qqy sslscan
+  - apt update >>/dev/null; apt install -qy sslscan >>/dev/null
+
+help:
+  - sslscan --help
 
 sslscan:
-  help:
-    - sslscan --help
   test:
     assertStdoutNotContains:
       - "TLSv1.0   enabled"
@@ -22,5 +23,3 @@ sslscan:
       - "supported=\"1\" secure=\"0\""
     run:
       - sslscan --no-colour --no-cipher-details --xml="${{HOST}}-sslscan.xml" ${{HOST}}
-    xml:
-      - cat ${{HOST}}-sslscan.xml

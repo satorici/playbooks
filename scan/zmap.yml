@@ -9,7 +9,7 @@ settings:
   example: satori run satori://scan/zmap.yml -d PORT="1234" -d HOST="host" --output
 
 install:
-  - apt update >>/dev/null; apt install -qqy zmap net-tools
+  - apt update >>/dev/null; apt install -qy zmap net-tools >>/dev/null
 
 route:
   - route
@@ -17,9 +17,10 @@ route:
 ifconfig:
   - ifconfig
 
+help:
+  - zmap -h
+
 zmap:
   assertStdout: True
-  help:
-    - zmap -h
   run:
     - zmap -i eth1 -p ${{PORT}} ${{HOST}}

@@ -10,7 +10,7 @@ settings:
   
 install:
   dependencies: 
-    - apt update >>/dev/null; apt install -qqy git
+    - apt update >>/dev/null; apt install -qy git >>/dev/null
   dnscan:
     - git clone --depth 1 https://github.com/rbsec/dnscan.git; pip install -r dnscan/requirements.txt -q --disable-pip-version-check
 

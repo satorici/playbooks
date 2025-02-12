@@ -11,7 +11,7 @@ settings:
 install:
   assertReturnCode: 0
   goaltdns:
-    - go install github.com/subfinder/goaltdns@latest
+    - go install github.com/subfinder/goaltdns@latest 2>>/dev/null
   wordlist:
     - mkdir -p /go/src/github.com/subfinder/goaltdns
     - wget -q https://raw.githubusercontent.com/subfinder/goaltdns/master/words.txt -O /go/src/github.com/subfinder/goaltdns/words.txt

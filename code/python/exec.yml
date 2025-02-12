@@ -7,8 +7,18 @@ settings:
   gallery:
     - https://files.catbox.moe/p19cst.png
   example: satori run ./ --playbook="satori://code/python/exec.yml" --output
-  
-exec:
+
+KEYWORD:
+- - "pexpect.run"
+  - "eval("
+  - "exec("
+  - "os\.system"
+  - "os\.popen"
+  - "execfile"
+  - "subprocess\.Popen"
+  - "subprocess\.call"
+
+python_exec:
   assertStdout: False
-  run:
-    - grep "pexpect.run\|eval(\|exec(\|os\.system\|os\.popen\|execfile\|subprocess\.Popen\|subprocess\.call" * -r --include="*.py"
+  find:
+    - grep "{{KEYWORD}}" * -r --include="*.py"

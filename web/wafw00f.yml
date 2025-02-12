@@ -8,11 +8,8 @@ settings:
   example: satori run satori://web/wafw00f.yml -d URL="satori.ci" --output
 
 install:
-  assertReturnCode: 0
-  update:
-    - apt update
   dependencies:
-    - apt install -y python3-pip git
+    - apt update >>/dev/null; apt install -qy python3-pip git >>/dev/null
   pipx:
     - pip install pipx -q --disable-pip-version-check --root-user-action=ignore
     - pipx ensurepath

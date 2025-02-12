@@ -8,7 +8,7 @@ settings:
 
 install:
   dependencies:
-    - apt update >>/dev/null; apt install -qqy git curl jq
+    - apt update >>/dev/null; apt install -qy git curl jq >>/dev/null
   github-email:
     - git clone --depth 1 https://github.com/paulirish/github-email.git
 

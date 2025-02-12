@@ -9,7 +9,7 @@ settings:
 
 install:
   dependencies:
-    - apt update >>/dev/null; apt install -qqy xvfb
+    - apt update >>/dev/null; apt install -qy xvfb >>/dev/null
   webscreenshot:
     - pip install webscreenshot -q --disable-pip-version-check --root-user-action=ignore
 

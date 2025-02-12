@@ -10,7 +10,7 @@ settings:
 
 install:
   dependencies:
-    - apt update >>/dev/null; apt install -qqy git
+    - apt update >>/dev/null; apt install -qy git
   cmseek:
     - git clone https://github.com/Tuhinshubhra/CMSeeK.git --depth 1; pip3 install -r CMSeeK/requirements.txt -q --disable-pip-version-check --root-user-action=ignore
 

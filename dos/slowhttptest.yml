@@ -16,10 +16,10 @@ settings:
   example: satori run satori://dos/slowhttptest.yml -d URL="satori.ci" --output
 
 install:
-  - apt update >>/dev/null; apt install -qqy slowhttptest curl >>/dev/null
+  - apt update >>/dev/null; apt install -qy slowhttptest curl >>/dev/null
 
 help:
-  - slowhttptest --help
+  - slowhttptest -h
 
 before_slowhttptest:
   assertReturnCode: 0

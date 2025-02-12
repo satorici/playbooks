@@ -11,6 +11,9 @@ settings:
 install:
   - curl -sfL https://raw.githubusercontent.com/Bearer/bearer/main/contrib/install.sh | sh
 
+help:
+  - ./bin/bearer --help
+
 bearer:
   assertStdoutNotContains: "no failures were detected"
   scan:

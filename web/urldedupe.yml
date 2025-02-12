@@ -8,7 +8,7 @@ settings:
   example: satori run satori://web/urldedupe.yml -d URL="https://google.com/home?qs=value\nhttps://google.com/home?qs=secondValue" --output
 
 install:
-  - apt update >>/dev/null; apt install -qqy git build-essential make cmake
+  - apt update >>/dev/null; apt install -qy git build-essential make cmake >>/dev/null
   - git clone --depth 1 https://github.com/ameenmaali/urldedupe.git
   - cd urldedupe ; cmake CMakeLists.txt ; make
 

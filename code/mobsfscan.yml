@@ -11,9 +11,12 @@ settings:
   
 install:
   dependencies:
-  - apt update >>/dev/null; apt install -qqy jq
+  - apt update >>/dev/null; apt install -qy jq >>/dev/null
   mobsfscan:
   - pip3 install mobsfscan -q --disable-pip-version-check
+
+mobsfscan:
+  - mobsfscan --help
 
 mobsfscan:
   assertStdout: False

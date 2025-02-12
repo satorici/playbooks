@@ -10,6 +10,9 @@ settings:
 install:
 - pip3 install ruff -q --disable-pip-version-check
 
+help:
+  - ruff --help
+
 ruff:
   assertStdout: False
   assertStderr: False

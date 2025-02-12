@@ -9,7 +9,10 @@ settings:
   example: satori run satori://web/testssl.yml -d HOST="satori.ci" --output
 
 install:
-  - apt update >>/dev/null; apt install -qqy testssl.sh
+  - apt update >>/dev/null; apt install -qy testssl.sh >>/dev/null
+
+help:
+  - testssl --help
 
 testssl:
   run:

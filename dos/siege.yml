@@ -18,7 +18,7 @@ settings:
   example: satori run satori://dos/siege.yml -d URL="satori.ci" --output
 
 install:
-  - apt update >>/dev/null; apt install -qqy curl siege >>/dev/null
+  - apt update >>/dev/null; apt install -qy curl siege >>/dev/null
 
 help:
   - siege --help

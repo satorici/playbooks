@@ -9,7 +9,7 @@ settings:
   example: satori run satori://web/dirb.yml -d URL="http://example.com" --output
 
 install:
-  - apt update >>/dev/null; apt install -qqy dirb
+  - apt update >>/dev/null; apt install -qy dirb >>/dev/null
 
 dirb:
   assertStdoutContains: "DOWNLOADED: 4456"

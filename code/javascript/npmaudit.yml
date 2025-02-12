@@ -8,7 +8,7 @@ settings:
   
 install:
   npm:
-    - apt update >>/dev/null; apt install -qqy npm
+    - apt update >>/dev/null; apt install -qy npm >>/dev/null
   package-lock-only:
     - "if [ ! -e package-lock.json ]; then npm i --package-lock-only; fi; ls -l package-lock.json"
 

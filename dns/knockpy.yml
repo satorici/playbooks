@@ -15,4 +15,4 @@ knockpy:
   help:
     - knockpy -h
   run:
-    - knockpy -d ${{DOMAIN}} --recon --silent
+    - knockpy -d ${{DOMAIN}} --recon --silent 2>>/dev/null
