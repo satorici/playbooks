@@ -10,9 +10,12 @@ settings:
 
 install:
   dependencies:
-    - apt update >>/dev/null; apt install -qqy jq curl dnsutils netcat-traditional git
+    - apt update >>/dev/null; apt install -qy jq curl dnsutils netcat-traditional git >>/dev/null
   clone:
     - git clone --depth 1 https://github.com/trailofbits/twa.git
+
+help:
+  - twa/twa --help
 
 twa:
   assertStdoutNotContains: FAIL

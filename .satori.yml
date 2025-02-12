@@ -25,6 +25,8 @@ tests:
     - find . -name "*.yml" ! -path "./.*" -exec grep -L "image:" {} \;
   assert:
     - find . -name "*.yml" ! -path "./.*" -exec grep -L "assert" {} \;
+  help:
+    - find . -name "*.yml" ! -path "./.*" -exec grep -L "help" {} \;
 
 import:
   - satori://code/yamllint.yml

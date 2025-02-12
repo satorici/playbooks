@@ -18,14 +18,17 @@ settings:
   example: satori run satori://dos/siege.yml -d URL="satori.ci" --output
 
 install:
-  - apt update >>/dev/null; apt install -qqy curl siege
+  - apt update >>/dev/null; apt install -qqy curl siege >>/dev/null
 
-host:
+help:
+  - siege --help
+
+siege:
   assertReturnCode: 0
   setSeverity: 4
   before_siege:
     - curl -s ${{URL}} -m 3
-  siege:
+  run:
     - siege -c 100 -t 30s ${{URL}}
   after_siege:
     - curl -s ${{URL}} -m 3

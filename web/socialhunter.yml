@@ -8,10 +8,11 @@ settings:
   example: satori run satori://web/socialhunter.yml -d URL="https://www.satori.ci" --output
 
 install:
-  socialhunter:
-    - go install github.com/utkusen/socialhunter@latest
-  url:
-    - echo "${{URL}}" > url.txt
+  - go install github.com/utkusen/socialhunter@latest
+  - echo "${{URL}}" > url.txt
+
+help:
+  - socialhunter --help
 
 socialhunter:
   assertStdoutNotContains: "Possible Takeover"

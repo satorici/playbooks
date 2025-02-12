@@ -1,5 +1,5 @@
 settings:
-  name: "Bearer: SAST"
+  name: "Bearer: static source code analysis"
   description: "Bearer is a static application security testing (SAST) tool designed to scan your source code and analyze data flows to identify, filter, and prioritize security and privacy risks."
   gallery: 
   - https://files.catbox.moe/2kcimw.png

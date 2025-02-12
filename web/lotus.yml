@@ -16,6 +16,9 @@ install:
   clone:
     - git clone --depth 1 https://github.com/rusty-sec/lotus-scripts
 
+help:
+  - lotus --help
+
 lotus:
   assertReturnCode: 0
   run:
