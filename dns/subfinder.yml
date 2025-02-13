@@ -8,7 +8,7 @@ settings:
   example: satori run satori://dns/subfinder.yml  -d DOMAIN="satori.ci" --output
 
 install:
-  - go install github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest
+  - go install github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest 2>>/dev/null
 
 help:
   - subfinder --help

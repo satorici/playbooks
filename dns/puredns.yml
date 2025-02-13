@@ -13,7 +13,7 @@ install:
   massdns:
     - git clone https://github.com/blechschmidt/massdns.git; cd massdns && make
   puredns:
-    - go install github.com/d3mondev/puredns/v2@latest
+    - go install github.com/d3mondev/puredns/v2@latest 2>>/dev/null
   input_file:
     - echo "${{DOMAIN}}" > input_file.txt
 
