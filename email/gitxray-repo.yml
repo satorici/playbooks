@@ -8,7 +8,7 @@ settings:
     - https://github.com/kulkansecurity
   gallery:
     - https://files.catbox.moe/qtnkry.png
-  example: satori run satori://email/repo.yml -d REPO="satorici/playbooks" --report --output
+  example: satori run satori://email/gitxray-repo.yml -d REPO="satorici/playbooks" --report --output
 
 gitxray:
   install:

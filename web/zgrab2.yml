@@ -10,7 +10,7 @@ settings:
 
 zgrab2:
   install:
-    - go install github.com/zmap/zgrab2/cmd/zgrab2@latest
+    - go install github.com/zmap/zgrab2/cmd/zgrab2@latest 2>>/dev/null
 
   help:
     - zgrab2 --help

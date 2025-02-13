@@ -8,7 +8,7 @@ settings:
     - https://github.com/kulkansecurity
   gallery:
     - https://files.catbox.moe/v4epas.png
-  example: satori run satori://email/contrib.yml -d REPO=satorici/playbooks -d USER=satoridev01 --report --output
+  example: satori run satori://email/gitxray-user.yml -d REPO=satorici/playbooks -d USER=satoridev01 --report --output
 
 gitxray:
   install:

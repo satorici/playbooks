@@ -5,7 +5,7 @@ settings:
     - https://github.com/adrienverge
   gallery:
     - https://files.catbox.moe/6dqhjw.png
-  example: satori repo satorici/playbooks run --playbook satori://code/yamllint.yml --report --output
+  example: satori run ./ --playbook="satori://code/yamllint.yml" --report --output
 
 yamllint:
   install:

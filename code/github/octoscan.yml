@@ -6,7 +6,7 @@ settings:
     - https://github.com/synacktiv
   gallery:
     - https://files.catbox.moe/cakzpb.png
-  example: satori run ./ --playbook=satori://code/github/octoscan.yml --report --output
+  example: satori run ./ --playbook="satori://code/github/octoscan.yml" --report --output
 
 octoscan:
   install:

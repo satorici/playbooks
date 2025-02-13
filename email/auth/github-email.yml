@@ -4,7 +4,7 @@ settings:
   image: debian
   author:
     - https://github.com/paulirish
-  example: satori run satori://email/github-email.yml -d USER=satorici -d GITHUB_PAT=TBC --report --output
+  example: satori run satori://email/auth/github-email.yml -d USER=satorici -d GITHUB_PAT=TBC --report --output
 
 github-email:
   install:
