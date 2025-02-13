@@ -1,21 +1,21 @@
 settings:
+  name: "WebAnalyze: a port of Wappalyzer in Go to be performant and allows to test huge lists of web hosts"
   image: golang
-  name: This is a port of Wappalyzer in Go. This tool is designed to be performant and allows to test huge lists of hosts.
   author:
     - https://github.com/rverton
   gallery:
     - https://files.catbox.moe/ievv8s.gif
-  example: satori run satori://web/webanalyze.yml -d HOST="satori.ci" --output
-
-install:
-  webanalyze:
-    - go install github.com/rverton/webanalyze/cmd/webanalyze@latest
-  update:
-    - webanalyze -update
+  example: satori run satori://web/webanalyze.yml -d HOST="satori.ci" --report --output
 
 webanalyze:
-  assertReturnCode: 0
+  install:
+    - go install github.com/rverton/webanalyze/cmd/webanalyze@latest
+    - webanalyze -update
+
   help:
     - webanalyze -h
-  run:
-    - webanalyze -host ${{HOST}} -crawl 1
+
+  test:
+    assertReturnCode: 0
+    run:
+      - webanalyze -host ${{HOST}} -crawl 1

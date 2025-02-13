@@ -6,19 +6,19 @@ settings:
     - https://github.com/semgrep
   gallery:
     - https://files.catbox.moe/dj0xyt.png
-  example: satori run ./ --playbook="satori://code/semgrep.yml" --output
-
-install:
-  - pip install semgrep -q --disable-pip-version-check
-
-help:
-  - semgrep --help
+  example: satori run ./ --playbook="satori://code/semgrep.yml" --report --output
 
 semgrep:
-  assertStdout: False
-  error:
-    - semgrep --config auto --severity ERROR -q
-  warning:
-    - semgrep --config auto --severity WARNING -q
-  info:
-    - semgrep --config auto --severity INFO -q
+  install:
+    - pip install semgrep -q --disable-pip-version-check
+  help:
+    - semgrep --help
+  test:
+    assertReturnCode: 0
+    assertStdout: False
+    error:
+      - semgrep --config auto --severity ERROR -q
+    warning:
+      - semgrep --config auto --severity WARNING -q
+    info:
+      - semgrep --config auto --severity INFO -q

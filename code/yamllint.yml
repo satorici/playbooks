@@ -5,16 +5,15 @@ settings:
     - https://github.com/adrienverge
   gallery:
     - https://files.catbox.moe/6dqhjw.png
-  example: satori repo satorici/playbooks run --playbook satori://code/yamllint.yml --output
-
-install:
-  - pip install yamllint --disable-pip-version-check --no-warn-script-location -q
+  example: satori repo satorici/playbooks run --playbook satori://code/yamllint.yml --report --output
 
 yamllint:
-  assertReturnCode: 0
+  install:
+    - pip install yamllint --disable-pip-version-check --no-warn-script-location -q
   help:
     - yamllint --help
   test:
+    assertReturnCode: 0
     assertStdoutNotContains: "error"
     run:
       - yamllint . -f colored --no-warnings | grep -v line-length

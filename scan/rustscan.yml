@@ -1,17 +1,19 @@
 settings:
-  image: rustscan/rustscan:2.1.1
   name: "Rustscan: Network port scanner"
   description: "RustScan is a modern port scanner that rapidly scans all 65,535 ports in approximately 3 seconds. It features a scripting engine supporting languages like Python, Lua, and Shell, allowing users to automate tasks such as piping results into Nmap for detailed analysis. RustScan also employs adaptive learning to optimize its scanning process based on the environment."
+  image: rustscan/rustscan:2.1.1
   author:
     - https://github.com/RustScan
   gallery:
     - https://files.catbox.moe/4ng16r.png
   example: satori run satori://scan/rustscan.yml -d HOST="satori.ci" --output
 
-install:
-  - "! which rustscan &> /dev/null && cargo install rustscan 2>>/dev/null"
-
 rustscan:
-  assertReturnCode: 0
-  run:
-    - rustscan -a ${{HOST}}
+  install:
+    - "! which rustscan &> /dev/null && cargo install rustscan 2>>/dev/null"
+  help:
+    - rustscan --help
+  test:
+    assertReturnCode: 0
+    run:
+      - rustscan -a ${{HOST}}

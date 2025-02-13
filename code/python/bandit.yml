@@ -1,12 +1,12 @@
 settings:
-  image: python
   name: "Bandit: Find common security issues in Python"
   description: "Bandit processes each file, builds an AST from it, and runs appropriate plugins against the AST nodes. Once Bandit has finished scanning all the files it generates a report about the security issues found."
+  image: python
   author:
     - https://github.com/PyCQA
   gallery:
     - https://placehold.co/600x400
-  example: satori run ./ --playbook="satori://code/python/bandit.yml" --output
+  example: satori run ./ --playbook="satori://code/python/bandit.yml" --report --output
 
 install:
   - pip install bandit -q --disable-pip-version-check

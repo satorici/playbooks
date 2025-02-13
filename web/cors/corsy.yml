@@ -8,13 +8,12 @@ settings:
     - https://files.catbox.moe/lj0oxn.png
   example: satori run satori://web/cors/corsy.yml -d URL="https://satori.ci" --output
 
-install:
-  dependencies:
-    - apt update >>/dev/null; apt install -qy git >>/dev/null
-  corsy:
-    - git clone --depth 1 https://github.com/s0md3v/Corsy.git; pip3 install -r Corsy/requirements.txt -q --disable-pip-version-check
-
 corsy:
+  install:
+    dependencies:
+      - apt update >>/dev/null; apt install -qy git >>/dev/null
+    corsy:
+      - git clone --depth 1 https://github.com/s0md3v/Corsy.git; pip3 install -r Corsy/requirements.txt -q --disable-pip-version-check
   help:
     - python3 Corsy/corsy.py -h
   test:

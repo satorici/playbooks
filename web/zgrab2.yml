@@ -6,14 +6,16 @@ settings:
     - https://github.com/zmap
   gallery:
     - https://files.catbox.moe/rg49iv.png
-  example: satori run satori://web/zgrab2.yml -d HOST="satori.ci" --output
-
-install:
-  - go install github.com/zmap/zgrab2/cmd/zgrab2@latest
+  example: satori run satori://web/zgrab2.yml -d HOST="satori.ci" --report --output
 
 zgrab2:
-  assertReturnCode: 0
+  install:
+    - go install github.com/zmap/zgrab2/cmd/zgrab2@latest
+
   help:
     - zgrab2 --help
-  run:
-    - echo ${{HOST}} | zgrab2 http
+
+  test:
+    assertReturnCode: 0
+    run:
+      - echo ${{HOST}} | zgrab2 http

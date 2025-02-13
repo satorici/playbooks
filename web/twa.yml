@@ -1,23 +1,22 @@
 settings:
-  image: ubuntu:jammy
   name: "TWA: Tiny Web Auditor"
   description: "twa audits web security headers and configurations. It checks for issues such as HTTP redirects to HTTP, missing security headers, and the absence of Content-Security-Policy. Findings are categorized into levels to indicate severity and status."
+  image: ubuntu:jammy
   author:
     - https://github.com/trailofbits/twa
   gallery:
     - https://files.catbox.moe/vasexx.gif
-  example: satori run satori://web/twa.yml -d HOST="satori.ci" --output
-
-install:
-  dependencies:
-    - apt update >>/dev/null; apt install -qy jq curl dnsutils netcat-traditional git >>/dev/null
-  clone:
-    - git clone --depth 1 https://github.com/trailofbits/twa.git
-
-help:
-  - twa/twa --help
+  example: satori run satori://web/twa.yml -d HOST="satori.ci" --report --output
 
 twa:
-  assertStdoutNotContains: FAIL
-  run:
-    - twa/twa -v ${{HOST}}
+  install:
+    - apt update >>/dev/null; apt install -qy jq curl dnsutils netcat-traditional git >>/dev/null
+    - git clone --depth 1 https://github.com/trailofbits/twa.git
+
+  help:
+    - twa/twa --help
+
+  test:
+    assertStdoutNotContains: FAIL
+    run:
+      - twa/twa -v ${{HOST}}

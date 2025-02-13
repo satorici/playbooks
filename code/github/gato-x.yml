@@ -8,18 +8,20 @@ settings:
   image: python
   cpu: 256
   memory: 512
-  example: satori run satori://code/github/gato-x.yml -d GITHUB_PAT=TBC -d REPO=udacity/deep-reinforcement-learning --output
+  example: satori run satori://code/github/gato-x.yml -d GITHUB_PAT=TBC -d REPO=udacity/deep-reinforcement-learning --report --output
   redacted: 
     - GITHUB_PAT
 
-install:
-  - git clone --depth 1 https://github.com/AdnaneKhan/gato-x
-  - cd gato-x; pip install . -q --disable-pip-version-check --root-user-action=ignore
-
-help:
-  - gato-x --help
-
 gato-x:
-  assertStdoutNotContains: HIGH
-  run:
-    - export GH_TOKEN=${{GITHUB_PAT}}; gato-x e --repository ${{REPO}} 
+  install:
+    - pip install git+https://github.com/AdnaneKhan/gato-x.git -q --disable-pip-version-check --root-user-action=ignore
+  help:
+    - gato-x --help
+  test:
+    assertStdoutNotContains:
+      - HIGH
+      - MEDIUM
+      - LOW
+      - UNKNOWN
+    run:
+      - export GH_TOKEN=${{GITHUB_PAT}}; gato-x e --repository ${{REPO}} 

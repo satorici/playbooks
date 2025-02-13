@@ -1,19 +1,20 @@
 settings:
-  name: "Discover valid subdomains using passive online sources"
+  name: "Subfinder: Discover valid subdomains using passive online sources"
   image: golang
   author:
   - https://github.com/projectdiscovery
   gallery:
   - https://files.catbox.moe/6km2wy.png
-  example: satori run satori://dns/subfinder.yml  -d DOMAIN="satori.ci" --output
-
-install:
-  - go install github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest 2>>/dev/null
-
-help:
-  - subfinder --help
+  example: satori run satori://dns/subfinder.yml  -d DOMAIN="satori.ci" --report --output
 
 subfinder:
-  assertReturnCode: 0
-  run:
-  - subfinder -d ${{DOMAIN}}
+  install:
+    - go install github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest 2>>/dev/null
+
+  help:
+    - subfinder --help
+
+  test:
+    assertReturnCode: 0
+    run:
+      - subfinder -d ${{DOMAIN}}

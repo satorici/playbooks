@@ -1,18 +1,20 @@
 settings:
-  image: python:bullseye
   name: "Knock.py: Enumerate subdomains on a target domain through passive reconnaissance and dictionary scan"
+  image: python:bullseye
   author:
     - https://github.com/guelfoweb
   gallery:
     - https://files.catbox.moe/r3cjdi.gif
-  example: satori run satori://dns/knockpy.yml -d DOMAIN="hackerone.com" --output
-
-install:
-  - pip install git+https://github.com/guelfoweb/knock.git -q --disable-pip-version-check --root-user-action=ignore
+  example: satori run satori://dns/knockpy.yml -d DOMAIN="hackerone.com" --report --output
 
 knockpy:
-  assertReturnCode: 0
+  install:
+    - pip install git+https://github.com/guelfoweb/knock.git -q --disable-pip-version-check --root-user-action=ignore
+
   help:
     - knockpy -h
-  run:
-    - knockpy -d ${{DOMAIN}} --recon --silent 2>>/dev/null
+
+  test:
+    assertReturnCode: 0
+    run:
+      - knockpy -d ${{DOMAIN}} --recon --silent 2>>/dev/null

@@ -1,22 +1,23 @@
 settings:
-  image: golang
   name: "gobuster-dns: brute forces DNS subdomains"
   description: "Gobuster performs brute-force enumeration of URLs, DNS subdomains, and virtual host names. It supports wordlist-based scanning for directories and files on web servers, subdomains in DNS, and virtual hosts. The tool allows users to specify extensions, HTTP methods, and authentication options."
+  image: golang
   author:
     - https://github.com/OJ
   gallery:
     - https://files.catbox.moe/kti61x.gif
-  example: satori run satori://dns/gobuster-dns.yml -d DOMAIN="satori.ci" --output
-
-install:
-  gobuster-dns:
-    - go install github.com/OJ/gobuster/v3@latest 2>>/dev/null
-  wordlist:
-    - mkdir -p wordlists; curl -s https://raw.githubusercontent.com/danielmiessler/SecLists/master/Discovery/DNS/subdomains-top1million-5000.txt -o wordlists/subdomains.txt
+  example: satori run satori://dns/gobuster-dns.yml -d DOMAIN="satori.ci" --report --output
 
 gobuster-dns:
-  assertReturnCode: 0
+  install:
+    - go install github.com/OJ/gobuster/v3@latest 2>>/dev/null
+    - mkdir -p wordlists
+    - curl -s https://raw.githubusercontent.com/danielmiessler/SecLists/master/Discovery/DNS/subdomains-top1million-5000.txt -o wordlists/subdomains.txt
+
   help:
     - gobuster dns -h
-  run:
-    - gobuster dns -d ${{DOMAIN}} -w wordlists/subdomains.txt --wildcard -v
+
+  test:
+    assertReturnCode: 0
+    run:
+      - gobuster dns -d ${{DOMAIN}} -w wordlists/subdomains.txt --wildcard -v

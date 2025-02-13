@@ -8,13 +8,12 @@ settings:
     - https://files.catbox.moe/0wtbt4.gif
   example: satori run satori://web/katana.yml -d URL="satori.ci" --output
 
-install:
-  dependencies:
-    - apt install -qy wget git gcc
-  katana:
-    - go install github.com/projectdiscovery/katana/cmd/katana@latest 2>>/dev/null
-
 katana:
+  install:
+    dependencies:
+      - apt install -qy wget git gcc >>/dev/null
+    katana:
+      - go install github.com/projectdiscovery/katana/cmd/katana@latest 2>>/dev/null
   help:
     - katana --help
   test:

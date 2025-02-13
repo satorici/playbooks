@@ -3,15 +3,17 @@ settings:
   image: golang
   author: 
     - https://github.com/anshumanbh
-  example: satori run satori://dns/tko-subs.yml -d DOMAIN="example.com" --output
+  example: satori run satori://dns/tko-subs.yml -d DOMAIN="example.com" --report --output
 
 tko-subs:
   install:
     - go install github.com/anshumanbh/tko-subs@latest 2>>/dev/null
     - echo "name,cname,string,http" > providers-data.csv
     - echo "github,github.io,There isn't a GitHub Pages site here,false" >> providers-data.csv
+
   help:
     - tko-subs -h
+
   test:
     assertReturnCode: 0
     assertStderrNotContains: Domain problem

@@ -1,18 +1,20 @@
 settings:
+  name: "Waymore: find way more URLs from the Wayback Machine"
   image: python
-  name: Find way more from the Wayback Machine
   author:
     - https://github.com/xnl-h4ck3r
   gallery:
     - https://files.catbox.moe/y6sbh6.gif
-  example: satori run satori://web/waymore.yml -d URL="satori.ci" --output
-
-install:
-  - pip install waymore -q --disable-pip-version-check --root-user-action=ignore
+  example: satori run satori://web/waymore.yml -d URL="satori.ci" --report --output
 
 waymore:
-  assertReturnCode: 0
+  install:
+    - pip install waymore -q --disable-pip-version-check --root-user-action=ignore
+
   help:
     - waymore -h
-  run:
-    - waymore -i ${{URL}} -mode U
+
+  test:
+    assertReturnCode: 0
+    run:
+      - waymore -i ${{URL}} -mode U

@@ -4,15 +4,15 @@ settings:
   image: public.ecr.aws/h8o5p8e3/satori/base-image:latest
   author:
     - https://github.com/npm
-  example: satori run ./ --playbook="satori://code/javascript/npmaudit.yml" --output
+  example: satori run ./ --playbook="satori://code/javascript/npmaudit.yml" --report --output
   
-install:
-  npm:
-    - apt update >>/dev/null; apt install -qy npm >>/dev/null
-  package-lock-only:
-    - "if [ ! -e package-lock.json ]; then npm i --package-lock-only; fi; ls -l package-lock.json"
-
 npm:
-  assertStdoutContains: "0 vulnerabilities"
-  audit:
-    - /usr/bin/npm audit
+  install:
+    npm:
+      - apt update >>/dev/null; apt install -qy npm >>/dev/null
+    package-lock-only:
+      - "if [ ! -e package-lock.json ]; then npm i --package-lock-only; fi; ls -l package-lock.json"
+  test:
+    assertStdoutContains: "0 vulnerabilities"
+    audit:
+      - /usr/bin/npm audit

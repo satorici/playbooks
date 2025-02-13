@@ -1,37 +1,37 @@
 settings:
-  image: python
-  files: true
   name: "MobSFScan - SAST for mobile code"
   description: "MobSFScan can find insecure code patterns in Android and iOS source code. Supports Java, Kotlin, Swift, and Objective C Code. It uses MobSF static analysis rules and is powered by semgrep and libsast pattern matcher.\n\n## Example:\n\n```satori run ./ --playbook=\"satori://code/mobsfscan.yml\" --report --output```"
+  image: python
+  files: true
   author:
-  - https://github.com/MobSF
+    - https://github.com/MobSF
   gallery:
-  - https://files.catbox.moe/2fokdm.gif
-  example: satori run ./ --playbook="satori://code/mobsfscan.yml" --output
+    - https://files.catbox.moe/2fokdm.gif
+  example: satori run ./ --playbook="satori://code/mobsfscan.yml" --report --output
   
-install:
-  dependencies:
-  - apt update >>/dev/null; apt install -qy jq >>/dev/null
-  mobsfscan:
-  - pip3 install mobsfscan -q --disable-pip-version-check
-
 mobsfscan:
-  - mobsfscan --help
-
-mobsfscan:
-  assertStdout: False
-  assertStderr: False
-  output:
-  - mobsfscan ./ --sarif > mobsfscan-output.log
-  error:
-    setSeverity: 1
-    run:
-    - cat mobsfscan-output.log | jq '.runs[].results[] | select(.level == "error")' | tee error.log
-  warning:
-    setSeverity: 3
-    run:
-    - cat mobsfscan-output.log | jq '.runs[].results[] | select(.level == "warning")' | tee warning.log
-  note:
-    setSeverity: 5
-    run:
-    - cat mobsfscan-output.log | jq '.runs[].results[] | select(.level == "note")' | tee note.log
+  install:
+    dependencies:
+      - apt update >>/dev/null; apt install -qy jq >>/dev/null
+    mobsfscan:
+      - pip3 install mobsfscan -q --disable-pip-version-check
+  help:
+    - mobsfscan --help
+  test:
+    assertReturnCode: 0
+    assertStdout: False
+    assertStderr: False
+    output:
+      - mobsfscan ./ --sarif > mobsfscan-output.log
+    error:
+      setSeverity: 1
+      run:
+        - cat mobsfscan-output.log | jq '.runs[].results[] | select(.level == "error")' | tee error.log
+    warning:
+      setSeverity: 3
+      run:
+        - cat mobsfscan-output.log | jq '.runs[].results[] | select(.level == "warning")' | tee warning.log
+    note:
+      setSeverity: 5
+      run:
+        - cat mobsfscan-output.log | jq '.runs[].results[] | select(.level == "note")' | tee note.log

@@ -5,14 +5,16 @@ settings:
     - https://github.com/ameenmaali
   gallery:
     - https://files.catbox.moe/l0rcrt.png
-  example: satori run satori://web/urldedupe.yml -d URL="https://google.com/home?qs=value\nhttps://google.com/home?qs=secondValue" --output
-
-install:
-  - apt update >>/dev/null; apt install -qy git build-essential make cmake >>/dev/null
-  - git clone --depth 1 https://github.com/ameenmaali/urldedupe.git
-  - cd urldedupe ; cmake CMakeLists.txt ; make
+  example: satori run satori://web/urldedupe.yml -d URL="https://google.com/home?qs=value\nhttps://google.com/home?qs=secondValue" --report --output
 
 urldedupe:
-  assertReturnCode: 0
-  run:
-    - echo "${{URL}}" | urldedupe/urldedupe
+  install:
+    - apt update >>/dev/null; apt install -qy git build-essential make cmake >>/dev/null
+    - git clone --depth 1 https://github.com/ameenmaali/urldedupe.git
+    - cd urldedupe ; cmake CMakeLists.txt ; make
+
+  test:
+    assertReturnCode: 0
+    assertStdout: True
+    run:
+      - echo "${{URL}}" | urldedupe/urldedupe

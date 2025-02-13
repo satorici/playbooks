@@ -6,16 +6,8 @@ settings:
     - https://github.com/blechschmidt
   gallery:
     - https://files.catbox.moe/54vy1l.gif
-  example: satori run satori://dns/massdns.yml -d DOMAIN="satori.ci" --output
+  example: satori run satori://dns/massdns.yml -d DOMAIN="satori.ci" --report --output
   
-install:
-  dependencies:
-    - apt update >> /dev/null; apt install git make gcc -qy >> /dev/null
-  massdns:
-    - git clone https://github.com/blechschmidt/massdns.git; cd massdns && make
-  input_file:
-    - echo "${{DOMAIN}}" > domain.txt
-
 RECORD:
 - - A
   - AAAA
@@ -28,8 +20,15 @@ RECORD:
   - PTR
 
 massdns:
-  assertReturnCode: 0
+  install:
+    - apt update >> /dev/null; apt install git make gcc -qy >> /dev/null
+    - git clone https://github.com/blechschmidt/massdns.git; cd massdns && make
+    - echo "${{DOMAIN}}" > domain.txt
+
   help:
     - ./massdns/bin/massdns --help
-  run:
-    - ./massdns/bin/massdns -q -r massdns/lists/resolvers.txt -t ${{RECORD}} -o F -w output_${{RECORD}}.txt domain.txt; cat output_${{RECORD}}.txt
+
+  test:
+    assertReturnCode: 0
+    run:
+      - ./massdns/bin/massdns -q -r massdns/lists/resolvers.txt -t ${{RECORD}} -o F -w output_${{RECORD}}.txt domain.txt; cat output_${{RECORD}}.txt

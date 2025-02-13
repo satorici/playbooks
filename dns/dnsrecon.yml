@@ -1,5 +1,4 @@
 settings:
-  image: python
   name: "DNSRecon: general domain name enumeration"
   description: |
     This tool provides the ability to perform. 
@@ -8,22 +7,22 @@ settings:
     - Perform common SRV Record Enumeration; Top Level Domain (TLD) Expansion; Check for Wildcard Resolution; 
     - Brute Force subdomain and host A and AAAA records given a domain and a wordlist; Perform a PTR Record lookup for a given IP Range or CIDR; 
     - Check a DNS Server Cached records for A, AAAA and CNAME Records provided a list of host records in a text file to check.
+  image: python
   author:
     - https://github.com/darkoperator
   gallery:
     - https://files.catbox.moe/b92mj7.gif
-  example: satori run satori://dns/dnsrecon.yml -d DOMAIN="satori.ci" --output
-
-install:
-  assertReturnCode: 0
-  clone:
-    - git clone --depth 1 https://github.com/darkoperator/dnsrecon.git
-  requirements:
-    - pip install -r dnsrecon/requirements.txt -q --disable-pip-version-check --root-user-action=ignore
+  example: satori run satori://dns/dnsrecon.yml -d DOMAIN="satori.ci" --report --output
 
 dnsrecon:
-  assertReturnCode: 0
+  install:
+    - git clone --depth 1 https://github.com/darkoperator/dnsrecon.git
+    - pip install -r dnsrecon/requirements.txt -q --disable-pip-version-check --root-user-action=ignore
+
   help:
     - python3 dnsrecon/dnsrecon.py -h
-  run:
-    - python3 dnsrecon/dnsrecon.py -d ${{DOMAIN}}
+
+  test:
+    assertReturnCode: 0
+    run:
+      - python3 dnsrecon/dnsrecon.py -d ${{DOMAIN}}

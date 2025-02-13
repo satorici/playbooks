@@ -1,18 +1,20 @@
 settings:
-  image: golang
   name: "Subzy: subdomain takeover tool that matches response fingerprings from can-i-take-over-xyz"
+  image: golang
   author:
     - https://github.com/PentestPad
   gallery:
     - https://files.catbox.moe/46j46k.png
-  example: satori run satori://dns/subzy.yml -d DOMAIN="satori.ci" --output
-
-install:
-  - go install github.com/PentestPad/subzy@latest
+  example: satori run satori://dns/subzy.yml -d DOMAIN="satori.ci" --report --output
 
 subzy:
-  assertReturnCode: 0
+  install:
+    - go install github.com/PentestPad/subzy@latest
+
   help:
     - subzy --help
-  run:
-    - subzy run --target ${{DOMAIN}}
+
+  test:
+    assertReturnCode: 0
+    run:
+      - subzy run --target ${{DOMAIN}}

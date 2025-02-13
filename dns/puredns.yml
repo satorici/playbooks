@@ -1,26 +1,23 @@
 settings:
-  image: golang
   name: "Puredns: domain resolver and subdomain bruteforcing tool that filters out wildcard subdomains and DNS poisoned entries"
+  image: golang
   author:
     - https://github.com/blechschmidt
   gallery:
     - https://files.catbox.moe/2i78fz.png
-  example: satori run satori://dns/puredns.yml -d DOMAIN="satori.ci" --output
-
-install:
-  dependencies:
-    - apt update && apt install -y git make gcc
-  massdns:
-    - git clone https://github.com/blechschmidt/massdns.git; cd massdns && make
-  puredns:
-    - go install github.com/d3mondev/puredns/v2@latest 2>>/dev/null
-  input_file:
-    - echo "${{DOMAIN}}" > input_file.txt
-
+  example: satori run satori://dns/puredns.yml -d DOMAIN="satori.ci" --report --output
 
 puredns:
-  assertReturnCode: 0
+  install:
+    - apt update >>/dev/null; apt install -y git make gcc >>/dev/null
+    - git clone https://github.com/blechschmidt/massdns.git; cd massdns && make
+    - go install github.com/d3mondev/puredns/v2@latest 2>>/dev/null
+    - echo "${{DOMAIN}}" > input_file.txt
+
   help:
     - puredns -h
-  run:
-    - puredns resolve input_file.txt --bin ./massdns/bin/massdns --resolvers ./massdns/lists/resolvers.txt
+
+  test:
+    assertReturnCode: 0
+    run:
+      - puredns resolve input_file.txt --bin ./massdns/bin/massdns --resolvers ./massdns/lists/resolvers.txt

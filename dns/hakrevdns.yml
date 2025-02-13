@@ -1,19 +1,20 @@
 settings:
-  image: golang
   name: "hakrevdns: reverse DNS lookup"
+  image: golang
   author:
     - https://github.com/hakluke
   gallery:
     - https://files.catbox.moe/ut84q3.png
-  example: satori run satori://dns/hakrevdns.yml -d IP="54.210.33.205" -d IP="3.93.207.195" --output
-
-install:
-  - go install github.com/hakluke/hakrevdns@latest
-
-help:
-  - hakrevdns -h
+  example: satori run satori://dns/hakrevdns.yml -d IP="54.210.33.205" -d IP="3.93.207.195" --report --output
 
 hakrevdns:
-  assertReturnCode: 0
-  run:
-    - echo "${{IP}}" | hakrevdns -r 1.1.1.1
+  install:
+    - go install github.com/hakluke/hakrevdns@latest
+
+  help:
+    - hakrevdns -h
+
+  test:
+    assertReturnCode: 0
+    run:
+      - echo "${{IP}}" | hakrevdns -r 1.1.1.1

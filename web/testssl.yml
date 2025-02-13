@@ -16,8 +16,14 @@ help:
 
 testssl:
   run:
-    - testssl -p -s -f -U -S -P --csvfile=log --ip ${{HOST}}
+    - testssl -p -s -f -U -S -P --csvfile=log ${{URL}}
   log:
-    assertStdoutNotRegex: ("LOW"|"MEDIUM"|"HIGH"|"CRITICAL"|"FATAL")
+    assertReturnCode: 0
+    assertStdoutNotContains:
+      - LOW
+      - MEDIUM
+      - HIGH
+      - CRITICAL
+      - FATAL
     run:
       - cat log

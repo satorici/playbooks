@@ -6,12 +6,12 @@ settings:
     - https://github.com/semgrep
   gallery:
     - https://files.catbox.moe/5yw3g6.png
-  example: satori run satori://code/javascript/semgrep.yml --output
-
-install:
-  - pip install semgrep -q --disable-pip-version-check
+  example: satori run satori://code/javascript/semgrep.yml --report --output
 
 semgrep:
-  assertStdoutContains: "0 findings"
-  javascript:
-  - semgrep --config "p/javascript"
+  install:
+    - pip install semgrep -q --disable-pip-version-check
+  test:
+    assertStdoutContains: "0 findings"
+    javascript:
+      - semgrep --config "p/javascript"

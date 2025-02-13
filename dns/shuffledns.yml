@@ -7,15 +7,13 @@ settings:
 
 shuffledns:
   install:
-    shuffledns:
-      - go install github.com/projectdiscovery/shuffledns/cmd/shuffledns@latest 2>>/dev/null
-    massdns:
-      dependencies:
-        - apt update >>/dev/null; apt install git make gcc -qy >>/dev/null
-      clone:
-        - git clone https://github.com/blechschmidt/massdns.git; cd massdns && make
+    - go install github.com/projectdiscovery/shuffledns/cmd/shuffledns@latest 2>>/dev/null
+    - apt update >>/dev/null; apt install git make gcc -qy >>/dev/null
+    - git clone https://github.com/blechschmidt/massdns.git; cd massdns && make
+
   help:
     - shuffledns -h
+
   test:
     assertStdout: True
     assertStderrNotContains: ERR

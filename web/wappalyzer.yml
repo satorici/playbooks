@@ -1,28 +1,23 @@
 settings:
-  #image: sitespeedio/node:ubuntu-22-04-nodejs-20.15.1
-  image: node
   name: Wappalyzer identifies technologies on websites, including content management systems, eCommerce platforms, JavaScript frameworks, analytics tools and much more.
+  image: node
   author:
     - https://github.com/tunetheweb
   gallery:
     - https://files.catbox.moe/0pp2iq.gif
-  example: satori run satori://web/wappalyzer.yml -d URL="https://satori.ci" --output
+  example: satori run satori://web/wappalyzer.yml -d URL="https://satori.ci" --report --output
 
-install:
-  assertReturnCode: 0
-  update:
-    - apt update
-  dependencies:
-    - apt install -qy git libxss1 >>/dev/null
-    #- npm install --global yarn
-    - apt install -qy libasound2 ca-certificates fonts-liberation libappindicator3-1 libatk-bridge2.0-0 libatk1.0-0 libc6 libcairo2 libcups2 libdbus-1-3 libexpat1 libfontconfig1 libgbm1 libgcc1 libglib2.0-0 libgtk-3-0 libnspr4 libnss3 libpango-1.0-0 libpangocairo-1.0-0 libstdc++6 libx11-6 libx11-xcb1 libxcb1 libxcomposite1 libxcursor1 libxdamage1 libxext6 libxfixes3 libxi6 libxrandr2 libxrender1 libxss1 libxtst6 lsb-release wget xdg-utils
-  clone:
+wappalyzer:
+  install:
+    - apt update >>/dev/null; apt install -qy git libxss1 >>/dev/null
+    - apt install -qy libasound2 ca-certificates fonts-liberation libappindicator3-1 libatk-bridge2.0-0 libatk1.0-0 libc6 libcairo2 libcups2 libdbus-1-3 libexpat1 libfontconfig1 libgbm1 libgcc1 libglib2.0-0 libgtk-3-0 libnspr4 libnss3 libpango-1.0-0 libpangocairo-1.0-0 libstdc++6 libx11-6 libx11-xcb1 libxcb1 libxcomposite1 libxcursor1 libxdamage1 libxext6 libxfixes3 libxi6 libxrandr2 libxrender1 libxss1 libxtst6 lsb-release wget xdg-utils >>/dev/null
     - git clone --depth 1 https://github.com/tunetheweb/wappalyzer.git
     - cd wappalyzer && yarn install && yarn run link
 
-wappalyzer:
-  assertReturnCode: 0
   help:
     - node wappalyzer/src/drivers/npm/cli.js -h
-  run:
-    - node wappalyzer/src/drivers/npm/cli.js ${{URL}} --pretty
+
+  test:
+    assertReturnCode: 0
+    run:
+      - node wappalyzer/src/drivers/npm/cli.js ${{URL}} --pretty

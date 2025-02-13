@@ -6,14 +6,14 @@ settings:
   author:
     - https://github.com/kulkansecurity
   example: satori run satori://recon/gitxray.yml -d REPO="satorici/playbooks" --report --output
-  cpu: 256
-  memory: 512
-
-install:
-  - git clone https://github.com/kulkansecurity/gitxray.git --depth 1 >>/dev/null
-  - python3 -m pip install -r requirements.txt >>/dev/null
 
 gitxray:
-  assertReturnCode: 0
-  repo:
-    - cd gitxray/src; python3 -m gitxray.gitxray -r https://github.com/${{REPO}} -outformat text --shush
+  install:
+    - git clone https://github.com/kulkansecurity/gitxray.git --depth 1 >>/dev/null
+    - python3 -m pip install -r gitxray/requirements.txt >>/dev/null
+  help:
+    - cd gitxray/src; python3 -m gitxray.gitxray --help
+  test:
+    assertReturnCode: 0
+    repo:
+      - cd gitxray/src; python3 -m gitxray.gitxray -r https://github.com/${{REPO}} -outformat text --shush

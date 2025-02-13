@@ -4,14 +4,14 @@ settings:
   image: norionomura/swiftlint
   author:
     - https://github.com/realm
-  example: satori run ./ --playbook="satori://code/swiftlint.yml" --output
-
-help:
-  - swiftlint -h
+  example: satori run ./ --playbook="satori://code/swiftlint.yml" --report --output
 
 swiftlint:
-  assertReturnCode: 0
-  analyze:
-  - swiftlint analyze
-  lint:
-  - swiftlint lint
+  help:
+    - swiftlint -h
+  test:
+    assertReturnCode: 0
+    analyze:
+      - swiftlint analyze
+    lint:
+      - swiftlint lint

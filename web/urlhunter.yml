@@ -5,15 +5,17 @@ settings:
   description: "Tool for searching URLs exposed through URL shortener services by analyzing collections of previously brute-forced and published shortened URLs. It allows users to filter results using keywords and define date ranges for analysis."
   author:
     - https://github.com/utkusen
-  example: satori run satori://web/urlhunter.yml -d URL="satori.ci" --output
-
-install:
-  - go install github.com/utkusen/urlhunter@latest
-  - echo "${{URL}}" > keywords.txt
+  example: satori run satori://web/urlhunter.yml -d URL="satori.ci" --report --output
 
 urlhunter:
-  assertReturnCode: 0
+  install:
+    - go install github.com/utkusen/urlhunter@latest
+    - echo "${{URL}}" > keywords.txt
+
   help:
     - urlhunter -h
-  run:
-    - urlhunter --keywords keywords.txt --date latest -o /go/bin/urlhunter/out.txt; cat out.txt
+
+  test:
+    assertReturnCode: 0
+    run:
+      - urlhunter --keywords keywords.txt --date latest -o /go/bin/urlhunter/out.txt; cat out.txt

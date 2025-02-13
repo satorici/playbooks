@@ -1,18 +1,18 @@
 settings:
+  name: "AssetFinder: Find domains and subdomains potentially related to a given domain"
   image: golang
-  name: Find domains and subdomains potentially related to a given domain.
   author:
     - https://github.com/tomnomnom
   gallery:
     - https://files.catbox.moe/cvmny4.png
   example: satori run satori://web/assetfinder.yml -d DOMAIN="satori.ci" --output
 
-install:
-  - go install github.com/tomnomnom/assetfinder@latest
-
 assetfinder:
-  assertReturnCode: 0
+  install:
+    - go install github.com/tomnomnom/assetfinder@latest
   help:
     - assetfinder --help
-  run:
-    - assetfinder --subs-only ${{DOMAIN}}
+  test:
+    assertReturnCode: 0
+    run:
+      - assetfinder --subs-only ${{DOMAIN}}

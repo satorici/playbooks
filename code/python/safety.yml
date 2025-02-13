@@ -1,18 +1,18 @@
 settings:
-  image: python
   name: "Safety: check Python dependencies for known security vulnerabilities in their requirements.txt file"
-  description: "URL: https://github.com/pyupio/safety"
+  image: python
   author:
     - https://github.com/satorici
-  example: satori run ./ --playbook="satori://code/python/safety.yml" --output
+    - https://github.com/pyupio/
+  example: satori run ./ --playbook="satori://code/python/safety.yml" --report --output
   
-install:
-  - pip3 install safety -q --disable-pip-version-check
-
-help:
-  - safety --help
-
 safety:
+  install:
+    - pip3 install safety -q --disable-pip-version-check
+  help:
+    - safety --help
+  test:
+    assertReturnCode: 0
     assertStdout: False
     run:
       - safety check -r requirements.txt

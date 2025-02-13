@@ -1,21 +1,21 @@
 settings:
-  image: python:bullseye
   name: "Webscreenshot: screenshot a list of websites"
+  image: python:bullseye
   author:
     - https://github.com/maaaaz
   gallery:
     - https://files.catbox.moe/8jv7ts.gif
-  example: satori run satori://web/webscreenshot.yml -d URL="satori.ci" --output
-
-install:
-  dependencies:
-    - apt update >>/dev/null; apt install -qy xvfb >>/dev/null
-  webscreenshot:
-    - pip install webscreenshot -q --disable-pip-version-check --root-user-action=ignore
+  example: satori run satori://web/webscreenshot.yml -d URL="satori.ci" --report --output
 
 webscreenshot:
-  assertReturnCode: 0
+  install:
+    - apt update >>/dev/null; apt install -qy xvfb >>/dev/null
+    - pip install webscreenshot -q --disable-pip-version-check --root-user-action=ignore
+
   help:
     - webscreenshot -h
-  run:
-    - webscreenshot -v ${{URL}}
+
+  test:
+    assertReturnCode: 0
+    run:
+      - webscreenshot -v ${{URL}}

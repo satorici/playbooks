@@ -6,14 +6,14 @@ settings:
     - https://github.com/RetireJS
   gallery: 
     - https://files.catbox.moe/86vziv.png
-  example: satori run ./ --playbook="satori://code/javascript/retirejs.yml" --output
-
-install:
-  - npm install -g retire
+  example: satori run ./ --playbook="satori://code/javascript/retirejs.yml" --report --output
 
 retirejs:
-  assertReturnCode: 0
+  install:
+    - npm install -g retire
   help:
     - retire --help
-  run:
-    - retire --outputformat cyclonedx
+  test:
+    assertReturnCode: 0
+    run:
+      - retire --outputformat cyclonedx

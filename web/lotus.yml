@@ -1,27 +1,25 @@
 settings:
-  image: rust:bullseye
   name: "Lotus: scan different vulnerabilities"
+  image: rust:bullseye
   author:
     - https://github.com/bugBlocker
   gallery:
     - https://files.catbox.moe/ur9imn.png
   example: satori run satori://web/lotus.yml -d URL="http://testphp.vulnweb.com/listproducts.php?cat=1" --output
 
-
-install:
-  dependencies:
-    - apt update >>/dev/null; apt install -qy jq git lua5.4 liblua5.4-dev libluajit-5.1-dev pkg-config >>/dev/null
-  cargo:
-    - cargo install --git=https://github.com/BugBlocker/lotus/ 2>>/dev/null
-  clone:
-    - git clone --depth 1 https://github.com/rusty-sec/lotus-scripts
-
-help:
-  - lotus --help
-
 lotus:
-  assertReturnCode: 0
-  run:
-    - echo ${{URL}} | lotus scan lotus-scripts/active -o out.json -v
-  read:
-    - cat out.json | jq
+  install:
+    dependencies:
+      - apt update >>/dev/null; apt install -qy jq git lua5.4 liblua5.4-dev libluajit-5.1-dev pkg-config >>/dev/null
+    lotus:
+      - cargo install --git=https://github.com/BugBlocker/lotus/ 2>>/dev/null
+    lotus-scripts:
+      - git clone --depth 1 https://github.com/rusty-sec/lotus-scripts
+  help:
+    - lotus --help
+  test:
+    assertReturnCode: 0
+    run:
+      - echo ${{URL}} | lotus scan lotus-scripts/active -o out.json -v
+    read:
+      - cat out.json | jq

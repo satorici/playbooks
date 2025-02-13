@@ -1,23 +1,22 @@
 settings:
   name: "Nikto: Tests web servers for over 6700 security threats"
-  image: ubuntu:jammy
+  image: debian
   author:
     - https://github.com/sullo
   gallery:
     - https://files.catbox.moe/lkx3qy.png
-  example: satori run satori://web/nikto.yml -d URL="http://example.com" --output
-
-install:
-  dependencies:
-    - apt update >>/dev/null; apt install -qy wget build-essential cpanminus libssl-dev zlib1g-dev
-  cpan:
-    - cpanm Time::Local ; cpanm Net::hostent ; cpanm Time::HiRes ; cpanm Net::SSLeay ; cpanm IO::Socket::SSL
-  nikto:
-    - wget -qO nikto.tar.gz https://github.com/sullo/nikto/archive/master.tar.gz; tar xf nikto.tar.gz --strip-components=2 -C ./ nikto-master/program
+  example: satori run satori://web/nikto.yml -d URL="http://example.com" --report --output
 
 nikto:
-  assertReturnCode: 0
+  install:
+    - apt update >>/dev/null; apt install -qy wget build-essential cpanminus libssl-dev zlib1g-dev >>/dev/null
+    - cpanm Time::Local Net::hostent Time::HiRes Net::SSLeay IO::Socket::SSL >>/dev/null
+    - wget -qO nikto.tar.gz https://github.com/sullo/nikto/archive/master.tar.gz; tar xf nikto.tar.gz --strip-components=2 -C ./ nikto-master/program
+
   help:
     - ./nikto.pl --help
-  run:
-    - ./nikto.pl -host ${{URL}}
+
+  test:
+    assertReturnCode: 0
+    run:
+      - ./nikto.pl -host ${{URL}}
