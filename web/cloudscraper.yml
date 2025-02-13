@@ -5,7 +5,7 @@ settings:
     - https://github.com/jordanpotti
   gallery:
     - https://files.catbox.moe/jsjtnv.png
-  example: satori run satori://web/cloudscraper.yml --output -d URL="http://example.com" --report --output
+  example: satori run satori://web/cloudscraper.yml -d URL="http://example.com" --report --output
 
 cloudscraper:
   install:
