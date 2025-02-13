@@ -1,7 +1,7 @@
 settings:
   name: "tko-subs: detect and takeover subdomains with dead DNS records"
   image: golang
-  author: 
+  author:
     - https://github.com/anshumanbh
   example: satori run satori://dns/tko-subs.yml -d DOMAIN="example.com" --report --output
 

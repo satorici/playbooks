@@ -3,17 +3,18 @@ settings:
   description: "Semgrep is a static code analysis tool with stable support for C#, Go, Java, JavaScript, JSON, Python, PHP, Ruby, and Scala. It has experimental support for nineteen other languages, as well as a language agnostic mode. The following playbook focuses on Github Workflows"
   image: python
   gallery:
-  - https://files.catbox.moe/ealtzu.png
+    - https://files.catbox.moe/ealtzu.png
   author:
-  - https://github.com/semgrep
+    - https://github.com/semgrep
   cpu: 256
   memory: 512
   example: satori run ./ --playbook=satori://code/github/semgrep.yml --report --output
-    
-install:
-  - pip install semgrep -q --disable-pip-version-check
 
 semgrep:
-  assertStdout: False
-  github_action:
-  - semgrep --config 'p/github-actions' -q --max-chars-per-line 1024
+  install:
+    - pip install semgrep -q --disable-pip-version-check
+
+  test:
+    assertStdoutContains: "0 findings"
+    github_action:
+      - semgrep --config 'p/github-actions' --max-chars-per-line 1024

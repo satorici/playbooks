@@ -1,6 +1,7 @@
 settings:
   name: Satori CI Playbooks
   image: python
+  example: satori local ./ --report --output
 
 playbooks:
   - pip install satori-ci >>/dev/null 2>>/dev/null; satori playbooks --public
@@ -14,16 +15,16 @@ tests:
   author:
     - find . -name "*.yml" ! -path "./.*" -exec grep -L "author:" {} \;
   author_item:
-    - find . -name "*.yml" ! -path "./.*" -exec grep -H "author:" -A1 {} \; | grep ":.*\-"|grep -v "https"
+    - find . -name "*.yml" ! -path "./.*" -exec grep -H "author:" -A1 {} \; | grep ":.*\-" | grep -v "https"
   example:
     - find . -name "*.yml" ! -path "./.*" -exec grep -L "example:" {} \;
   gallery:
     - find . -name "*.yml" ! -path "./.*" -exec grep -L "gallery:" {} \;
   gallery_item:
-    - find . -name "*.yml" ! -path "./.*" -exec grep -H "gallery:" -A1 {} \; | grep "\-"|grep -v "gallery\|https"
+    - find . -name "*.yml" ! -path "./.*" -exec grep -H "gallery:" -A1 {} \; | grep "\-" | grep -v "gallery\|https"
   image:
     - find . -name "*.yml" ! -path "./.*" -exec grep -L "image:" {} \;
-  assert:
+  test:
     - find . -name "*.yml" ! -path "./.*" -exec grep -L "assert" {} \;
   noreport:
     - grep "example:" * -R|grep -v "report"|awk -F':' '{print $1}'

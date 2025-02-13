@@ -7,15 +7,17 @@ settings:
   gallery:
     - https://files.catbox.moe/4goi2y.gif
   example: satori run satori://code/javascript/dependencycheck.yml --report --output
-  
-install:
-  - wget -q https://github.com/jeremylong/DependencyCheck/releases/download/v7.3.0/dependency-check-7.3.0-release.zip ; unzip dependency-check-7.3.0-release.zip >>/dev/null
 
 dependency-check:
+  install:
+    - wget -q https://github.com/jeremylong/DependencyCheck/releases/download/v7.3.0/dependency-check-7.3.0-release.zip ; unzip dependency-check-7.3.0-release.zip >>/dev/null
+
   help:
     - dependency-check/bin/dependency-check.sh --help
+
   scan:
     - dependency-check/bin/dependency-check.sh --scan "./" -f CSV
+
   test:
     assertStdout: False
     highest:

@@ -4,17 +4,18 @@ settings:
   image: python
   files: true
   clone: false
-  author: 
+  author:
     - https://github.com/kulkansecurity
-  example: satori run satori://email/auth/repo.yml -d REPO=satorici/playbooks -d GITHUB_PAT=TBC --output
-  redacted: 
+  example: satori run satori://email/auth/repo.yml -d REPO=satorici/playbooks -d GITHUB_PAT=TBC --report --output
+  redacted:
     - GITHUB_PAT
 
-install:
-  - git clone https://github.com/kulkansecurity/gitxray.git --depth 1 >>/dev/null
-  - python3 -m pip install -r gitxray/requirements.txt -q --disable-pip-version-check --root-user-action=ignore
-
 gitxray:
-  assertReturnCode: 0
-  repo:
-    - export GH_ACCESS_TOKEN=${{GITHUB_PAT}}; cd gitxray/src; python3 -m gitxray.gitxray -r https://github.com/${{REPO}} -f emails -outformat text --shush
+  install:
+    - git clone https://github.com/kulkansecurity/gitxray.git --depth 1 >>/dev/null
+    - python3 -m pip install -r gitxray/requirements.txt -q --disable-pip-version-check --root-user-action=ignore
+
+  test:
+    assertStdoutContains: "@"
+    repo:
+      - export GH_ACCESS_TOKEN=${{GITHUB_PAT}}; cd gitxray/src; python3 -m gitxray.gitxray -r https://github.com/${{REPO}} -f emails -outformat text --shush

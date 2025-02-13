@@ -2,20 +2,24 @@ settings:
   name: "Ppmap: perform XSS via Prototype Pollution"
   description: "ppmap is a tool that scans for client-side Prototype Pollution vulnerabilities and exploits them to achieve cross-site scripting (XSS) by leveraging known gadgets. It identifies if a website is vulnerable to Prototype Pollution by performing heuristic scans and checks for specific variables in the global context. Upon finding a vulnerability, it fingerprints known gadgets to determine the appropriate exploitation method and displays the final XSS payload that can be used."
   image: golang
-  author: 
+  author:
     - https://github.com/kleiton0x00
   gallery:
     - https://files.catbox.moe/deptae.png
-  example: satori run satori://web/ppmap.yml -d URL="https://satori.ci" --output
-  
-install:
-  - apt update >>/dev/null; apt install -qy git sudo >>/dev/null
-  - git clone --depth 1 https://github.com/kleiton0x00/ppmap.git
-  - cd ppmap/ && bash setup.sh >>/dev/null 2>>/dev/null
+  example: satori run satori://web/ppmap.yml -d URL="https://satori.ci" --report --output
 
 ppmap:
-  assertStdoutNotContains: 
-    - "VULN"
-    - "EXPL"
-  run:
-    - echo '${{URL}}' | ppmap
+  install:
+    - apt update >>/dev/null; apt install -qy git sudo >>/dev/null
+    - git clone --depth 1 https://github.com/kleiton0x00/ppmap.git
+    - cd ppmap/ && bash setup.sh >>/dev/null 2>>/dev/null
+
+  help:
+    - ppmap --help
+
+  test:
+    assertStdoutNotContains:
+      - "VULN"
+      - "EXPL"
+    run:
+      - echo '${{URL}}' | ppmap

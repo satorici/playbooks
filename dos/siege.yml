@@ -15,20 +15,23 @@ settings:
     - https://github.com/JoeDog
   gallery:
     - https://files.catbox.moe/e4fu1g.png
-  example: satori run satori://dos/siege.yml -d URL="satori.ci" --output
-
-install:
-  - apt update >>/dev/null; apt install -qy curl siege >>/dev/null
-
-help:
-  - siege --help
+  example: satori run satori://dos/siege.yml -d URL="satori.ci" --report --output
 
 siege:
-  assertReturnCode: 0
-  setSeverity: 4
-  before_siege:
-    - curl -s ${{URL}} -m 3
-  run:
-    - siege -c 100 -t 30s ${{URL}}
-  after_siege:
-    - curl -s ${{URL}} -m 3
+  install:
+    - apt update >>/dev/null; apt install -qy curl siege >>/dev/null
+
+  help:
+    - siege --help
+
+  test:
+    assertReturnCode: 0
+    setSeverity: 4
+    before_siege:
+      - curl -s ${{URL}} -m 3
+
+    run:
+      - siege -c 100 -t 30s ${{URL}}
+
+    after_siege:
+      - curl -s ${{URL}} -m 3

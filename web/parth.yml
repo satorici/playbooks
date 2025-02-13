@@ -6,15 +6,15 @@ settings:
     - https://github.com/s0md3v
   gallery:
     - https://files.catbox.moe/s6ab46.png
-  example: satori run satori://web/parth.yml -d HOST="geeksforgeeks.org" --output
-
-install:
-  - pip3 install requests parth -q --disable-pip-version-check
+  example: satori run satori://web/parth.yml -d HOST="geeksforgeeks.org" --report --output
 
 parth:
-  assertReturnCode: 0
+  install:
+    - pip3 install requests parth -q --disable-pip-version-check
+
   help:
     - parth -h
+
   test:
     assertStdoutContains: "issues"
     run:

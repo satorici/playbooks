@@ -5,13 +5,15 @@ settings:
     - https://github.com/projectdiscovery
   gallery:
     - https://files.catbox.moe/7cj3mn.png
-  example: satori run satori://recon/cdncheck.yml -d HOST="satori.ci" --output
+  example: satori run satori://recon/cdncheck.yml -d HOST="satori.ci" --report --output
 
 cdncheck:
   install:
     - go install github.com/projectdiscovery/cdncheck/cmd/cdncheck@latest 2>>/dev/null
+
   help:
     - cdncheck -duc -h
+
   check:
     assertReturnCode: 0
     assertStdoutContains: "No results found"

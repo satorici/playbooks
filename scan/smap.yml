@@ -5,14 +5,16 @@ settings:
     - https://github.com/s0md3v
   gallery:
     - https://files.catbox.moe/5b50gj.png
-  example: satori run satori://scan/smap.yml -d HOST="satori.ci" --output
-
-install:
-  - go install github.com/s0md3v/smap/cmd/smap@latest
+  example: satori run satori://scan/smap.yml -d HOST="satori.ci" --report --output
 
 smap:
-  assertReturnCode: 0
+  install:
+    - go install github.com/s0md3v/smap/cmd/smap@latest
+
   help:
     - smap -h
-  smap:
-    - smap ${{HOST}}
+
+  test:
+    assertReturnCode: 0
+    run:
+      - smap ${{HOST}}

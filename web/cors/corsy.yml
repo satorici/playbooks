@@ -2,20 +2,20 @@ settings:
   name: "Corsy: Scans for misconfigurations in CORS implementations"
   description: "Corsy scans for misconfigurations in Cross-Origin Resource Sharing (CORS) settings. It detects vulnerabilities like origin reflection, wildcard values, and various bypass techniques. The tool supports scanning multiple URLs, exporting results, and using custom headers."
   image: python
-  author: 
+  author:
     - https://github.com/s0md3v
   gallery:
     - https://files.catbox.moe/lj0oxn.png
-  example: satori run satori://web/cors/corsy.yml -d URL="https://satori.ci" --output
+  example: satori run satori://web/cors/corsy.yml -d URL="https://satori.ci" --report --output
 
 corsy:
   install:
-    dependencies:
-      - apt update >>/dev/null; apt install -qy git >>/dev/null
-    corsy:
-      - git clone --depth 1 https://github.com/s0md3v/Corsy.git; pip3 install -r Corsy/requirements.txt -q --disable-pip-version-check
+    - apt update >>/dev/null; apt install -qy git >>/dev/null
+    - git clone --depth 1 https://github.com/s0md3v/Corsy.git; pip3 install -r Corsy/requirements.txt -q --disable-pip-version-check
+
   help:
     - python3 Corsy/corsy.py -h
+
   test:
     assertStdoutContains: "No misconfigurations found"
     run:

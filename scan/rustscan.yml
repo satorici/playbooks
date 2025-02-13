@@ -6,13 +6,15 @@ settings:
     - https://github.com/RustScan
   gallery:
     - https://files.catbox.moe/4ng16r.png
-  example: satori run satori://scan/rustscan.yml -d HOST="satori.ci" --output
+  example: satori run satori://scan/rustscan.yml -d HOST="satori.ci" --report --output
 
 rustscan:
   install:
     - "! which rustscan &> /dev/null && cargo install rustscan 2>>/dev/null"
+
   help:
     - rustscan --help
+
   test:
     assertReturnCode: 0
     run:

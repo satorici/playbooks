@@ -5,13 +5,13 @@ settings:
   author:
     - https://github.com/npm
   example: satori run ./ --playbook="satori://code/javascript/npmaudit.yml" --report --output
-  
+
 npm:
   install:
-    npm:
-      - apt update >>/dev/null; apt install -qy npm >>/dev/null
-    package-lock-only:
-      - "if [ ! -e package-lock.json ]; then npm i --package-lock-only; fi; ls -l package-lock.json"
+    - apt update >>/dev/null; apt install -qy npm >>/dev/null
+    # package-lock-only:
+    - "if [ ! -e package-lock.json ]; then npm i --package-lock-only; fi; ls -l package-lock.json"
+
   test:
     assertStdoutContains: "0 vulnerabilities"
     audit:

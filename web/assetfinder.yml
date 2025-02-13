@@ -5,13 +5,15 @@ settings:
     - https://github.com/tomnomnom
   gallery:
     - https://files.catbox.moe/cvmny4.png
-  example: satori run satori://web/assetfinder.yml -d DOMAIN="satori.ci" --output
+  example: satori run satori://web/assetfinder.yml -d DOMAIN="satori.ci" --report --output
 
 assetfinder:
   install:
     - go install github.com/tomnomnom/assetfinder@latest
+
   help:
     - assetfinder --help
+
   test:
     assertReturnCode: 0
     run:

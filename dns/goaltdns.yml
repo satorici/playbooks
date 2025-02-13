@@ -2,7 +2,7 @@ settings:
   name: "GoAltdns: subdomain generation tool"
   description: It takes a list of subdomains, permute them using a wordlist, insert indexes, numbers, dashes and generates potential subdomains.
   image: golang
-  author: 
+  author:
     - https://github.com/subfinder
   gallery:
     - https://files.catbox.moe/wfwsek.png

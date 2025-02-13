@@ -9,12 +9,13 @@ settings:
     - https://files.catbox.moe/nkmd7e.png
   example: satori run satori://crack/john.yml -d PASS='$2b$10$heqvAkYMez.Va6Et2uXInOnkCT6/uQj1brkrbyG3LpopDklcq7ZOS' --cpu 16384 --memory 32768 --report --output
 
-install:
-  - apt-get update >>/dev/null; apt-get install -qy john wget >>/dev/null
-  - echo '${{PASS}}' > hash.txt
-  - wget -qO 10k-most-common.txt https://raw.githubusercontent.com/danielmiessler/SecLists/master/Passwords/Common-Credentials/10k-most-common.txt
-
 john:
-  assertStdoutNotContains: "?"
-  run:
-    - john hash.txt
+  install:
+    - apt-get update >>/dev/null; apt-get install -qy john wget >>/dev/null
+    - echo '${{PASS}}' > hash.txt
+    - wget -qO 10k-most-common.txt https://raw.githubusercontent.com/danielmiessler/SecLists/master/Passwords/Common-Credentials/10k-most-common.txt
+
+  test:
+    assertStdoutNotContains: "?"
+    run:
+      - john hash.txt

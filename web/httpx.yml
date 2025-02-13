@@ -6,14 +6,15 @@ settings:
     - https://github.com/projectdiscovery
   gallery:
     - https://files.catbox.moe/83do15.png
-  example: satori run satori://web/httpx.yml -d URL="satori.ci" --output
-
-install:
-  - go install github.com/projectdiscovery/httpx/cmd/httpx@latest 2>>/dev/null
+  example: satori run satori://web/httpx.yml -d URL="satori.ci" --report --output
 
 httpx:
+  install:
+    - go install github.com/projectdiscovery/httpx/cmd/httpx@latest 2>>/dev/null
+
   help:
     - httpx -h
+
   test:
     assertStdoutContains: "SUCCESS"
     run:

@@ -6,24 +6,25 @@ settings:
     - https://files.catbox.moe/44b58j.gif
   author:
     - https://github.com/testssl
-  example: satori run satori://web/testssl.yml -d HOST="satori.ci" --output
-
-install:
-  - apt update >>/dev/null; apt install -qy testssl.sh >>/dev/null
-
-help:
-  - testssl --help
+  example: satori run satori://web/testssl.yml -d HOST="satori.ci" --report --output
 
 testssl:
-  run:
-    - testssl -p -s -f -U -S -P --csvfile=log ${{URL}}
-  log:
-    assertReturnCode: 0
-    assertStdoutNotContains:
-      - LOW
-      - MEDIUM
-      - HIGH
-      - CRITICAL
-      - FATAL
+  install:
+    - apt update >>/dev/null; apt install -qy testssl.sh >>/dev/null
+
+  help:
+    - testssl --help
+
+  test:
     run:
-      - cat log
+      - testssl -p -s -f -U -S -P --csvfile=log ${{URL}}
+    log:
+      assertReturnCode: 0
+      assertStdoutNotContains:
+        - LOW
+        - MEDIUM
+        - HIGH
+        - CRITICAL
+        - FATAL
+      check:
+        - cat log

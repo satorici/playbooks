@@ -5,14 +5,18 @@ settings:
   author:
     - https://github.com/TinderSec
   example: satori run satori://code/github/gh-workflow-auditor.yml -d GITHUB_PAT=TBC -d REPO=All-Hands-AI/OpenHands --report --output
-  redacted: 
+  redacted:
     - GITHUB_PAT
 
-install:
-  - git clone --depth 1 https://github.com/TinderSec/gh-workflow-auditor.git
-  - python3 -m pip install requests PyYAML -q --disable-pip-version-check --root-user-action=ignore
-
 gh-workflow-auditor:
-  assertStderrNotContains: WARNING
-  run:
-    - export PAT=${{GITHUB_PAT}}; cd gh-workflow-auditor; python main.py --type repo ${{REPO}}
+  install:
+    - git clone --depth 1 https://github.com/TinderSec/gh-workflow-auditor.git
+    - python3 -m pip install requests PyYAML -q --disable-pip-version-check --root-user-action=ignore
+
+  help:
+    - python main.py --help
+
+  test:
+    assertStderrNotContains: WARNING
+    run:
+      - export PAT=${{GITHUB_PAT}}; cd gh-workflow-auditor; python main.py --type repo ${{REPO}}

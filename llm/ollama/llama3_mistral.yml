@@ -6,21 +6,23 @@ settings:
   timeout: 300
   author:
     - https://github.com/ollama
-  example: satori run satori://llm/ollama/llama3_mistral.yml -d INPUT="Hello World" --output
+  example: satori run satori://llm/ollama/llama3_mistral.yml -d INPUT="Hello World" --report --output
 
 MODEL:
-- - "llama3"
-  - "mistral"
-
-install:
-  - apt update >> /dev/null
-  - apt install -qy screen jq curl >> /dev/null
+  - - "llama3"
+    - "mistral"
 
 ollama:
-  assertReturnCode: 0
-  serve:
-    - screen -dm ollama serve; sleep 1
-  pull:
-    - ollama pull ${{MODEL}}
-  generate:
-    - "curl -s http://localhost:11434/api/generate -d '{\"model\": \"${{MODEL}}\",\"prompt\":\"${{INPUT}}\"}' | grep \"model.*response\" | jq -r 'select(.done==false) | .response' | tr -d '\\n'"
+  install:
+    - apt update >> /dev/null; apt install -qy screen jq curl >> /dev/null
+
+  test:
+    assertReturnCode: 0
+    serve:
+      - screen -dm ollama serve; sleep 1
+
+    pull:
+      - ollama pull ${{MODEL}}
+
+    generate:
+      - "curl -s http://localhost:11434/api/generate -d '{\"model\": \"${{MODEL}}\",\"prompt\":\"${{INPUT}}\"}' | grep \"model.*response\" | jq -r 'select(.done==false) | .response' | tr -d '\\n'"

@@ -11,14 +11,18 @@ settings:
 semgrep:
   install:
     - pip install semgrep -q --disable-pip-version-check
+
   help:
     - semgrep --help
+
   test:
     assertReturnCode: 0
     assertStdout: False
     error:
       - semgrep --config auto --severity ERROR -q
+
     warning:
       - semgrep --config auto --severity WARNING -q
+
     info:
       - semgrep --config auto --severity INFO -q

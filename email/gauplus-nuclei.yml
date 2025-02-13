@@ -6,21 +6,19 @@ settings:
     - https://github.com/projectdiscovery
   gallery:
     - https://files.catbox.moe/7tozqa.png
-  example: satori run satori://recon/emails.yml -d DOMAIN="satori.ci" --output
+  example: satori run satori://recon/emails.yml -d DOMAIN="satori.ci" --report --output
 
-install:
-  dependencies:
+gauplus-nuclei:
+  install:
     - apt update >>/dev/null; apt install -qy git >>/dev/null
-  gauplus:
     - go install github.com/bp0lr/gauplus@latest 2>>/dev/null
-  nuclei:
     - go install github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest 2>>/dev/null
-  3p-templates:
     - git clone --depth 1 https://github.com/panch0r3d/nuclei-templates.git
 
-emails:
-  assertReturnCode: 0
-  gauplus:
-    - gauplus -providers commoncrawl -o output ${{DOMAIN}}
-  nuclei:
-    - nuclei -l output -t ./nuclei-templates/email-extraction.yaml
+  test:
+    assertReturnCode: 0
+    gauplus:
+      - gauplus -providers commoncrawl -o output ${{DOMAIN}}
+
+    nuclei:
+      - nuclei -l output -t ./nuclei-templates/email-extraction.yaml

@@ -6,14 +6,15 @@ settings:
     - https://github.com/satorici
   gallery:
     - https://files.catbox.moe/xd763c.gif
-  example: satori run satori://scan/nmap-full-scan.yml -d HOST="satori.ci" --output
-
-install:
-  - apt update >>/dev/null; apt install -qy nmap >>/dev/null
+  example: satori run satori://scan/nmap-full-scan.yml -d HOST="satori.ci" --report --output
 
 nmap-full-scan:
-  assertStdoutContains: "Nmap done"
-  #UDP:
-  #  - nmap --top-ports 100 -sU -A -sC -sV -oN UDP_nmap.txt ${{HOST}}
-  TCP:
-    - nmap -p- -sS -A -sC -sV -oN TCP_nmap.txt ${{HOST}} 
+  install:
+    - apt update >>/dev/null; apt install -qy nmap >>/dev/null
+
+  test:
+    assertStdoutContains: "Nmap done"
+    #UDP:
+    #  - nmap --top-ports 100 -sU -A -sC -sV -oN UDP_nmap.txt ${{HOST}}
+    TCP:
+      - nmap -p- -sS -A -sC -sV -oN TCP_nmap.txt ${{HOST}}

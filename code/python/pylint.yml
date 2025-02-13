@@ -4,15 +4,17 @@ settings:
   image: python
   author:
     - https://github.com/pylint-dev/
-  gallery: 
+  gallery:
     - https://files.catbox.moe/ge78zy.png
   example: satori run ./ --playbook="satori://code/python/pylint.yml" --report --output
-  
+
 pylint:
   install:
     - apt update >>/dev/null; apt install -qy pylint >>/dev/null
+
   help:
     - pylint --help
+
   test:
     assertReturncCode: 0
     run:

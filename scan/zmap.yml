@@ -6,10 +6,7 @@ settings:
     - https://github.com/satorici
   gallery:
     - https://files.catbox.moe/tuoctj.png
-  example: satori run satori://scan/zmap.yml -d PORT="1234" -d HOST="host" --output
-
-install:
-  - apt update >>/dev/null; apt install -qy zmap net-tools >>/dev/null
+  example: satori run satori://scan/zmap.yml -d PORT="1234" -d HOST="host" --report --output
 
 route:
   - route
@@ -17,10 +14,14 @@ route:
 ifconfig:
   - ifconfig
 
-help:
-  - zmap -h
-
 zmap:
-  assertStdout: True
-  run:
-    - zmap -i eth1 -p ${{PORT}} ${{HOST}}
+  install:
+    - apt update >>/dev/null; apt install -qy zmap net-tools >>/dev/null
+
+  help:
+    - zmap -h
+
+  test:
+    assertStdout: True
+    run:
+      - zmap -i eth1 -p ${{PORT}} ${{HOST}}

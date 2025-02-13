@@ -9,9 +9,11 @@ settings:
 swiftlint:
   help:
     - swiftlint -h
+
   test:
     assertReturnCode: 0
     analyze:
       - swiftlint analyze
+
     lint:
       - swiftlint lint

@@ -7,17 +7,17 @@ settings:
   gallery:
     - https://files.catbox.moe/54vy1l.gif
   example: satori run satori://dns/massdns.yml -d DOMAIN="satori.ci" --report --output
-  
+
 RECORD:
-- - A
-  - AAAA
-  - MX
-  - NS
-  - TXT
-  - CNAME
-  - SOA
-  - SRV
-  - PTR
+  - - A
+    - AAAA
+    - MX
+    - NS
+    - TXT
+    - CNAME
+    - SOA
+    - SRV
+    - PTR
 
 massdns:
   install:

@@ -6,14 +6,15 @@ settings:
     - https://github.com/bp0lr
   gallery:
     - https://files.catbox.moe/yj6avp.png
-  example: satori run satori://web/gauplus.yml -d DOMAIN="example.com" --output
-
-install:
-  - go install github.com/bp0lr/gauplus@latest
+  example: satori run satori://web/gauplus.yml -d DOMAIN="example.com" --report --output
 
 gauplus:
+  install:
+    - go install github.com/bp0lr/gauplus@latest
+
   help:
     - gauplus -h
+
   test:
     assertStdout: True
     run:

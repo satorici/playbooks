@@ -10,11 +10,12 @@ settings:
 yamllint:
   install:
     - pip install yamllint --disable-pip-version-check --no-warn-script-location -q
+
   help:
     - yamllint --help
+
   test:
     assertReturnCode: 0
     assertStdoutNotContains: "error"
     run:
       - yamllint . -f colored --no-warnings | grep -v line-length
-

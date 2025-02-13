@@ -9,14 +9,14 @@ settings:
   example: satori run ./ --playbook="satori://code/python/exec.yml" --report --output
 
 KEYWORD:
-- - "pexpect.run"
-  - "eval("
-  - "exec("
-  - "os.system"
-  - "os.popen"
-  - "execfile"
-  - "subprocess.Popen"
-  - "subprocess.call"
+  - - "pexpect.run"
+    - "eval("
+    - "exec("
+    - "os.system"
+    - "os.popen"
+    - "execfile"
+    - "subprocess.Popen"
+    - "subprocess.call"
 
 python_exec:
   assertStdout: False

@@ -6,13 +6,15 @@ settings:
     - https://github.com/projectdiscovery
   gallery:
     - https://files.catbox.moe/b49mxt.png
-  example: satori run satori://web/tlsx.yml -d HOST="satori.ci" --output
+  example: satori run satori://web/tlsx.yml -d HOST="satori.ci" --report --output
 
 tlsx:
   install:
     - go install github.com/projectdiscovery/tlsx/cmd/tlsx@latest 2>>/dev/null
+
   help:
     - tlsx -h
+
   test:
     assertReturnCode: 0
     run:

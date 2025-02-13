@@ -2,15 +2,16 @@ settings:
   name: "Ping a host with no packet loss"
   image: debian
   author:
-  - https://github.com/satorici
+    - https://github.com/satorici
   gallery:
-  - https://files.catbox.moe/mw4jlg.png
-  example: satori run satori://monitor/ping.yml -d HOST="satori.ci" --output
-
-install:
-  - apt update >>/dev/null; apt-get install iputils-ping -qy >>/dev/null
+    - https://files.catbox.moe/mw4jlg.png
+  example: satori run satori://monitor/ping.yml -d HOST="satori.ci" --report --output
 
 ping:
-  assertStdoutContains: "0.0% packet loss"
-  execute: 
-    - ping -c 4 ${{HOST}}
+  install:
+    - apt update >>/dev/null; apt-get install iputils-ping -qy >>/dev/null
+
+  test:
+    assertStdoutContains: "0.0% packet loss"
+    run:
+      - ping -c 4 ${{HOST}}

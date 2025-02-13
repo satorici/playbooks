@@ -5,12 +5,14 @@ settings:
     - https://github.com/satorici
     - https://github.com/pyupio/
   example: satori run ./ --playbook="satori://code/python/safety.yml" --report --output
-  
+
 safety:
   install:
     - pip3 install safety -q --disable-pip-version-check
+
   help:
     - safety --help
+
   test:
     assertReturnCode: 0
     assertStdout: False

@@ -2,24 +2,21 @@ settings:
   name: "CORSTest: misconfiguration scanner"
   description: "CORStest identifies misconfigurations in Cross-Origin Resource Sharing (CORS) implementations. It tests whether arbitrary origins are accepted, credentials are allowed, and methods beyond the standard ones are permitted. The tool helps detect security risks related to improperly configured CORS policies that could lead to unauthorized data access."
   image: python
-  author: 
+  author:
     - https://github.com/RUB-NDS/CORStest
   gallery:
     - https://files.catbox.moe/iaoxhf.png
-  example: satori run satori://web/cors/corstest.yml -d URL="https://satori.ci" --output
-
-install:
-  dependencies:
-    - apt update >>/dev/null; apt install -qy git >>/dev/null
-  corstest:
-    - git clone https://github.com/RUB-NDS/CORStest.git --depth 1
-  input_file:
-    - echo "${{URL}}" > input_file
+  example: satori run satori://web/cors/corstest.yml -d URL="https://satori.ci" --report --output
 
 CORStest:
-  assertReturnCode: 0
+  install:
+    - apt update >>/dev/null; apt install -qy git >>/dev/null
+    - git clone https://github.com/RUB-NDS/CORStest.git --depth 1
+    - echo "${{URL}}" > input_file
+
   help:
     - python3 CORStest/corstest.py --help
+
   test:
     assertStdoutContains: "Not vulnerable"
     run:

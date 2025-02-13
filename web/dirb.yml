@@ -6,12 +6,13 @@ settings:
     - https://github.com/v0re
   gallery:
     - https://files.catbox.moe/siqrj1.png
-  example: satori run satori://web/dirb.yml -d URL="http://example.com" --output
-
-install:
-  - apt update >>/dev/null; apt install -qy dirb >>/dev/null
+  example: satori run satori://web/dirb.yml -d URL="http://example.com" --report --output
 
 dirb:
-  assertStdoutContains: "DOWNLOADED: 4456"
-  common:
-    - dirb ${{URL}} /usr/share/dirb/wordlists/common.txt -S -r -i
+  install:
+    - apt update >>/dev/null; apt install -qy dirb >>/dev/null
+
+  test:
+    assertStdoutContains: "DOWNLOADED: 4456"
+    common:
+      - dirb ${{URL}} /usr/share/dirb/wordlists/common.txt -S -r -i

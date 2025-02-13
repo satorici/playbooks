@@ -6,16 +6,17 @@ settings:
     - https://github.com/projectdiscovery
   gallery:
     - https://files.catbox.moe/q58rym.png
-  example: satori run satori://scan/naabu.yml -d HOST="satori.ci" --output
-
-install:
-  - apt update >>/dev/null; apt install -qy libpcap-dev >>/dev/null
-  - go install github.com/projectdiscovery/naabu/v2/cmd/naabu@latest 2>>/dev/null
-
-help:
-  - naabu --help
+  example: satori run satori://scan/naabu.yml -d HOST="satori.ci" --report --output
 
 naabu:
-  assertReturnCode: 0
-  run:
-    - naabu -host ${{HOST}}
+  install:
+    - apt update >>/dev/null; apt install -qy libpcap-dev >>/dev/null
+    - go install github.com/projectdiscovery/naabu/v2/cmd/naabu@latest 2>>/dev/null
+
+  help:
+    - naabu --help
+
+  test:
+    assertReturnCode: 0
+    run:
+      - naabu -host ${{HOST}}

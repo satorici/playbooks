@@ -5,18 +5,17 @@ settings:
     - https://github.com/bugBlocker
   gallery:
     - https://files.catbox.moe/ur9imn.png
-  example: satori run satori://web/lotus.yml -d URL="http://testphp.vulnweb.com/listproducts.php?cat=1" --output
+  example: satori run satori://web/lotus.yml -d URL="http://testphp.vulnweb.com/listproducts.php?cat=1" --report --output
 
 lotus:
   install:
-    dependencies:
-      - apt update >>/dev/null; apt install -qy jq git lua5.4 liblua5.4-dev libluajit-5.1-dev pkg-config >>/dev/null
-    lotus:
-      - cargo install --git=https://github.com/BugBlocker/lotus/ 2>>/dev/null
-    lotus-scripts:
-      - git clone --depth 1 https://github.com/rusty-sec/lotus-scripts
+    - apt update >>/dev/null; apt install -qy jq git lua5.4 liblua5.4-dev libluajit-5.1-dev pkg-config >>/dev/null
+    - cargo install --git=https://github.com/BugBlocker/lotus/ 2>>/dev/null
+    - git clone --depth 1 https://github.com/rusty-sec/lotus-scripts
+
   help:
     - lotus --help
+
   test:
     assertReturnCode: 0
     run:

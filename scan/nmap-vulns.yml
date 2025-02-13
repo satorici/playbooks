@@ -6,12 +6,13 @@ settings:
     - https://github.com/satorici
   gallery:
     - https://files.catbox.moe/3sdyoy.gif
-  example: satori run satori://scan/nmap-vulns.yml -d HOST="satori.ci" --output
-
-install:
-  - apt update >>/dev/null; apt install -qy nmap >>/dev/null
+  example: satori run satori://scan/nmap-vulns.yml -d HOST="satori.ci" --report --output
 
 nmap-vulns:
-  assertStdoutContains: "Nmap done"
-  run:
-    - nmap --top-ports 100 -sT -sU -A -sC --script vuln --script-args unsafe=1 --open -oA outputfile ${{HOST}}
+  install:
+    - apt update >>/dev/null; apt install -qy nmap >>/dev/null
+
+  test:
+    assertStdoutContains: "Nmap done"
+    run:
+      - nmap --top-ports 100 -sT -sU -A -sC --script vuln --script-args unsafe=1 --open -oA outputfile ${{HOST}}

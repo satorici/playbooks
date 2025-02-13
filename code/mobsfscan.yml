@@ -8,29 +8,32 @@ settings:
   gallery:
     - https://files.catbox.moe/2fokdm.gif
   example: satori run ./ --playbook="satori://code/mobsfscan.yml" --report --output
-  
+
 mobsfscan:
   install:
-    dependencies:
-      - apt update >>/dev/null; apt install -qy jq >>/dev/null
-    mobsfscan:
-      - pip3 install mobsfscan -q --disable-pip-version-check
+    - apt update >>/dev/null; apt install -qy jq >>/dev/null
+    - pip3 install mobsfscan -q --disable-pip-version-check
+
   help:
     - mobsfscan --help
+
   test:
     assertReturnCode: 0
     assertStdout: False
     assertStderr: False
     output:
       - mobsfscan ./ --sarif > mobsfscan-output.log
+
     error:
       setSeverity: 1
       run:
         - cat mobsfscan-output.log | jq '.runs[].results[] | select(.level == "error")' | tee error.log
+
     warning:
       setSeverity: 3
       run:
         - cat mobsfscan-output.log | jq '.runs[].results[] | select(.level == "warning")' | tee warning.log
+
     note:
       setSeverity: 5
       run:

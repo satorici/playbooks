@@ -9,21 +9,23 @@ settings:
   redacted:
     - AWS_ACCESS_KEY_ID
     - AWS_SECRET_ACCESS_KEY
-  
-install:
-  dependencies:
-  - apt update >>/dev/null; apt install -qy python3 python3-pip jq >>/dev/null
-  scoutsuite:
-  - pip3 install scoutsuite -q --disable-pip-version-check --break-system-packages
 
 scout:
-  run:
-    - scout aws --access-key-id ${{AWS_ACCESS_KEY_ID}} --secret-access-key ${{AWS_SECRET_ACCESS_KEY}}
-  output:
-    - "set +f; cat scoutsuite-report/scoutsuite-results/scoutsuite_results_aws-*.js"
-  results:
-    assertStdout: False
-    danger:
-      - "tail -n +2 scoutsuite-report/scoutsuite-results/scoutsuite_results_aws-*.js | jq '.services[].findings[] | select(.level == \"danger\")'"
-    # warning:
-    # - "tail -n +2 scoutsuite-report/scoutsuite-results/scoutsuite_results_aws-*.js | jq '.services[].findings[] | select(.level == \"warning\")'"
+  install:
+    - apt update >>/dev/null; apt install -qy python3 python3-pip jq >>/dev/null
+    - pip3 install scoutsuite -q --disable-pip-version-check --break-system-packages
+
+  help:
+    - scout --help
+
+  test:
+    run:
+      - scout aws --access-key-id ${{AWS_ACCESS_KEY_ID}} --secret-access-key ${{AWS_SECRET_ACCESS_KEY}}
+    output:
+      - "set +f; cat scoutsuite-report/scoutsuite-results/scoutsuite_results_aws-*.js"
+    results:
+      assertStdout: False
+      danger:
+        - "tail -n +2 scoutsuite-report/scoutsuite-results/scoutsuite_results_aws-*.js | jq '.services[].findings[] | select(.level == \"danger\")'"
+      # warning:
+      # - "tail -n +2 scoutsuite-report/scoutsuite-results/scoutsuite_results_aws-*.js | jq '.services[].findings[] | select(.level == \"warning\")'"

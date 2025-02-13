@@ -8,13 +8,14 @@ settings:
     - https://placehold.co/600x400
   example: satori run ./ --playbook="satori://code/python/bandit.yml" --report --output
 
-install:
-  - pip install bandit -q --disable-pip-version-check
-
 bandit:
-  - bandit --help
+  install:
+    - pip install bandit -q --disable-pip-version-check
 
-bandit:
-  assertStdoutContains: "No issues identified"
-  run:
-    - bandit -r ./
+  help:
+    - bandit --help
+
+  test:
+    assertStdoutContains: "No issues identified"
+    run:
+      - bandit -r ./

@@ -7,7 +7,7 @@ settings:
   gallery:
     - https://files.catbox.moe/t5vgws.png
   example: satori run satori://dns/dnscan.yml -d DOMAIN="satori.ci" --report --output
-  
+
 dnscan:
   install:
     - apt update >>/dev/null; apt install -qy git >>/dev/null

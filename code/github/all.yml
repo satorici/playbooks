@@ -12,40 +12,41 @@ settings:
     - https://github.com/semgrep
   example: satori run satori://code/github/all.yml -d REPO=satorici/satori-cli -d GITHUB_PAT=TBC --report --output
 
-install:
-  # dependencies
-  - apt-get update -qq; apt-get install python3-pip -qy >>/dev/null
-  # octoscan
-  - cd /tmp; git clone --depth 1 https://github.com/synacktiv/octoscan.git 2>>/dev/null; cd octoscan; go mod tidy 2>>/dev/null; go build
-  # gato-x
-  - cd /tmp; git clone --depth 1 https://github.com/AdnaneKhan/gato-x 2>>/dev/null; cd gato-x; python3 -m pip install . -q --disable-pip-version-check --root-user-action=ignore --break-system-packages 
-  # gh-workflow-auditor
-  - cd /tmp; git clone --depth 1 https://github.com/TinderSec/gh-workflow-auditor.git 2>>/dev/null; python3 -m pip install requests PyYAML -q --disable-pip-version-check --root-user-action=ignore --break-system-packages 
-  # semgrep
-  - pip install semgrep -q --disable-pip-version-check --root-user-action=ignore --break-system-packages 
-  # clone repo
-  - git clone --depth 1 https://github.com/${{REPO}}.git
+github_actions_all:
+  install:
+    # dependencies
+    - apt-get update -qq; apt-get install python3-pip -qy >>/dev/null
+    # octoscan
+    - cd /tmp; git clone --depth 1 https://github.com/synacktiv/octoscan.git 2>>/dev/null; cd octoscan; go mod tidy 2>>/dev/null; go build
+    # gato-x
+    - cd /tmp; git clone --depth 1 https://github.com/AdnaneKhan/gato-x 2>>/dev/null; cd gato-x; python3 -m pip install . -q --disable-pip-version-check --root-user-action=ignore --break-system-packages
+    # gh-workflow-auditor
+    - cd /tmp; git clone --depth 1 https://github.com/TinderSec/gh-workflow-auditor.git 2>>/dev/null; python3 -m pip install requests PyYAML -q --disable-pip-version-check --root-user-action=ignore --break-system-packages
+    # semgrep
+    - pip install semgrep -q --disable-pip-version-check --root-user-action=ignore --break-system-packages
+    # clone repo
+    - git clone --depth 1 https://github.com/${{REPO}}.git
 
-sast:
-  assertStdout: False
-  secrets:
-    - cd */.github/workflows; semgrep --config 'p/secrets' -q --max-chars-per-line 1024
-  octoscan:
-    - find ./ -name "*.yml" | grep "github/workflows" | xargs -IX /tmp/octoscan/octoscan scan X
-  semgrep:
-    - semgrep --config 'p/github-actions' -q --max-chars-per-line 1024
+  test:
+    sast:
+      assertStdout: False
+      secrets:
+        - cd */.github/workflows; semgrep --config 'p/secrets' -q --max-chars-per-line 1024
+      octoscan:
+        - find ./ -name "*.yml" | grep "github/workflows" | xargs -IX /tmp/octoscan/octoscan scan X
+      semgrep:
+        - semgrep --config 'p/github-actions' -q --max-chars-per-line 1024
 
-dast:
-  gato-x:
-    assertStdoutNotContains:
-      - HIGH
-      - MEDIUM
-      - LOW
-      - UNKNOWN
-    run:
-      - export GH_TOKEN=${{GITHUB_PAT}}; gato-x e --repository ${{REPO}} 
-  gh-workflow-auditor:
-    assertStderrNotContains: WARNING
-    run:
-      - export PAT=${{GITHUB_PAT}}; cd /tmp/gh-workflow-auditor; python3 main.py --type repo ${{REPO}}
-
+    dast:
+      gato-x:
+        assertStdoutNotContains:
+          - HIGH
+          - MEDIUM
+          - LOW
+          - UNKNOWN
+        run:
+          - export GH_TOKEN=${{GITHUB_PAT}}; gato-x e --repository ${{REPO}}
+      gh-workflow-auditor:
+        assertStderrNotContains: WARNING
+        run:
+          - export PAT=${{GITHUB_PAT}}; cd /tmp/gh-workflow-auditor; python3 main.py --type repo ${{REPO}}

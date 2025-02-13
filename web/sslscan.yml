@@ -6,15 +6,15 @@ settings:
     - https://github.com/satorici
   gallery:
     - https://files.catbox.moe/o8ey2s.png
-  example: satori run satori://web/sslscan.yml -d HOST="satori.ci:443" --output
-
-install:
-  - apt update >>/dev/null; apt install -qy sslscan >>/dev/null
-
-help:
-  - sslscan --help
+  example: satori run satori://web/sslscan.yml -d HOST="satori.ci:443" --report --output
 
 sslscan:
+  install:
+    - apt update >>/dev/null; apt install -qy sslscan >>/dev/null
+
+  help:
+    - sslscan --help
+
   test:
     assertStdoutNotContains:
       - "TLSv1.0   enabled"

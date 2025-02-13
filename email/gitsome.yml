@@ -1,17 +1,21 @@
 settings:
   name: "gitSome: gets emails associated with a Github account"
   image: python
-  author: 
+  author:
     - https://github.com/chm0dx
-  gallery: 
+  gallery:
     - https://files.catbox.moe/bnkkxg.png
-  example: satori run satori://email/gitsome.yml -d USER=octocat --output
-
-install:
-  - git clone --depth 1 https://github.com/chm0dx/gitSome.git
-  - cd gitSome; pip install -r requirements.txt -q --disable-pip-version-check --root-user-action=ignore
+  example: satori run satori://email/gitsome.yml -d USER=octocat --report --output
 
 gitsome:
-  assertStdoutNotContains: "@"
-  run:
-    - python3 gitSome/gitSome.py -u ${{USER}}
+  install:
+    - git clone --depth 1 https://github.com/chm0dx/gitSome.git
+    - cd gitSome; pip install -r requirements.txt -q --disable-pip-version-check --root-user-action=ignore
+
+  help:
+    - python3 gitSome/gitSome.py --help
+
+  test:
+    assertStdoutNotContains: "@"
+    run:
+      - python3 gitSome/gitSome.py -u ${{USER}}

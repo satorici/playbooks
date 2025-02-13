@@ -2,9 +2,9 @@ settings:
   name: "Subfinder: Discover valid subdomains using passive online sources"
   image: golang
   author:
-  - https://github.com/projectdiscovery
+    - https://github.com/projectdiscovery
   gallery:
-  - https://files.catbox.moe/6km2wy.png
+    - https://files.catbox.moe/6km2wy.png
   example: satori run satori://dns/subfinder.yml  -d DOMAIN="satori.ci" --report --output
 
 subfinder:

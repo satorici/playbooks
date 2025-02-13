@@ -11,8 +11,10 @@ settings:
 octoscan:
   install:
     - command -v octoscan||(apt update -qq;apt install -qy git;git clone --depth=1 https://github.com/synacktiv/octoscan.git;cd octoscan;go mod tidy;go install)
+
   help:
     - octoscan --help
+
   test:
     assertStdout: False
     run:

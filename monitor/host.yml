@@ -1,17 +1,17 @@
 settings:
   name: "Host: Check if a host has an IP address"
   image: debian
-  description: 
   author:
-  - https://github.com/satorici
+    - https://github.com/satorici
   gallery:
-  - https://files.catbox.moe/8d7b4t.png
-  example: satori run satori://monitor/host.yml -d HOST="host_name" -d IP="ip_adress" --output
-
-install:
-  - apt update >>/dev/null; apt install -qy dnsutils >>/dev/null
+    - https://files.catbox.moe/8d7b4t.png
+  example: satori run satori://monitor/host.yml -d HOST="host_name" -d IP="ip_adress" --report --output
 
 host:
-  assertStdoutContains: "${{HOST}} has address ${{IP}}"
-  execute: 
-  - host ${{HOST}}
+  install:
+    - apt update >>/dev/null; apt install -qy dnsutils >>/dev/null
+
+  test:
+    assertStdoutContains: "${{HOST}} has address ${{IP}}"
+    run:
+      - host ${{HOST}}

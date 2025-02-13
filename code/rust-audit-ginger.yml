@@ -3,27 +3,28 @@ settings:
   image: rust
   files: true
   author:
-  - https://github.com/rustsec
-  example: satori run satori://code/rust-audit-ginger.yml --output
+    - https://github.com/rustsec
+  example: satori run satori://code/rust-audit-ginger.yml --report --output
 
 rust_audit_ginger:
   install:
     - apt install -qy pkg-config libssl-dev >>/dev/null
     - cargo install cargo-geiger cargo-audit 2>>/dev/null
-   
-  cargo-audit:
-    assertStdoutNotContains:
-      - Severity
-      - advisories
-    setSeverity: 4
-    run:
-      - cargo audit | tee audit.txt
 
-  cargo-geiger:
-    assertStdoutNotContains: "!  │"
-    setSeverity: 4
-    run:
-      - cargo geiger | tee geiger.txt
+  test:
+    cargo-audit:
+      assertStdoutNotContains:
+        - Severity
+        - advisories
+      setSeverity: 4
+      run:
+        - cargo audit | tee audit.txt
+
+    cargo-geiger:
+      assertStdoutNotContains: "!  │"
+      setSeverity: 4
+      run:
+        - cargo geiger | tee geiger.txt
 
   rm:
     - rm -fr target/

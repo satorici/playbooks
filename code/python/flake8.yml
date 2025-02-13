@@ -2,7 +2,7 @@ settings:
   name: "Flake8: check the style and quality of Python code."
   description: "Flake8 is a wrapper around PyFlakes, pycodestyle, and Ned Batchelder's McCabe script. Flake8 runs all the tools by launching the single flake8 command. It displays the warnings in a per-file, merged output."
   image: python
-  gallery: 
+  gallery:
     - https://files.catbox.moe/j3x5vg.png
   author:
     - https://github.com/PyCQA
@@ -11,6 +11,10 @@ settings:
 flake8:
   install:
     - pip install flake8 -q --disable-pip-version-check
+
+  help:
+    - flake8 --help
+
   test:
     assertReturnCode: 0
     assertStdout: False
