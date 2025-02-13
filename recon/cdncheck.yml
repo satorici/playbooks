@@ -1,5 +1,5 @@
 settings:
-  name: "Identify the technology associated with a host: CDN, CLOUD or WAF"
+  name: "cdncheck: Identify the technology associated with a host (CDN, CLOUD or WAF)"
   image: golang
   author:
     - https://github.com/projectdiscovery
@@ -7,13 +7,13 @@ settings:
     - https://files.catbox.moe/7cj3mn.png
   example: satori run satori://recon/cdncheck.yml -d HOST="satori.ci" --output
 
-install:
-    - go install github.com/projectdiscovery/cdncheck/cmd/cdncheck@latest
-
 cdncheck:
+  install:
+    - go install github.com/projectdiscovery/cdncheck/cmd/cdncheck@latest 2>>/dev/null
   help:
     - cdncheck -duc -h
   check:
-    assertStdoutNotContains: "No results found"
+    assertReturnCode: 0
+    assertStdoutContains: "No results found"
     run:
       - cdncheck -duc -resp -i ${{HOST}}
