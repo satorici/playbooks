@@ -3,17 +3,17 @@ settings:
   description: "Octoscan is a reconnaissance tool that automates the process of scanning GitHub organizations and repositories for potential security issues in Github Workflows."
   image: ghcr.io/synacktiv/octoscan
   author:
-  - https://github.com/synacktiv
+    - https://github.com/synacktiv
   gallery:
-  - https://files.catbox.moe/cakzpb.png
-  example: satori repo udacity/deep-reinforcement-learning run --playbook=octoscan.yml --report --output
-  cpu: 256
-  memory: 512
-
-help:
-  - octoscan --help
+    - https://files.catbox.moe/cakzpb.png
+  example: satori run ./ --playbook=satori://code/github/octoscan.yml --report --output
 
 octoscan:
-  assertStdout: False
-  run:
-    - find ./ -name "*.yml" | grep "github/workflows" | xargs -IX octoscan scan X
+  install:
+    - command -v octoscan||(apt update -qq;apt install -qy git;git clone --depth=1 https://github.com/synacktiv/octoscan.git;cd octoscan;go mod tidy;go install)
+  help:
+    - octoscan --help
+  test:
+    assertStdout: False
+    run:
+      - find ./ -name "*.yml" | grep "github/workflows" | xargs -IX octoscan scan X
