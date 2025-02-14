@@ -1,7 +1,7 @@
 settings:
   name: "TestSSL: Checks TLS/SSL ciphers and protocols for security flaws"
   description: "Check a server's service on any port for the support of TLS/SSL ciphers, protocols as well as some cryptographic flaws."
-  image: ubuntu:jammy
+  image: debian
   gallery:
     - https://files.catbox.moe/44b58j.gif
   author:

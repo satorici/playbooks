@@ -1,6 +1,6 @@
 settings:
   name: Pass in a list of URLs, and get back a list of deduplicated (unique) URL and query string combination
-  image: ubuntu:jammy
+  image: debian
   author:
     - https://github.com/ameenmaali
   gallery:

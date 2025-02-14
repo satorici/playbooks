@@ -5,10 +5,10 @@ settings:
   files: True
   author:
     - https://github.com/nccgroup
-  example: satori run satori://cloud/scoutsuite.yml -d AWS_ACCESS_KEY_ID=TBC -d AWS_SECRET_ACCESS_KEY=TBC --files --report --output
+  example: satori run satori://cloud/scoutsuite.yml -d AWS_ACCESS_KEY=TBC -d AWS_SECRET_KEY=TBC --files --report --output
   redacted:
-    - AWS_ACCESS_KEY_ID
-    - AWS_SECRET_ACCESS_KEY
+    - AWS_ACCESS_KEY
+    - AWS_SECRET_KEY
 
 scout:
   install:
@@ -20,7 +20,7 @@ scout:
 
   test:
     run:
-      - scout aws --access-key-id ${{AWS_ACCESS_KEY_ID}} --secret-access-key ${{AWS_SECRET_ACCESS_KEY}}
+      - scout aws --access-key-id ${{AWS_ACCESS_KEY}} --secret-access-key ${{AWS_SECRET_KEY}}
     output:
       - "set +f; cat scoutsuite-report/scoutsuite-results/scoutsuite_results_aws-*.js"
     results:

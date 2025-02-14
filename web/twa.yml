@@ -1,7 +1,7 @@
 settings:
   name: "TWA: Tiny Web Auditor"
   description: "twa audits web security headers and configurations. It checks for issues such as HTTP redirects to HTTP, missing security headers, and the absence of Content-Security-Policy. Findings are categorized into levels to indicate severity and status."
-  image: ubuntu:jammy
+  image: debian
   author:
     - https://github.com/trailofbits/twa
   gallery:
@@ -11,12 +11,12 @@ settings:
 twa:
   install:
     - apt update >>/dev/null; apt install -qy jq curl dnsutils netcat-traditional git >>/dev/null
-    - git clone --depth 1 https://github.com/trailofbits/twa.git
+    - cd /tmp; git clone --depth 1 https://github.com/trailofbits/twa.git
 
   help:
-    - twa/twa --help
+    - /tmp/twa/twa --help
 
   test:
     assertStdoutNotContains: FAIL
     run:
-      - twa/twa -v ${{HOST}}
+      - /tmp/twa/twa -v ${{HOST}}

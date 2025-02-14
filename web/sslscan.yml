@@ -1,7 +1,7 @@
 settings:
   name: "SSLScan: Identify security issues related to SSL/TLS/HTTPS services"
   description: "It reports the protocol versions, cipher suites, key exchanges, signature algorithms, and certificates in use."
-  image: ubuntu:jammy
+  image: debian
   author:
     - https://github.com/satorici
   gallery:
