@@ -10,12 +10,12 @@ settings:
 assetFinder:
   install:
     - apt update >>/dev/null; apt install -qy wget >>/dev/null
-    - wget -q https://github.com/tomnomnom/assetfinder/releases/download/v0.1.1/assetfinder-linux-amd64-0.1.1.tgz; tar -zxf assetfinder-linux-amd64-0.1.1.tgz
+    - cd /tmp; wget -q https://github.com/tomnomnom/assetfinder/releases/download/v0.1.1/assetfinder-linux-amd64-0.1.1.tgz; tar -zxf assetfinder-linux-amd64-0.1.1.tgz
 
   help:
-    - ./assetfinder --help
+    - /tmp/assetfinder --help
 
   test:
     assertReturnCode: 0
     subs:
-      - ./assetfinder -subs-only ${{DOMAIN}} | sort -u
+      - /tmp/assetfinder -subs-only ${{DOMAIN}} | sort -u

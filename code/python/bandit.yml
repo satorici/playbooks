@@ -6,7 +6,7 @@ settings:
     - https://github.com/PyCQA
   gallery:
     - https://placehold.co/600x400
-  example: satori run ./ --playbook="satori://code/python/bandit.yml" --report --output
+  example: satori run ./ --playbook satori://code/python/bandit.yml --report --output
 
 bandit:
   install:

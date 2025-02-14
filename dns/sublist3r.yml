@@ -8,17 +8,15 @@ settings:
 
 sublist3r:
   install:
-    - apt install -qy git >>/dev/null
-    - git clone --depth 1 https://github.com/aboul3la/Sublist3r.git
-    - pip install -r Sublist3r/requirements.txt -q --disable-pip-version-check --root-user-action=ignore
+    - pip install git+https://github.com/aboul3la/Sublist3r.git
 
   help:
-    - python Sublist3r/sublist3r.py -h
+    - sublist3r -h
 
   test:
     assertReturnCode: 0
     assertStdout: False
     run:
-      - python Sublist3r/sublist3r.py -o results.txt -v -d ${{DOMAIN}} -t 5 -e bing,yahoo
+      - sublist3r -o results.txt -v -d ${{DOMAIN}} -t 5 -e bing,yahoo
     read:
       - cat results.txt

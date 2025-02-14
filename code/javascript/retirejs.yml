@@ -6,7 +6,7 @@ settings:
     - https://github.com/RetireJS
   gallery:
     - https://files.catbox.moe/86vziv.png
-  example: satori run ./ --playbook="satori://code/javascript/retirejs.yml" --report --output
+  example: satori run ./ --playbook satori://code/javascript/retirejs.yml --report --output
 
 retirejs:
   install:

@@ -9,13 +9,12 @@ settings:
 
 theHarvest:
   install:
-    - apt install -qy git >>/dev/null
-    - git clone --depth 1 https://github.com/laramies/theHarvester ; pip3 install -r theHarvester/requirements/base.txt -q --disable-pip-version-check --root-user-action=ignore
+    - pip install git+https://github.com/laramies/theHarvester.git
 
   help:
-    - python3 theHarvester/theHarvester.py -h
+    - theHarvester -h
 
   test:
     assertReturnCode: 0
     run:
-      - python3 theHarvester/theHarvester.py -d ${{DOMAIN}} -b baidu
+      - theHarvester -d ${{DOMAIN}} -b baidu

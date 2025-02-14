@@ -5,7 +5,7 @@ settings:
     - https://github.com/astral-sh
   gallery:
     - https://files.catbox.moe/fso4nn.gif
-  example: satori run ./ --playbook="satori://code/python/ruff.yml" --report --output
+  example: satori run ./ --playbook satori://code/python/ruff.yml --report --output
 
 ruff:
   install:

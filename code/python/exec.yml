@@ -6,7 +6,7 @@ settings:
     - https://github.com/satorici
   gallery:
     - https://files.catbox.moe/p19cst.png
-  example: satori run ./ --playbook="satori://code/python/exec.yml" --report --output
+  example: satori run ./ --playbook satori://code/python/exec.yml --report --output
 
 KEYWORD:
   - - "pexpect.run"

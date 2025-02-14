@@ -9,7 +9,7 @@ shuffledns:
   install:
     - go install github.com/projectdiscovery/shuffledns/cmd/shuffledns@latest 2>>/dev/null
     - apt update >>/dev/null; apt install git make gcc -qy >>/dev/null
-    - git clone https://github.com/blechschmidt/massdns.git; cd massdns && make
+    - cd /tmp; git clone https://github.com/blechschmidt/massdns.git; cd massdns; make
 
   help:
     - shuffledns -h
@@ -18,4 +18,4 @@ shuffledns:
     assertStdout: True
     assertStderrNotContains: ERR
     run:
-      - echo '${{DOMAIN}}' | shuffledns -m massdns/bin/massdns -r /data/massdns/lists/resolvers.txt -mode resolve
+      - echo '${{DOMAIN}}' | shuffledns -m /tmp/massdns/bin/massdns -r /tmp/massdns/lists/resolvers.txt -mode resolve

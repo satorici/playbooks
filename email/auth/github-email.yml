@@ -9,9 +9,9 @@ settings:
 github-email:
   install:
     - apt update >>/dev/null; apt install -qy git curl jq >>/dev/null
-    - git clone --depth 1 https://github.com/paulirish/github-email.git
+    - cd /tmp; git clone --depth 1 https://github.com/paulirish/github-email.git
 
   test:
     assertStdoutContains: "@"
     run:
-      - export GH_EMAIL_TOKEN={{GITHUB_PAT}}; github-email/github-email.sh ${{USER}}
+      - export GH_EMAIL_TOKEN={{GITHUB_PAT}}; /tmp/github-email/github-email.sh ${{USER}}

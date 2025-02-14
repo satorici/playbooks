@@ -4,7 +4,7 @@ settings:
   author:
     - https://github.com/satorici
     - https://github.com/pyupio/
-  example: satori run ./ --playbook="satori://code/python/safety.yml" --report --output
+  example: satori run ./ --playbook satori://code/python/safety.yml --report --output
 
 safety:
   install:

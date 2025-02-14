@@ -10,7 +10,7 @@ settings:
 puredns:
   install:
     - apt update >>/dev/null; apt install -y git make gcc >>/dev/null
-    - git clone https://github.com/blechschmidt/massdns.git; cd massdns && make
+    - cd /tmp; git clone https://github.com/blechschmidt/massdns.git; cd massdns; make
     - go install github.com/d3mondev/puredns/v2@latest 2>>/dev/null
     - echo "${{DOMAIN}}" > input_file.txt
 
@@ -20,4 +20,4 @@ puredns:
   test:
     assertReturnCode: 0
     run:
-      - puredns resolve input_file.txt --bin ./massdns/bin/massdns --resolvers ./massdns/lists/resolvers.txt
+      - puredns resolve input_file.txt --bin /tmp/massdns/bin/massdns --resolvers /tmp/massdns/lists/resolvers.txt

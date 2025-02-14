@@ -9,13 +9,12 @@ settings:
 
 gitxray:
   install:
-    - cd /tmp; git clone https://github.com/kulkansecurity/gitxray.git --depth 1 >>/dev/null
-    - python3 -m pip install -r /tmp/gitxray/requirements.txt >>/dev/null
+    - pip install git+https://github.com/kulkansecurity/gitxray.git
 
   help:
-    - cd /tmp/gitxray/src; python3 -m gitxray.gitxray --help
+    - python3 -m gitxray.gitxray --help
 
   test:
     assertReturnCode: 0
     repo:
-      - cd /tmp/gitxray/src; python3 -m gitxray.gitxray -r https://github.com/${{REPO}} -outformat text --shush
+      - python3 -m gitxray.gitxray -r https://github.com/${{REPO}} -outformat text --shush

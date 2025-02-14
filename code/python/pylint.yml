@@ -6,7 +6,7 @@ settings:
     - https://github.com/pylint-dev/
   gallery:
     - https://files.catbox.moe/ge78zy.png
-  example: satori run ./ --playbook="satori://code/python/pylint.yml" --report --output
+  example: satori run ./ --playbook satori://code/python/pylint.yml --report --output
 
 pylint:
   install:

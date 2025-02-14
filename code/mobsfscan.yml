@@ -7,7 +7,7 @@ settings:
     - https://github.com/MobSF
   gallery:
     - https://files.catbox.moe/2fokdm.gif
-  example: satori run ./ --playbook="satori://code/mobsfscan.yml" --report --output
+  example: satori run ./ --playbook satori://code/mobsfscan.yml --report --output
 
 mobsfscan:
   install:

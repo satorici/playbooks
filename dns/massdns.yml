@@ -22,13 +22,13 @@ RECORD:
 massdns:
   install:
     - apt update >> /dev/null; apt install git make gcc -qy >> /dev/null
-    - git clone https://github.com/blechschmidt/massdns.git; cd massdns && make
+    - cd /tmp; git clone https://github.com/blechschmidt/massdns.git; cd massdns && make
     - echo "${{DOMAIN}}" > domain.txt
 
   help:
-    - ./massdns/bin/massdns --help
+    - /tmp/massdns/bin/massdns --help
 
   test:
     assertReturnCode: 0
     run:
-      - ./massdns/bin/massdns -q -r massdns/lists/resolvers.txt -t ${{RECORD}} -o F -w output_${{RECORD}}.txt domain.txt; cat output_${{RECORD}}.txt
+      - /tmp/massdns/bin/massdns -q -r /tmp/massdns/lists/resolvers.txt -t ${{RECORD}} -o F -w output_${{RECORD}}.txt domain.txt; cat output_${{RECORD}}.txt

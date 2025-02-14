@@ -9,13 +9,12 @@ settings:
 
 gitsome:
   install:
-    - git clone --depth 1 https://github.com/chm0dx/gitSome.git
-    - cd gitSome; pip install -r requirements.txt -q --disable-pip-version-check --root-user-action=ignore
+    - cd /tmp; git clone --depth 1 https://github.com/chm0dx/gitSome.git; pip install -r gitSome/requirements.txt -q --disable-pip-version-check --root-user-action=ignore
 
   help:
-    - python3 gitSome/gitSome.py --help
+    - python3 /tmp/gitSome/gitSome.py --help
 
   test:
     assertStdoutNotContains: "@"
     run:
-      - python3 gitSome/gitSome.py -u ${{USER}}
+      - python3 /tmp/gitSome/gitSome.py -u ${{USER}}

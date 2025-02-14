@@ -1,5 +1,5 @@
 settings:
-  name: "Nikto: Tests web servers for over 6700 security threats"
+  name: "Nikto: Tests web servers for security threats"
   image: debian
   author:
     - https://github.com/sullo
@@ -11,12 +11,12 @@ nikto:
   install:
     - apt update >>/dev/null; apt install -qy wget build-essential cpanminus libssl-dev zlib1g-dev >>/dev/null
     - cpanm Time::Local Net::hostent Time::HiRes Net::SSLeay IO::Socket::SSL >>/dev/null
-    - wget -qO nikto.tar.gz https://github.com/sullo/nikto/archive/master.tar.gz; tar xf nikto.tar.gz --strip-components=2 -C ./ nikto-master/program
+    - cd /tmp; wget -qO nikto.tar.gz https://github.com/sullo/nikto/archive/master.tar.gz; tar xf nikto.tar.gz --strip-components=2 -C ./ nikto-master/program
 
   help:
-    - ./nikto.pl --help
+    - /tmp/nikto.pl --help
 
   test:
     assertReturnCode: 0
     run:
-      - ./nikto.pl -host ${{URL}}
+      - /tmp/nikto.pl -host ${{URL}}

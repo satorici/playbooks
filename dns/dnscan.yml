@@ -11,13 +11,12 @@ settings:
 dnscan:
   install:
     - apt update >>/dev/null; apt install -qy git >>/dev/null
-    - git clone --depth 1 https://github.com/rbsec/dnscan.git
-    - pip install -r dnscan/requirements.txt -q --disable-pip-version-check
+    - cd /tmp; git clone --depth 1 https://github.com/rbsec/dnscan.git; pip install -r dnscan/requirements.txt -q --disable-pip-version-check
 
   help:
-    - python3 dnscan/dnscan.py -h
+    - python3 /tmp/dnscan/dnscan.py -h
 
   test:
     assertReturnCode: 0
     run:
-      - python3 dnscan/dnscan.py -d ${{DOMAIN}}
+      - python3 /tmp/dnscan/dnscan.py -d ${{DOMAIN}}

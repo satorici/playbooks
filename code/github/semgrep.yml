@@ -8,7 +8,7 @@ settings:
     - https://github.com/semgrep
   cpu: 256
   memory: 512
-  example: satori run ./ --playbook="satori://code/github/semgrep.yml" --report --output
+  example: satori run ./ --playbook satori://code/github/semgrep.yml --report --output
 
 semgrep:
   install:

@@ -1,5 +1,5 @@
 settings:
-  name: "Gauplus+Nuclei: Get all urls of a domain and search for email addresses"
+  name: "Gauplus+Nuclei: Get the urls of a domain and search for email addresses"
   image: golang
   author:
     - https://github.com/bp0lr
@@ -13,7 +13,7 @@ gauplus-nuclei:
     - apt update >>/dev/null; apt install -qy git >>/dev/null
     - go install github.com/bp0lr/gauplus@latest 2>>/dev/null
     - go install github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest 2>>/dev/null
-    - git clone --depth 1 https://github.com/panch0r3d/nuclei-templates.git
+    - cd /tmp; git clone --depth 1 https://github.com/panch0r3d/nuclei-templates.git
 
   test:
     assertReturnCode: 0
@@ -21,4 +21,4 @@ gauplus-nuclei:
       - gauplus -providers commoncrawl -o output ${{DOMAIN}}
 
     nuclei:
-      - nuclei -l output -t ./nuclei-templates/email-extraction.yaml
+      - nuclei -l output -t /tmp/nuclei-templates/email-extraction.yaml

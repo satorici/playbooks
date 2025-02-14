@@ -6,7 +6,7 @@ settings:
     - https://github.com/semgrep
   gallery:
     - https://files.catbox.moe/dj0xyt.png
-  example: satori run ./ --playbook="satori://code/semgrep.yml" --report --output
+  example: satori run ./ --playbook satori://code/semgrep.yml --report --output
 
 semgrep:
   install:

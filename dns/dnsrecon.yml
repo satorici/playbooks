@@ -16,13 +16,12 @@ settings:
 
 dnsrecon:
   install:
-    - git clone --depth 1 https://github.com/darkoperator/dnsrecon.git
-    - pip install -r dnsrecon/requirements.txt -q --disable-pip-version-check --root-user-action=ignore
+    - pip install git+https://github.com/darkoperator/dnsrecon.git
 
   help:
-    - python3 dnsrecon/dnsrecon.py -h
+    - dnsrecon -h
 
   test:
     assertReturnCode: 0
     run:
-      - python3 dnsrecon/dnsrecon.py -d ${{DOMAIN}}
+      - dnsrecon -d ${{DOMAIN}}

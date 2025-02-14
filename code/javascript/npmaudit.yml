@@ -4,7 +4,7 @@ settings:
   image: public.ecr.aws/h8o5p8e3/satori/base-image:latest
   author:
     - https://github.com/npm
-  example: satori run ./ --playbook="satori://code/javascript/npmaudit.yml" --report --output
+  example: satori run ./ --playbook satori://code/javascript/npmaudit.yml --report --output
 
 npm:
   install:

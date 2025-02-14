@@ -10,11 +10,11 @@ settings:
 cloudscraper:
   install:
     - apt update >>/dev/null; apt install -qy git >>/dev/null
-    - git clone https://github.com/jordanpotti/CloudScraper.git --depth 1; pip3 install -r CloudScraper/requirements.txt -q --disable-pip-version-check
+    - cd /tmp; git clone https://github.com/jordanpotti/CloudScraper.git --depth 1; pip3 install -r CloudScraper/requirements.txt -q --disable-pip-version-check
 
   help:
-    - python3 CloudScraper/CloudScraper.py --help
+    - python3 /tmp/CloudScraper/CloudScraper.py --help
   test:
     assertStdoutContains: "There were no matches!"
     run:
-      - python3 CloudScraper/CloudScraper.py -u ${{URL}}
+      - python3 /tmp/CloudScraper/CloudScraper.py -u ${{URL}}

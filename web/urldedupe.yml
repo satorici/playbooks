@@ -1,5 +1,6 @@
 settings:
-  name: Pass in a list of URLs, and get back a list of deduplicated (unique) URL and query string combination
+  name: "Urldedupe: deduplicates a list of similar URLs"
+  description: "Pass in a list of URLs with newlines, and get back a list of deduplicated (unique) URL and query string combination"
   image: debian
   author:
     - https://github.com/ameenmaali
@@ -10,11 +11,10 @@ settings:
 urldedupe:
   install:
     - apt update >>/dev/null; apt install -qy git build-essential make cmake >>/dev/null
-    - git clone --depth 1 https://github.com/ameenmaali/urldedupe.git
-    - cd urldedupe ; cmake CMakeLists.txt ; make
+    - cd /tmp; git clone --depth 1 https://github.com/ameenmaali/urldedupe.git; cd urldedupe ; cmake CMakeLists.txt ; make
 
   test:
     assertReturnCode: 0
     assertStdout: True
     run:
-      - echo "${{URL}}" | urldedupe/urldedupe
+      - echo "${{URL}}" | /tmp/urldedupe/urldedupe

@@ -11,12 +11,12 @@ settings:
 corsy:
   install:
     - apt update >>/dev/null; apt install -qy git >>/dev/null
-    - git clone --depth 1 https://github.com/s0md3v/Corsy.git; pip3 install -r Corsy/requirements.txt -q --disable-pip-version-check
+    - cd /tmp; git clone --depth 1 https://github.com/s0md3v/Corsy.git; pip3 install -r Corsy/requirements.txt -q --disable-pip-version-check
 
   help:
-    - python3 Corsy/corsy.py -h
+    - python3 /tmp/Corsy/corsy.py -h
 
   test:
     assertStdoutContains: "No misconfigurations found"
     run:
-      - python3 Corsy/corsy.py -u ${{URL}}
+      - python3 /tmp/Corsy/corsy.py -u ${{URL}}

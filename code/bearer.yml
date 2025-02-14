@@ -6,16 +6,16 @@ settings:
   author:
     - https://github.com/Bearer
   image: python
-  example: satori run ./ --playbook="satori://code/bearer.yml" --report --output
+  example: satori run ./ --playbook=satori://code/bearer.yml --report --output
 
 bearer:
   install:
-    - curl -sfL https://raw.githubusercontent.com/Bearer/bearer/main/contrib/install.sh | sh
+    - cd /tmp; curl -sfL https://raw.githubusercontent.com/Bearer/bearer/main/contrib/install.sh | sh
 
   help:
-    - ./bin/bearer --help
+    - /tmp/bin/bearer --help
 
   test:
     assertStdoutNotContains: "no failures were detected"
     scan:
-      - ./bin/bearer scan ./ --hide-progress-bar
+      - /tmp/bin/bearer scan ./ --hide-progress-bar

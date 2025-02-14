@@ -10,12 +10,12 @@ settings:
 sqlmap:
   install:
     - apt update >>/dev/null; apt install -qy git
-    - git clone --depth 1 https://github.com/sqlmapproject/sqlmap.git
+    - cd /tmp; git clone --depth 1 https://github.com/sqlmapproject/sqlmap.git
 
   help:
-    - python3 sqlmap/sqlmap.py -hh
+    - python3 /tmp/sqlmap/sqlmap.py -hh
 
   test:
     assertStdoutNotContains: "sqlmap identified the following injection point"
     run:
-      - python3 sqlmap/sqlmap.py -u ${{URL}}
+      - python3 /tmp/sqlmap/sqlmap.py -u ${{URL}}
