@@ -15,10 +15,11 @@ lotus:
 
   help:
     - lotus --help
+  
+  run:
+    - echo ${{URL}} | lotus scan /tmp/lotus-scripts/active -o out.json
 
   test:
-    assertReturnCode: 0
-    run:
-      - echo ${{URL}} | lotus scan /tmp/lotus-scripts/active -o out.json -v
+    assertStdoutNotContains: high
     read:
       - cat out.json | jq
