@@ -14,9 +14,9 @@ gh-workflow-auditor:
     - python3 -m pip install requests PyYAML -q --disable-pip-version-check --root-user-action=ignore
 
   help:
-    - python /tmp/gh-workflow-auditor/main.py --help
+    - cd /tmp/gh-workflow-auditor; python main.py --help
 
   test:
     assertStderrNotContains: WARNING
     run:
-      - export PAT=${{GITHUB_PAT}}; cd gh-workflow-auditor; python main.py --type repo ${{REPO}}
+      - export PAT=${{GITHUB_PAT}}; cd /tmp/gh-workflow-auditor; python main.py --type repo ${{REPO}}
