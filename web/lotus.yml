@@ -1,6 +1,6 @@
 settings:
   name: "Lotus: scan different vulnerabilities"
-  image: rust:bullseye
+  image: rust
   author:
     - https://github.com/bugBlocker
   gallery:

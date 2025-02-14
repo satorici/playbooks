@@ -1,6 +1,6 @@
 settings:
   name: "Webscreenshot: screenshot a list of websites"
-  image: python:bullseye
+  image: python
   author:
     - https://github.com/maaaaz
   gallery:

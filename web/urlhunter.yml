@@ -1,6 +1,6 @@
 settings:
   timeout: 300
-  image: golang:latest
+  image: golang
   name: "Urlhunter: search URLs that are exposed via shortener services (bit.ly, goo.gl)"
   description: "Tool for searching URLs exposed through URL shortener services by analyzing collections of previously brute-forced and published shortened URLs. It allows users to filter results using keywords and define date ranges for analysis."
   author:

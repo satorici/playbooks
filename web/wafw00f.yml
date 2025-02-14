@@ -1,6 +1,6 @@
 settings:
   name: "WAFW00F: identify and fingerprint Web Application Firewall (WAF) products protecting a website."
-  image: python:bullseye
+  image: python
   author:
     - https://github.com/EnableSecurity
   gallery:
