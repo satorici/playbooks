@@ -1,7 +1,6 @@
 settings:
   name: "Multi GitHub Workflow Audit: Octoscan, Semgrep, GH Workflow Auditor and Gato-X"
   description: "Gato-X, Octoscan, Semgrep and GitHub Workflow Auditor are security tools designed to analyze, audit, and detect vulnerabilities in GitHub Actions workflows. These tools focus on identifying misconfigurations, security flaws, and potential attack vectors that could lead to privilege escalation, unauthorized code execution, or repository takeover. Together, they help security teams and developers ensure the security and integrity of their CI/CD pipelines by preventing unauthorized access and exploitation of GitHub Actions."
-  image: golang
   redacted:
     - GITHUB_PAT
   timeout: 600
@@ -12,41 +11,11 @@ settings:
     - https://github.com/semgrep
   example: satori run satori://code/github/all.yml -d REPO=satorici/satori-cli -d GITHUB_PAT=TBC --report --output
 
-github_actions_all:
-  install:
-    # dependencies
-    - apt-get update -qq; apt-get install python3-pip -qy >>/dev/null
-    # octoscan
-    - cd /tmp; git clone --depth 1 https://github.com/synacktiv/octoscan.git 2>>/dev/null; cd octoscan; go mod tidy 2>>/dev/null; go build
-    # gato-x
-    - cd /tmp; git clone --depth 1 https://github.com/AdnaneKhan/gato-x 2>>/dev/null; cd gato-x; python3 -m pip install . -q --disable-pip-version-check --root-user-action=ignore --break-system-packages
-    # gh-workflow-auditor
-    - cd /tmp; git clone --depth 1 https://github.com/TinderSec/gh-workflow-auditor.git 2>>/dev/null; python3 -m pip install requests PyYAML -q --disable-pip-version-check --root-user-action=ignore --break-system-packages
-    # semgrep
-    - pip install semgrep -q --disable-pip-version-check --root-user-action=ignore --break-system-packages
-    # clone repo
-    - git clone --depth 1 https://github.com/${{REPO}}.git
+install:
+  - git clone --depth 1 https://github.com/${{REPO}}.git
 
-  test:
-    sast:
-      assertStdout: False
-      secrets:
-        - cd */.github/workflows; semgrep --config 'p/secrets' -q --max-chars-per-line 1024
-      octoscan:
-        - find ./ -name "*.yml" | grep "github/workflows" | xargs -IX /tmp/octoscan/octoscan scan X
-      semgrep:
-        - semgrep --config 'p/github-actions' -q --max-chars-per-line 1024
-
-    dast:
-      gato-x:
-        assertStdoutNotContains:
-          - HIGH
-          - MEDIUM
-          - LOW
-          - UNKNOWN
-        run:
-          - export GH_TOKEN=${{GITHUB_PAT}}; gato-x e --repository ${{REPO}}
-      gh-workflow-auditor:
-        assertStderrNotContains: WARNING
-        run:
-          - export PAT=${{GITHUB_PAT}}; cd /tmp/gh-workflow-auditor; python3 main.py --type repo ${{REPO}}
+import:
+  - satori://code/github/semgrep.yml
+  - satori://code/github/octoscan.yml
+  - satori://code/github/gh-workflow-auditor.yml
+  - satori://code/github/gato-x.yml

@@ -12,10 +12,10 @@ settings:
 
 gitxray:
   install:
-    - git clone https://github.com/kulkansecurity/gitxray.git --depth 1 >>/dev/null
-    - python3 -m pip install -r gitxray/requirements.txt -q --disable-pip-version-check --root-user-action=ignore
+    - cd /tmp; git clone https://github.com/kulkansecurity/gitxray.git --depth 1 >>/dev/null
+    - python3 -m pip install -r /tmp/gitxray/requirements.txt -q --disable-pip-version-check --root-user-action=ignore
 
   test:
     assertStdoutContains: "@"
     contributor:
-      - export GH_ACCESS_TOKEN=${{GITHUB_PAT}}; cd gitxray/src; python3 -m gitxray.gitxray -r https://github.com/${{REPO}} -c ${{USER}} -f emails -outformat text --shush
+      - export GH_ACCESS_TOKEN=${{GITHUB_PAT}}; cd /tmp/gitxray/src; python3 -m gitxray.gitxray -r https://github.com/${{REPO}} -c ${{USER}} -f emails -outformat text --shush
