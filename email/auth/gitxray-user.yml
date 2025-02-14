@@ -12,7 +12,7 @@ settings:
 
 gitxray:
   install:
-    - pip install git+https://github.com/kulkansecurity/gitxray.git
+    - pip install git+https://github.com/kulkansecurity/gitxray.git -q --disable-pip-version-check --root-user-action=ignore
 
   test:
     assertStdoutContains: "@"

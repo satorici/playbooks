@@ -12,7 +12,7 @@ CORStest:
   install:
     - apt update >>/dev/null; apt install -qy git >>/dev/null
     - cd /tmp; git clone https://github.com/RUB-NDS/CORStest.git --depth 1
-    - echo "${{URL}}" > input_file
+    - echo "${{URL}}" > corstest_url_file.txt
 
   help:
     - python3 /tmp/CORStest/corstest.py --help
@@ -20,4 +20,4 @@ CORStest:
   test:
     assertStdoutContains: "Not vulnerable"
     run:
-      - python3 /tmp/CORStest/corstest.py input_file
+      - python3 /tmp/CORStest/corstest.py corstest_url_file.txt

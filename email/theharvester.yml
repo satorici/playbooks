@@ -9,7 +9,7 @@ settings:
 
 theHarvest:
   install:
-    - pip install git+https://github.com/laramies/theHarvester.git
+    - pip install git+https://github.com/laramies/theHarvester.git -q --disable-pip-version-check --root-user-action=ignore
 
   help:
     - theHarvester -h

@@ -11,8 +11,7 @@ settings:
 ppmap:
   install:
     - apt update >>/dev/null; apt install -qy git sudo >>/dev/null
-    - git clone --depth 1 https://github.com/kleiton0x00/ppmap.git
-    - cd ppmap/ && bash setup.sh >>/dev/null 2>>/dev/null
+    - cd /tmp; git clone --depth 1 https://github.com/kleiton0x00/ppmap.git; cd ppmap/; bash setup.sh >>/dev/null 2>>/dev/null
 
   help:
     - ppmap --help

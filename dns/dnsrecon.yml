@@ -16,7 +16,7 @@ settings:
 
 dnsrecon:
   install:
-    - pip install git+https://github.com/darkoperator/dnsrecon.git
+    - pip install git+https://github.com/darkoperator/dnsrecon.git -q --disable-pip-version-check --root-user-action=ignore
 
   help:
     - dnsrecon -h
