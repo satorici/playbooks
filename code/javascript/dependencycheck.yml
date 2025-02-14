@@ -10,15 +10,16 @@ settings:
 
 dependency-check:
   install:
-    - wget -q https://github.com/jeremylong/DependencyCheck/releases/download/v7.3.0/dependency-check-7.3.0-release.zip ; unzip dependency-check-7.3.0-release.zip >>/dev/null
+    - cd /tmp; wget -q https://github.com/jeremylong/DependencyCheck/releases/download/v7.3.0/dependency-check-7.3.0-release.zip ; unzip dependency-check-7.3.0-release.zip >>/dev/null
 
   help:
-    - dependency-check/bin/dependency-check.sh --help
+    - /tmp/dependency-check/bin/dependency-check.sh --help
 
   scan:
-    - dependency-check/bin/dependency-check.sh --scan "./" -f CSV
+    - /tmp/dependency-check/bin/dependency-check.sh --scan "./" -f CSV
+    - cat /data/dependency-check-report.csv
 
   test:
     assertStdout: False
     highest:
-      - grep HIGHEST dependency-check-report.csv
+      - grep HIGHEST /data/dependency-check-report.csv
