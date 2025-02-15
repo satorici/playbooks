@@ -1,5 +1,6 @@
 settings:
   name: "gitSome: gets emails associated with a Github account"
+  description: "gitSome is an OSINT tool that extracts email addresses and other information from various GitHub sources. It can target user accounts, organizations, or specific domains to gather associated emails, list organization members, and identify user affiliations. The tool integrates with FireProx to create rotating endpoints, enhancing anonymity during data collection. Users can authenticate with a GitHub personal access token to increase rate limits and access private resources. Additional features include proxy support, JSON output, and exclusion of specific repositories or accounts from searches."
   image: python
   author:
     - https://github.com/chm0dx

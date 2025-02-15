@@ -3,7 +3,7 @@ settings:
   description: "Nmap is short for Network Mapper. It is an open-source Linux command-line tool that is used to scan IP addresses and ports in a network and to detect installed applications. Nmap allows network admins to find which devices are running on their network, discover open ports and services, and detect vulnerabilities."
   image: debian
   author:
-    - https://github.com/satorici
+    - https://github.com/nmap
   gallery:
     - https://files.catbox.moe/xd763c.gif
   example: satori run satori://scan/nmap-full-scan.yml -d HOST="satori.ci" --report --output

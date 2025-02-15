@@ -1,5 +1,6 @@
 settings:
   name: "Gotator: generate DNS wordlists through permutations"
+  description: "Gotator generates permutations, alterations, and mutations of subdomains to enhance subdomain enumeration. It helps discover additional subdomains by modifying known ones, aiding in reconnaissance and security assessments."
   image: golang
   author:
     - https://github.com/Josue87

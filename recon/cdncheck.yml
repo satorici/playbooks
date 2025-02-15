@@ -1,5 +1,6 @@
 settings:
   name: "cdncheck: Identify the technology associated with a host (CDN, CLOUD or WAF)"
+  description: "cdncheck identifies whether IP addresses belong to known Content Delivery Networks (CDNs) or cloud providers. It helps distinguish between origin servers and CDN-protected assets during reconnaissance and security assessments."
   image: golang
   author:
     - https://github.com/projectdiscovery

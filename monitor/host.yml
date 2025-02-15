@@ -1,5 +1,6 @@
 settings:
   name: "Host: Check if a host has an IP address"
+  description: "This playbook checks if a host resolves to a specified IP address. It installs dnsutils, runs the host command on a given hostname, and verifies that the output matches that the host has a certain IP address."
   image: debian
   author:
     - https://github.com/satorici

@@ -1,5 +1,6 @@
 settings:
   name: "Webscreenshot: screenshot a list of websites"
+  description: "webscreenshot captures screenshots of multiple websites by rendering them using headless web browsers. It supports bulk URL input and can take screenshots in parallel, making it useful for reconnaissance and monitoring."
   image: python
   author:
     - https://github.com/maaaaz

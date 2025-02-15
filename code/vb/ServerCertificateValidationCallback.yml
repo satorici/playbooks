@@ -1,5 +1,6 @@
 settings:
   name: "ServerCertificateValidationCallback: Verify that is not set to True"
+  description: "Allowing ServerCertificateValidationCallback to be set to True disables SSL certificate validation, exposing applications to man-in-the-middle attacks. An attacker can intercept and modify encrypted traffic, compromising data integrity and security."
   image: debian
   author:
     - https://github.com/satorici

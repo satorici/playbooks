@@ -1,5 +1,6 @@
 settings:
-  name: "Ollama with parametrized input to run on Llama3 and Mistral"
+  name: "LLMs with parametrized input: run on Llama3 and Mistral"
+  description: "Runs a parametrized input on Llama3 and Mistral using Ollama. Starts the Ollama server, pulls the specified models, and queries them with the provided input. Extracts the response using a local API call and processes the output."
   image: ollama/ollama
   cpu: 16384
   memory: 122880

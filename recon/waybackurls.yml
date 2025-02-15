@@ -1,5 +1,6 @@
 settings:
   name: "WaybackURLs: Fetch the URLs that the Wayback Machine knows for a domain"
+  description: "waybackurls extracts URLs from the Wayback Machine for a given domain, helping identify historical endpoints, parameters, and potential attack surfaces for security assessments and reconnaissance."
   image: golang
   author:
     - https://github.com/tomnomnom

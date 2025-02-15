@@ -1,5 +1,6 @@
 settings:
-  name: "Ping a host with no packet loss"
+  name: "Ping: ping packets reach a host"
+  description: "This playbook checks for packet loss, running a ping command with four packets to a specified host, and verifying that the output contains that there is no packet loss."
   image: debian
   author:
     - https://github.com/satorici

@@ -1,5 +1,6 @@
 settings:
   name: "Wappalyzer: identifies technologies on websites, including content management systems, eCommerce platforms, JavaScript frameworks, analytics tools and more"
+  description: "Wappalyzer identifies technologies used by websites by analyzing their responses, headers, and scripts. It detects frameworks, CMS platforms, programming languages, analytics tools, and more, providing insights into a site’s tech stack."
   image: node
   author:
     - https://github.com/tunetheweb

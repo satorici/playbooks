@@ -1,5 +1,6 @@
 settings:
   name: "sqlmap: automates the process of detecting and exploiting SQL injection flaws"
+  description: "sqlmap automates the detection and exploitation of SQL injection vulnerabilities in web applications. It identifies injection points, extracts database information, and supports various attack techniques, including data retrieval, privilege escalation, and file system access."
   image: python
   author:
     - https://github.com/sqlmapproject

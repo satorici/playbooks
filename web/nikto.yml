@@ -1,5 +1,6 @@
 settings:
   name: "Nikto: Tests web servers for security threats"
+  description: "Nikto is a web server scanner that detects vulnerabilities, misconfigurations, and outdated software by testing against a database of known security issues. It performs comprehensive checks, including identifying default files, server options, and insecure configurations."
   image: debian
   author:
     - https://github.com/sullo

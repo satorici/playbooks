@@ -1,6 +1,7 @@
 settings:
   name: "Multi GitHub Workflow Audit: Octoscan, Semgrep, GH Workflow Auditor and Gato-X"
   description: "Gato-X, Octoscan, Semgrep and GitHub Workflow Auditor are security tools designed to analyze, audit, and detect vulnerabilities in GitHub Actions workflows. These tools focus on identifying misconfigurations, security flaws, and potential attack vectors that could lead to privilege escalation, unauthorized code execution, or repository takeover. Together, they help security teams and developers ensure the security and integrity of their CI/CD pipelines by preventing unauthorized access and exploitation of GitHub Actions."
+  image: satori
   redacted:
     - GITHUB_PAT
   timeout: 600
@@ -9,7 +10,7 @@ settings:
     - https://github.com/TinderSec
     - https://github.com/synacktiv
     - https://github.com/semgrep
-  example: satori run satori://code/github/all.yml -d REPO=satorici/satori-cli -d GITHUB_PAT=TBC --report --output
+  example: satori run ./ --playbook satori://code/github/all.yml -d REPO=satorici/satori-cli -d GITHUB_PAT=TBC --report --output
 
 install:
   - git clone --depth 1 https://github.com/${{REPO}}.git

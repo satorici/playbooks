@@ -1,8 +1,9 @@
 settings:
   name: "theHarvester: Get e-mails, subdomains and names"
+  description: "theHarvester collects OSINT (Open-Source Intelligence) data from public sources to gather emails, subdomains, IPs, and other information related to a target domain. It queries search engines, certificate transparency logs, and other sources for reconnaissance and security assessments."
   image: python
   author:
-    - https://github.com/laramies/theHarvester
+    - https://github.com/laramies
   gallery:
     - https://files.catbox.moe/pn0jpc.gif
   example: satori run satori://email/theharvester.yml -d DOMAIN="umd.edu" --report --output

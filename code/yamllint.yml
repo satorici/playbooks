@@ -1,5 +1,6 @@
 settings:
   name: YAML Lint
+  description: "yamllint checks YAML files for syntax errors, formatting issues, and best practices by enforcing indentation, key ordering, and structure consistency. It helps prevent misconfigurations and ensures YAML files remain readable and valid."
   image: python
   author:
     - https://github.com/adrienverge
@@ -9,7 +10,7 @@ settings:
 
 yamllint:
   install:
-    - pip install yamllint --disable-pip-version-check --no-warn-script-location -q
+    - pip install yamllint --disable-pip-version-check --no-warn-script-location -q --break-system-packages
 
   help:
     - yamllint --help

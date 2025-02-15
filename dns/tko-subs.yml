@@ -1,5 +1,6 @@
 settings:
   name: "tko-subs: detect and takeover subdomains with dead DNS records"
+  description: "tko-subs detects and exploits subdomain takeover vulnerabilities by scanning for misconfigured DNS records that point to external services no longer in use. It helps identify security risks that could allow attackers to hijack abandoned subdomains."
   image: golang
   author:
     - https://github.com/anshumanbh

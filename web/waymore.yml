@@ -1,5 +1,6 @@
 settings:
   name: "Waymore: find way more URLs from the Wayback Machine"
+  description: "waymore retrieves URLs from multiple sources, including the Wayback Machine, Common Crawl, AlienVault OTX, URLScan, and VirusTotal. It can download archived responses from the Wayback Machine, allowing users to search for additional links, developer comments, and parameters within those responses. This functionality aids in comprehensive web reconnaissance and vulnerability assessment."
   image: python
   author:
     - https://github.com/xnl-h4ck3r

@@ -1,5 +1,6 @@
 settings:
   name: "shuffleDNS: enumerate valid subdomains using active bruteforce as well as resolve subdomains with wildcard handling"
+  description: "shuffledns resolves and filters subdomains by combining wordlist-based brute forcing with mass DNS resolution using multiple resolvers. It helps identify active subdomains efficiently during reconnaissance and security assessments."
   image: golang
   author:
     - https://github.com/projectdiscovery

@@ -1,5 +1,6 @@
 settings:
   name: "Ruff: Python linter"
+  description: "Ruff is a fast Python linter and formatter that enforces code quality by detecting style violations, unused imports, and potential errors. It provides an alternative to traditional Python linters with a focus on speed and efficiency."
   image: python
   author:
     - https://github.com/astral-sh

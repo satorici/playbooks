@@ -1,5 +1,6 @@
 settings:
   name: "uro: remove uninteresting/duplicate URLs"
+  description: "uro extracts and deduplicates URLs from input data by normalizing and filtering them based on predefined rules. It removes duplicates, standardizes formats, and ensures cleaner URL lists for further processing."
   image: python
   author:
     - https://github.com/s0md3v

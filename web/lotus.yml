@@ -1,5 +1,6 @@
 settings:
-  name: "Lotus: scan different vulnerabilities"
+  name: "Lotus: scan web vulnerabilities"
+  description: "Lotus is a web security scanner written in Rust that automates dynamic application security testing (DAST) using Lua scripts. It provides a comprehensive Lua API to streamline web security scripting, enabling efficient automation of security processes."
   image: rust
   author:
     - https://github.com/bugBlocker
@@ -15,7 +16,7 @@ lotus:
 
   help:
     - lotus --help
-  
+
   run:
     - echo ${{URL}} | lotus scan /tmp/lotus-scripts/active -o out.json
 

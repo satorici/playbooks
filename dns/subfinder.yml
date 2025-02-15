@@ -1,5 +1,6 @@
 settings:
   name: "Subfinder: Discover valid subdomains using passive online sources"
+  description: "subfinder discovers subdomains by querying public sources, certificate transparency logs, APIs, and brute-force techniques. It is designed for reconnaissance and security assessments, providing a comprehensive list of subdomains associated with a target domain."
   image: golang
   author:
     - https://github.com/projectdiscovery

@@ -1,5 +1,6 @@
 settings:
   name: "WAFW00F: identify and fingerprint Web Application Firewall (WAF) products protecting a website."
+  description: "wafw00f detects and identifies web application firewalls (WAFs) by sending crafted HTTP requests and analyzing responses. It determines the WAF vendor and provides insights into possible firewall rules and protections."
   image: python
   author:
     - https://github.com/EnableSecurity

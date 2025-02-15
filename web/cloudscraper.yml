@@ -1,5 +1,6 @@
 settings:
   name: "Cloud Scraper: enumerates targets in search of cloud resources (S3 Buckets, Azure Blobs, Digital Ocean Storage Space)"
+  description: "CloudScraper spiders and scrapes target websites to identify exposed cloud resources, such as AWS S3 buckets, Azure Blobs, and DigitalOcean Spaces. By inputting a URL, it recursively searches through the site’s pages, extracting links and scanning for patterns indicative of cloud storage locations."
   image: python
   author:
     - https://github.com/jordanpotti

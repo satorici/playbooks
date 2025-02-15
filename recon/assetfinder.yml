@@ -1,8 +1,9 @@
 settings:
   name: "AssetFinder: find domains and subdomains potentially related to a domain"
+  description: "assetfinder discovers subdomains and related assets by querying public sources, certificate transparency logs, and APIs. It helps in reconnaissance and security assessments by identifying domain associations efficiently."
   image: debian
   author:
-    - https://github.com/tomnomnom/assetfinder
+    - https://github.com/tomnomnom
   gallery:
     - https://files.catbox.moe/f3apgb.pn
   example: satori run satori://recon/assetfinder.yml -d DOMAIN="satori.ci" --report --output

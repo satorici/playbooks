@@ -3,7 +3,7 @@ settings:
   description: "It reports the protocol versions, cipher suites, key exchanges, signature algorithms, and certificates in use."
   image: debian
   author:
-    - https://github.com/satorici
+    - https://github.com/rbsec
   gallery:
     - https://files.catbox.moe/o8ey2s.png
   example: satori run satori://web/sslscan.yml -d HOST="satori.ci:443" --report --output

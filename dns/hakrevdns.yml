@@ -1,5 +1,6 @@
 settings:
   name: "hakrevdns: reverse DNS lookup"
+  description: "hakrevdns performs fast and large-scale reverse DNS lookups by resolving IP addresses to hostnames. It helps identify associated domains, uncover network infrastructure, and assist in reconnaissance tasks."
   image: golang
   author:
     - https://github.com/hakluke

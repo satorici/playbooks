@@ -1,5 +1,6 @@
 settings:
   name: "Gauplus+Nuclei: Get the urls of a domain and search for email addresses"
+  description: "Extracts URLs from a domain using Gauplus and searches for email addresses with Nuclei. Retrieves historical and indexed URLs, then scans them for email patterns using predefined Nuclei templates to aid in reconnaissance and OSINT investigations."
   image: golang
   author:
     - https://github.com/bp0lr

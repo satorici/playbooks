@@ -1,5 +1,6 @@
 settings:
-  name: "Query a repository with Llama 3.2 using Ollama"
+  name: "Llama repo: Query a repository using Ollama with Llama3"
+  description: "Queries a GitHub repository using Llama 3.2 with Ollama. Clones the specified repository, compiles its file contents into a prompt, and queries the Llama model with the provided input. Ensures the Ollama server runs correctly, pulls the specified model, and executes the query."
   image: ollama/ollama
   cpu: 16384
   memory: 122880
