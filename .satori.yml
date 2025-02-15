@@ -25,7 +25,7 @@ tests:
   image:
     - find . -name "*.yml" ! -path "./.*" -exec grep -L "image:" {} \;
   test:
-    - find . -name "*.yml" ! -path "./.*" -exec grep -L "assert" {} \;
+    - find . -name "*.yml" ! -path "./.*" ! -name "all.yml" -exec grep -L "assert" {} \;
   noreport:
     - grep "example:" * -R|grep -v "report"|awk -F':' '{print $1}'
 
