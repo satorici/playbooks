@@ -16,6 +16,9 @@ bandit:
     - bandit --help
 
   test:
-    assertStdoutContains: "No issues identified"
+    assertStdoutNotContains:
+      - "Severity: High"
+      - "Severity: Medium"
+      - "Severity: Low"
     run:
       - bandit -r ./

@@ -9,7 +9,7 @@ settings:
     - https://files.catbox.moe/7tozqa.png
   example: satori run satori://email/gauplus-nuclei.yml -d DOMAIN="satori.ci" --report --output
 
-gauplus-nuclei:
+email_gauplus-nuclei:
   install:
     - apt update >>/dev/null; apt install -qy git >>/dev/null
     - go install github.com/bp0lr/gauplus@latest 2>>/dev/null

@@ -5,16 +5,19 @@ settings:
   author:
     - https://github.com/nmap
   gallery:
-    - https://files.catbox.moe/xd763c.gif
-  example: satori run satori://scan/nmap-full-scan.yml -d HOST="satori.ci" --report --output
+    - https://files.catbox.moe/wpfplf.png
+  example: satori run satori://scan/nmap.yml -d HOST="mytestsite.com" --report --output
 
-nmap-full-scan:
+nmap:
   install:
     - apt update >>/dev/null; apt install -qy nmap >>/dev/null
 
+  help:
+    - nmap --help
+
   test:
-    assertStdoutContains: "Nmap done"
-    #UDP:
-    #  - nmap --top-ports 100 -sU -A -sC -sV -oN UDP_nmap.txt ${{HOST}}
+    assertReturnCode: 0
     TCP:
-      - nmap -p- -sS -A -sC -sV -oN TCP_nmap.txt ${{HOST}}
+      - nmap --top-ports 1000 -sS -A -sC --script vuln --script-args unsafe=1 --open -oA tcp_scan ${{HOST}}
+    #UDP:
+    #  - nmap -sU --top-ports 20 -A --open -oA udp_scan ${{HOST}}

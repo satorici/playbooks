@@ -1,0 +1,22 @@
+settings:
+  name: "Trivy: Vulnerability Scanner"
+  description: "Scans filesystems and container images for vulnerabilities"
+  image: golang
+  cpu: 2048
+  memory: 8192
+  author:
+    - https://github.com/aquasecurity
+  gallery:
+    - https://files.catbox.moe/540h0u.png
+  example: satori run satori://container/trivy.yml -d IMAGE=python:3.4-alpine --report --output
+
+trivy:
+  install:
+    - go install github.com/aquasecurity/trivy/cmd/trivy@latest
+
+  test:
+    assertStdoutNotContains:
+      - HIGH
+      - MEDIUM
+    run:
+      - trivy image ${{IMAGE}}

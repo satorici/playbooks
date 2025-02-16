@@ -1,0 +1,25 @@
+settings:
+  name: "Grype: vulnerability scanner for container images and filesystems"
+  description: "Grype is a vulnerability scanner for container images and filesystems. Easily install the scanner, integrate it into your project, and quickly identify known vulnerabilities in your packages and dependencies."
+  image: debian
+  author:
+    - https://github.com/anchore/grype
+  gallery:
+    - https://files.catbox.moe/pplls4.png
+  example: satori run satori://container/grype.yml -d IMAGE="python:3.4-alpine" --report --output
+
+grype:
+  install:
+    - apt update >>/dev/null; apt install -y curl >>/dev/null
+    - curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b /usr/local/bin
+
+  help:
+    - grype --help
+
+  test:
+    assertStdoutNotContains: 
+      - Critical
+      - High
+      - Medium
+    run:
+      - grype ${{IMAGE}}

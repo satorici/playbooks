@@ -1,0 +1,29 @@
+settings:
+  name: "Rust_Audit_Ginger: audit check performs an audit for crates with security vulnerabilities"
+  description: "Checks Rust projects for security vulnerabilities and unsafe code. Uses cargo-audit to detect known security issues in dependencies and cargo-geiger to identify unsafe Rust code. Ensures no advisories or unsafe code patterns are present."
+  image: rust
+  files: true
+  author:
+    - https://github.com/rustsec
+  gallery:
+    - https://files.catbox.moe/v1rxmj.png
+  example: satori run ./ satori://code/rust/audit.yml --report --output
+
+rust_audit:
+  install:
+    - apt install -qy pkg-config libssl-dev >>/dev/null
+    - cargo install cargo-audit 2>>/dev/null
+
+  help:
+    - cargo audit --help
+
+  test:
+    assertStdoutNotContains:
+      - Severity
+      - advisories
+    setSeverity: 4
+    run:
+      - cargo audit | tee audit.txt
+
+  rm:
+    - rm -fr target/

@@ -1,0 +1,25 @@
+settings:
+  name: "KICS: Keeping Infrastructure as Code Secure"
+  description: "Find security vulnerabilities, compliance issues, and infrastructure misconfigurations in Infrastructure as Code. Supports Terraform, Dockerfile, CloudFormation, Kubernetes, Helm, and more."
+  image: golang
+  author:
+    - https://github.com/Checkmarx/kics
+  gallery:
+    - https://files.catbox.moe/p4hrc2.png
+  example: satori run ./ --playbook satori://iac/kics.yml --report --output
+
+kics:
+  install:
+    - cd /tmp; git clone --depth 1 https://github.com/Checkmarx/kics.git; cd kics; go mod vendor 2>>/dev/null; make build 2>>/dev/null
+
+  help:
+    - /tmp/kics/bin/kics --help
+    - /tmp/kics/bin/kics scan --help
+
+  test:
+    assertStdoutNotContains:
+      - "Severity: CRITICAL"
+      - "Severity: HIGH"
+      - "Severity: MEDIUM"
+    run:
+      - /tmp/kics/bin/kics scan -p . --queries-path /tmp/kics/assets/queries --no-progress

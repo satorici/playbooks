@@ -1,0 +1,23 @@
+settings:
+  name: "Hadolint: Dockerfile linter and best practices checker"
+  description: "Hadolint is a smarter Dockerfile linter that helps you build best practice Docker images. It checks for syntax errors, validates inline bash code, identifies common mistakes in Dockerfile instructions, and verifies that your Dockerfile follows best practices."
+  image: debian
+  author:
+    - https://github.com/hadolint
+  gallery:
+    - https://files.catbox.moe/bvvc22.png
+  example: satori run ./ satori://container/hadolint.yml --report --output
+
+hadolint:
+  install:
+    - apt update >>/dev/null; apt install -y wget >>/dev/null
+    - wget -q https://github.com/hadolint/hadolint/releases/latest/download/hadolint-Linux-x86_64 -O /usr/local/bin/hadolint
+    - chmod +x /usr/local/bin/hadolint
+
+  help:
+    - hadolint --help
+
+  test:
+    assertStdoutNotContains: "DL3"  # DL3xxx are hadolint rule codes
+    run:
+      - find . -name "Dockerfile*" -exec hadolint {} \;

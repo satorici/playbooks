@@ -1,0 +1,21 @@
+settings:
+  name: "Checkov: static code analysis tool for IaC"
+  description: "Checkov scans cloud infrastructure configurations (Terraform, CloudFormation, Kubernetes, Helm, Azure Resource Manager, Google Deployment Manager) to find misconfigurations and ensure cloud security best practices."
+  image: satori
+  author:
+    - https://github.com/bridgecrewio
+  gallery:
+    - https://files.catbox.moe/0s3gew.png
+  example: satori run ./ --playbook satori://iac/checkov.yml --report --output
+
+checkov:
+  install:
+    - pip install checkov -q --disable-pip-version-check
+
+  help:
+    - checkov --help
+
+  test:
+    assertStdoutNotContains: "FAILED"
+    run:
+      - checkov -d . --quiet --compact --framework terraform

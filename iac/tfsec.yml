@@ -1,0 +1,24 @@
+settings:
+  name: "tfsec: Security scanner for Terraform code"
+  description: "tfsec uses static analysis of your terraform code to spot potential security issues. Along with basic rule checking, tfsec also checks for sensitive information in terraform state files. Scans HCL2 and json formatted terraform configuration files."
+  image: golang
+  author:
+    - https://github.com/aquasecurity/tfsec
+  gallery:
+    - https://files.catbox.moe/tajjw4.png
+  example: satori run ./ --playbook satori://iac/tfsec.yml --report --output
+
+tfsec:
+  install:
+    - go install github.com/aquasecurity/tfsec/cmd/tfsec@latest 2>>/dev/null
+
+  help:
+    - tfsec --help
+
+  test:
+    assertStdoutNotContains: 
+      - "HIGH"
+      - "MEDIUM"
+      - "LOW"
+    run:
+      - tfsec . --no-color

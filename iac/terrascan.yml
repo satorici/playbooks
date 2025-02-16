@@ -1,0 +1,25 @@
+settings:
+  name: "Terrascan: detect compliance and security violations"
+  description: "Terrascan is a static code analyzer for Infrastructure as Code. It detects security vulnerabilities and compliance violations across Infrastructure as Code. Supports multiple cloud providers including AWS, Azure, GCP, and Kubernetes."
+  image: golang
+  author:
+    - https://github.com/tenable/terrascan
+  gallery:
+    - https://files.catbox.moe/7c95xg.png
+  example: satori run ./ --playbook satori://iac/terrascan.yml --report --output
+
+terrascan:
+  install:
+    - curl -sL "$(curl -s https://api.github.com/repos/tenable/terrascan/releases/latest | grep -o -E "https://.+?_Linux_x86_64.tar.gz")" > /tmp/terrascan.tar.gz
+    - cd /tmp; tar -xf terrascan.tar.gz terrascan; install terrascan /usr/local/bin
+
+  help:
+    - terrascan --help
+    - terrascan scan --help
+
+  test:
+    assertStdoutNotContains:
+      - HIGH
+      - MEDIUM
+    run:
+      - terrascan scan -t all -d .
