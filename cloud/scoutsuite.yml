@@ -20,12 +20,12 @@ scout:
 
   test:
     run:
-      - scout aws --access-key-id ${{AWS_ACCESS_KEY}} --secret-access-key ${{AWS_SECRET_KEY}}
+      - cd /tmp; scout aws --access-key-id ${{AWS_ACCESS_KEY}} --secret-access-key ${{AWS_SECRET_KEY}}
     output:
-      - "set +f; cat scoutsuite-report/scoutsuite-results/scoutsuite_results_aws-*.js"
+      - "set +f; cat /tmp/scoutsuite-report/scoutsuite-results/scoutsuite_results_aws-*.js"
     results:
       assertStdout: False
       danger:
-        - "tail -n +2 scoutsuite-report/scoutsuite-results/scoutsuite_results_aws-*.js | jq '.services[].findings[] | select(.level == \"danger\")'"
+        - "tail -n +2 /tmp/scoutsuite-report/scoutsuite-results/scoutsuite_results_aws-*.js | jq '.services[].findings[] | select(.level == \"danger\")'"
       # warning:
-      # - "tail -n +2 scoutsuite-report/scoutsuite-results/scoutsuite_results_aws-*.js | jq '.services[].findings[] | select(.level == \"warning\")'"
+      # - "tail -n +2 /tmp/scoutsuite-report/scoutsuite-results/scoutsuite_results_aws-*.js | jq '.services[].findings[] | select(.level == \"warning\")'"

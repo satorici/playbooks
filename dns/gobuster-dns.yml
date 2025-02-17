@@ -11,8 +11,8 @@ settings:
 gobuster-dns:
   install:
     - go install github.com/OJ/gobuster/v3@latest 2>>/dev/null
-    - mkdir -p wordlists
-    - curl -s https://raw.githubusercontent.com/danielmiessler/SecLists/master/Discovery/DNS/subdomains-top1million-5000.txt -o wordlists/subdomains.txt
+    - mkdir -p /tmp/wordlists
+    - curl -s https://raw.githubusercontent.com/danielmiessler/SecLists/master/Discovery/DNS/subdomains-top1million-5000.txt -o /tmp/wordlists/subdomains.txt
 
   help:
     - gobuster dns -h
@@ -20,4 +20,4 @@ gobuster-dns:
   test:
     assertReturnCode: 0
     run:
-      - gobuster dns -d ${{DOMAIN}} -w wordlists/subdomains.txt --wildcard 2>>/dev/null
+      - gobuster dns -d ${{DOMAIN}} -w /tmp/wordlists/subdomains.txt --wildcard 2>>/dev/null

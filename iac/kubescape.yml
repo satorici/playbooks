@@ -6,7 +6,7 @@ settings:
     - https://github.com/armosec
   gallery:
     - https://files.catbox.moe/w5otbd.png
-  example: satori run ./ --playbook satori://cloud-native/kubescape.yml --report --output
+  example: satori run ./ --playbook satori://iac/kubescape.yml --report --output
 
 kubescape:
   install:

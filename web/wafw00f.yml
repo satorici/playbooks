@@ -10,7 +10,6 @@ settings:
 
 wafw00f:
   install:
-    - apt update >>/dev/null; apt install -qy python3-pip git >>/dev/null
     - pip install pipx -q --disable-pip-version-check --root-user-action=ignore
     - pipx ensurepath
     - pipx install git+https://github.com/EnableSecurity/wafw00f.git

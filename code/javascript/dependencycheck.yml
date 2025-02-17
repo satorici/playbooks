@@ -1,7 +1,6 @@
 settings:
   name: "OWASP DependencyCheck: verifies publicly disclosed vulnerabilities in project's dependencies"
   description: "OWASP DependencyCheck is a multi-language “Software Composition Analysis” (SCA) tool. While it is commonly used in Java projects (and was originally designed with Java in mind), it also supports scanning dependencies for other ecosystems, including .NET, Node.js, Python, Ruby, PHP, and more."
-  #image: public.ecr.aws/h8o5p8e3/satori/base-image:latest
   image: satori
   author:
     - https://github.com/jeremylong
