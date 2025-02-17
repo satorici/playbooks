@@ -1,0 +1,23 @@
+settings:
+  name: "Brakeman: Static Application Security Testing for Ruby on Rails"
+  description: "Brakeman is a static analysis security vulnerability scanner for Ruby on Rails applications. It scans application code for known vulnerabilities, security issues, and configuration problems."
+  image: ruby
+  author:
+    - https://github.com/presidentbeef/brakeman
+  gallery:
+    - https://files.catbox.moe/pkjoj5.png
+  example: satori run ./ --playbook satori://code/ruby/brakeman.yml --report --output
+
+brakeman:
+  install:
+    - gem install brakeman -N
+
+  help:
+    - brakeman --help
+
+  test:
+    assertStdoutNotContains:
+      - High
+      - Medium
+    run:
+      - brakeman --no-pager --force-scan --color .
