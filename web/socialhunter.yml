@@ -11,6 +11,7 @@ settings:
 socialhunter:
   install:
     - go install github.com/utkusen/socialhunter@latest 2>>/dev/null
+    - echo "${{URL}}" > url.txt
 
   help:
     - socialhunter --help

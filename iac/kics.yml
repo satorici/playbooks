@@ -3,7 +3,7 @@ settings:
   description: "Find security vulnerabilities, compliance issues, and infrastructure misconfigurations in Infrastructure as Code. Supports Terraform, Dockerfile, CloudFormation, Kubernetes, Helm, and more."
   image: golang
   author:
-    - https://github.com/Checkmarx/kics
+    - https://github.com/Checkmarx
   gallery:
     - https://files.catbox.moe/p4hrc2.png
   example: satori run ./ --playbook satori://iac/kics.yml --report --output

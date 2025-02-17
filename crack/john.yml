@@ -13,7 +13,6 @@ john:
   install:
     - apt-get update >>/dev/null; apt-get install -qy john wget >>/dev/null
     - echo '${{PASS}}' > hash.txt
-    - wget -qO 10k-most-common.txt https://raw.githubusercontent.com/danielmiessler/SecLists/master/Passwords/Common-Credentials/10k-most-common.txt
 
   test:
     assertStdoutNotContains: "?"

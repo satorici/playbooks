@@ -10,7 +10,7 @@ settings:
     - https://github.com/TinderSec
     - https://github.com/synacktiv
     - https://github.com/semgrep
-  example: satori run ./ --playbook satori://code/github/all.yml -d REPO=satorici/satori-cli -d GITHUB_PAT=TBC --report --output
+  example: satori run satori://code/github/all.yml -d REPO=satorici/satori-cli -d GITHUB_PAT=TBC --report --output
 
 install:
   - git clone --depth 1 https://github.com/${{REPO}}.git
