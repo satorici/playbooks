@@ -1,0 +1,21 @@
+settings:
+  name: "RuboCop: Ruby static code analyzer and formatter"
+  description: "RuboCop is a Ruby static code analyzer (a.k.a. linter) and code formatter. It enforces many of the guidelines outlined in the community Ruby Style Guide, finds code smells, and can auto-fix many issues."
+  image: ruby
+  author:
+    - https://github.com/rubocop
+  gallery:
+    - https://files.catbox.moe/dhru5e.png
+  example: satori run ./ --playbook satori://code/ruby/rubocop.yml --report --output
+
+rubocop:
+  install:
+    - gem install rubocop -N
+
+  help:
+    - rubocop --help
+
+  test:
+    assertStdoutContains: "no offenses detected"
+    run:
+      - rubocop .

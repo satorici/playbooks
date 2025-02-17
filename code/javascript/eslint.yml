@@ -1,0 +1,42 @@
+settings:
+  name: "ESLint: JavaScript and TypeScript code analysis"
+  description: "ESLint statically analyzes your code to quickly find problems. It finds and fixes problems in your JavaScript code, from style issues to bugs and potential errors."
+  image: node
+  author:
+    - https://github.com/eslint/eslint
+  gallery:
+    - https://files.catbox.moe/p4ygpv.png
+  example: satori run ./ --playbook satori://code/javascript/eslint.yml --report --output
+
+eslint:
+  install:
+    - npm install eslint-plugin-security --save-dev
+    - npm init @eslint/config@latest
+
+  help:
+    - npx eslint --help
+
+  test:
+    assertStdoutNotContains: "error"
+    run:
+      - |
+        find ./ -name "*.js" | xargs -IX \
+        npx eslint X --no-warn-ignored --no-config-lookup \
+          --rule "no-eval:error" \
+          --rule "no-implied-eval:error" \
+          --rule "no-alert:error" \
+          --rule "no-console:error" \
+          --rule "no-debugger:error" \
+          --rule "no-global-assign:error" \
+          --rule "no-proto:error" \
+          --rule "no-prototype-builtins:error" \
+          --rule "no-unused-vars:error" \
+          --rule "no-undef:error" \
+          --rule "no-use-before-define:error" \
+          --plugin security \
+          --rule "security/detect-eval-with-expression:error" \
+          --rule "security/detect-non-literal-regexp:error" \
+          --rule "security/detect-non-literal-require:error" \
+          --rule "security/detect-possible-timing-attacks:error" \
+          --rule "security/detect-pseudoRandomBytes:error" \
+          --rule "security/detect-unsafe-regex:error"
