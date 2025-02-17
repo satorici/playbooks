@@ -1,0 +1,21 @@
+settings:
+  name: "Arjun: HTTP Parameter Discovery"
+  description: "Arjun is an HTTP parameter discovery suite. It's used to find query parameters, path parameters, POST data fields, and request headers in web applications through intelligent brute force probing."
+  image: python
+  author:
+    - https://github.com/s0md3v
+  gallery:
+    - https://files.catbox.moe/arjun.png
+  example: satori run satori://web/arjun.yml -d URL="https://api.satori.ci" --report --output
+
+arjun:
+  install:
+    - pip install arjun -q --disable-pip-version-check
+
+  help:
+    - arjun --help
+
+  test:
+    assertStdoutContains: "parameter detected"
+    run:
+      - arjun -u ${{URL}} --passive --disable-redirects

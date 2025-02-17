@@ -1,0 +1,32 @@
+settings:
+  name: "APKLeaks: Scanning APK files for URIs, endpoints, and secrets"
+  description: "APKLeaks scans Android APK files to find sensitive information like URLs, API keys, secrets, endpoints, and other potentially sensitive strings that could expose security issues."
+  image: satori
+  author:
+    - https://github.com/dwisiswant0
+  gallery:
+    - https://files.catbox.moe/929m57.png
+  example: satori run ./ --playbook satori://mobile/android/apkleaks.yml --report --output
+
+apkleaks:
+  install:
+    - apt update >>/dev/null
+    - apt install -y android-tools-apktool wget unzip >>/dev/null
+    - wget -q https://github.com/skylot/jadx/releases/download/v1.4.7/jadx-1.4.7.zip
+    - unzip -q jadx-1.4.7.zip -d /opt/jadx
+    - ln -s /opt/jadx/bin/jadx /usr/local/bin/
+    - ln -s /opt/jadx/bin/jadx-gui /usr/local/bin/
+    - pip install apkleaks -q --disable-pip-version-check
+
+  help:
+    - apkleaks --help
+
+  test:
+    assertStdoutNotContains:
+      - Google_API_Key
+      - Google_Cloud_Platform_OAuth
+      - IP_Address
+      - JSON_Web_Token
+      - LinkFinder
+    run:
+      - find ./ -name "*.apk" | xargs -I{} apkleaks -f {} --output results.json

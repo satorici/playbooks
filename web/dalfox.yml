@@ -1,0 +1,25 @@
+settings:
+  name: "Dalfox: XSS scanner"
+  description: "Dalfox detects and exploits XSS (Cross-Site Scripting) vulnerabilities by analyzing parameters, injecting payloads, and automating security testing. It supports reflection-based detection, DOM analysis, and blind XSS payload delivery for comprehensive web application security assessments."
+  image: golang
+  author:
+    - https://github.com/hahwul
+  gallery:
+    - https://files.catbox.moe/0jxc5w.png
+  example: satori run satori://web/dalfox.yml -d URL="http://testphp.vulnweb.com/listproducts.php?cat\=123&artist=123&asdf=ff" --report --output
+
+
+dalfox:
+  install:
+    - go install github.com/hahwul/dalfox/v2@latest 2>>/dev/null
+
+  help:
+    - dalfox --help
+
+  test:
+    assertStdoutNotContains:
+      - "[W]"
+      - "[V]"
+      - "[G]"
+    run:
+      - dalfox url ${{URL}}

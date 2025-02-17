@@ -1,0 +1,22 @@
+settings:
+  name: "Kubescape: Kubernetes security platform"
+  description: "Static analysis of Kubernetes YAML files for security issues and misconfigurations."
+  image: golang
+  author:
+    - https://github.com/armosec
+  gallery:
+    - https://files.catbox.moe/w5otbd.png
+  example: satori run ./ --playbook satori://cloud-native/kubescape.yml --report --output
+
+kubescape:
+  install:
+    - curl -s https://raw.githubusercontent.com/armosec/kubescape/master/install.sh | /bin/bash
+    
+  help:
+    - kubescape --help
+    - kubescape scan --help
+
+  test:
+    assertStdoutNotContains: "C-0"
+    run:
+      - kubescape scan . --keep-local
