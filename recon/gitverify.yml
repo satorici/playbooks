@@ -2,7 +2,7 @@ settings:
   name: "Gitverify: provide insights into a Github repository's trustworthiness"
   description: "GitVerify analyzes GitHub repositories to assess their trustworthiness by evaluating metadata, contributors, issues, pull requests, and associated domains. It gathers data from the GitHub API and can optionally perform VirusTotal checks on associated domains. The results are presented in various formats, including text, JSON, and CSV."
   image: python
-  scheme: kulkansecurity
+  #scheme: kulkansecurity
   author:
     - https://github.com/kulkansecurity
   gallery:
@@ -11,13 +11,13 @@ settings:
 
 gitverify:
   install:
-    - git clone https://github.com/kulkansecurity/gitverify.git --depth 1
-    - pip install -r gitverify/requirements.txt -q --disable-pip-version-check --root-user-action=ignore
+    - cd /tmp; git clone https://github.com/kulkansecurity/gitverify.git --depth 1
+    - pip install -r /tmp/gitverify/requirements.txt -q --disable-pip-version-check --root-user-action=ignore
 
   help:
-    - python3 gitverify/gitverify.py -h
+    - python3 /tmp/gitverify/gitverify.py -h
 
   test:
     assertReturnCode: 0
     run:
-      - python3 gitverify/gitverify.py -r ${{REPO}}
+      - python3 /tmp/gitverify/gitverify.py -r ${{REPO}}
