@@ -1,6 +1,6 @@
 settings:
-  name: "Rust_Audit_Ginger: audit check performs an audit for crates with security vulnerabilities"
-  description: "Checks Rust projects for security vulnerabilities and unsafe code. Uses cargo-audit to detect known security issues in dependencies and cargo-geiger to identify unsafe Rust code. Ensures no advisories or unsafe code patterns are present."
+  name: "Rust_Geiger: check crates with security vulnerabilities"
+  description: "Checks Rust projects for unsafe code"
   image: rust
   files: true
   author:

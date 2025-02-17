@@ -6,6 +6,8 @@ settings:
 playbooks:
   - pip install satori-ci >>/dev/null 2>>/dev/null; satori playbooks --public
 
+# Contents: while read line; do echo "satori://$line"; echo "------------------------------";cat $line; echo "--------------------------------------------------------------------------------"; echo ""; done<<<"`find ./ *.yml|grep -v ".git\|.satori"|grep yml|sed -e 's/\.\/\///g'`" > playbooks.txt
+# List: find ./ -name "*.yml"|grep -v "github\|\.satori\|llm\|swift\|all\.yml"|sed -e 's/\.\/\///g'|awk '{print "  - satori://"$1}'|sort -u
 tests:
   assertStdout: False
   name:

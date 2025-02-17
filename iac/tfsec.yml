@@ -16,7 +16,7 @@ tfsec:
     - tfsec --help
 
   test:
-    assertStdoutNotContains: 
+    assertStdoutNotContains:
       - "HIGH"
       - "MEDIUM"
       - "LOW"

@@ -17,7 +17,7 @@ grype:
     - grype --help
 
   test:
-    assertStdoutNotContains: 
+    assertStdoutNotContains:
       - Critical
       - High
       - Medium

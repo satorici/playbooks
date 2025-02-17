@@ -12,7 +12,7 @@ settings:
 wapiti:
   install:
     - apt update >>/dev/null
-    - apt install -qy wapiti >>/dev/null 2>>/dev/nul
+    - apt install -qy wapiti >>/dev/null 2>>/dev/null
 
   help:
     - wapiti -h

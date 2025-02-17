@@ -16,6 +16,6 @@ pylint:
     - pylint --help
 
   test:
-    assertReturncCode: 0
+    assertReturnCode: 0
     run:
       - find . -type f -name "*.py" -exec pylint {} +
