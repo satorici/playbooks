@@ -1,7 +1,7 @@
 settings:
   name: "Socialhunter: crawls the given URL and finds broken social media links that can be hijacked"
   description: "socialhunter crawls a given website to identify broken social media links that could be hijacked, potentially allowing attackers to conduct phishing attacks or damage a company’s reputation. It supports platforms like Twitter, Facebook, Instagram, and TikTok without requiring API keys."
-  image: golang
+  image: estoesunademoparasabersifuncionael
   author:
     - https://github.com/utkusen
   gallery:
