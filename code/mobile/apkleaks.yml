@@ -6,7 +6,7 @@ settings:
     - https://github.com/dwisiswant0
   gallery:
     - https://files.catbox.moe/929m57.png
-  example: satori run ./ --playbook satori://mobile/android/apkleaks.yml --report --output
+  example: satori run ./ --playbook satori://code/mobile/apkleaks.yml --report --output
 
 apkleaks:
   install:
