@@ -1,0 +1,30 @@
+settings:
+  name: "Qwen: Query this LLM"
+  description: "Queries Qwen with the provided input. Ensures the Ollama server runs correctly, pulls the specified model, and executes the query."
+  image: ollama/ollama
+  cpu: 16384
+  memory: 122880
+  storageSize: 100
+  timeout: 400
+  author:
+    - https://github.com/ollama
+  example: satori run satori://llm/qwen.yml -d INPUT="Hello World" --report --output
+
+MODEL:
+  - - "qwen"
+
+qwen:
+  install:
+    - apt update >> /dev/null; apt install -qy screen >> /dev/null
+
+  test:
+    assertReturnCode: 0
+    serve:
+      - ps aux | grep -v grep | grep -q ollama || screen -dm ollama serve
+      - sleep 1
+
+    pull:
+      - ollama pull ${{MODEL}}
+
+    query:
+      - ollama run ${{MODEL}} "${{INPUT}}"
