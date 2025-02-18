@@ -12,7 +12,7 @@ settings:
 
 trivy:
   install:
-    - go install github.com/aquasecurity/trivy/cmd/trivy@latest
+    - go install github.com/aquasecurity/trivy/cmd/trivy@latest 2>>/dev/null
 
   test:
     assertStdoutNotContains:
