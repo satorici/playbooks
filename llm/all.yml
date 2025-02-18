@@ -13,4 +13,4 @@ settings:
 import:
   - satori://llm/llama3.2-uncensored.yml
   - satori://llm/llama3.2.yml
-  - satori://llm/phi4.yml
+  - satori://llm/qwen.yml
