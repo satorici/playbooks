@@ -1,0 +1,14 @@
+settings:
+  name: "All LLM: Query all llm playbooks"
+  description: "Queries all LLM models with the provided input. Ensures the Ollama server runs correctly, pulls the specified model, and executes the query."
+  image: ollama/ollama
+  cpu: 16384
+  memory: 122880
+  timeout: 400
+  author:
+    - https://github.com/ollama
+  example: satori run satori://llm/all.yml -d INPUT="Hello World" --report --output
+
+import:
+  - satori://llm/llama3.2-uncensored.yml
+  - satori://llm/llama3.2.yml

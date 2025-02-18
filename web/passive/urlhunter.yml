@@ -18,4 +18,4 @@ urlhunter:
   test:
     assertReturnCode: 0
     run:
-      - urlhunter --keywords keywords.txt --date latest -o /go/bin/urlhunter/out.txt 2>>/dev/null; cat out.txt
+      - urlhunter --keywords keywords.txt --date latest -o /tmp/urlhunter.log 2>>/dev/null; cat /tmp/urlhunter.log

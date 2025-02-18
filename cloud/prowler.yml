@@ -1,0 +1,23 @@
+settings:
+  name: "Prowler: AWS Security Best Practices Assessment Tool"
+  description: "Prowler is an open-source security tool to perform AWS security best practices assessments, audits, incident response, continuous monitoring, hardening and forensics readiness. It contains hundreds of controls covering CIS, PCI-DSS, ISO27001, GDPR, HIPAA, FFIEC, SOC2, AWS FTR, ENS and custom security frameworks."
+  image: python
+  author:
+    - https://github.com/prowler-cloud/prowler
+  gallery:
+    - https://files.catbox.moe/prowler.png
+  example: satori run satori://cloud/prowler.yml -d AWS_ACCESS_KEY=key -d AWS_SECRET_KEY=secret --report --output
+  redacted:
+    - AWS_ACCESS_KEY
+    - AWS_SECRET_KEY
+  example: satori run satori://cloud/prowler.yml -d AWS_ACCESS_KEY=key -d AWS_SECRET_KEY=secret --report --output
+  # bug: https://github.com/prowler-cloud/prowler/issues/3418
+
+prowler:
+  install:
+    - pip install prowler -q --disable-pip-version-check
+
+  test:
+    assertStdoutNotContains: "CRITICAL"
+    run:
+      - export AWS_ACCESS_KEY_ID=${{AWS_ACCESS_KEY}}; export AWS_SECRET_ACCESS_KEY=${{AWS_SECRET_KEY}}; prowler aws -M json -M csv -o prowler_output --log-level ERROR

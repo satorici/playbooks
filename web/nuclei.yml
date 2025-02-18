@@ -1,0 +1,23 @@
+settings:
+  name: "Nuclei: Web vulnerability scanner"
+  description: "A feature-rich vulnerability scanner that uses templates to detect security issues including CVEs, misconfigurations, and exposed sensitive data."
+  image: golang
+  timeout: 1800
+  author:
+    - https://github.com/projectdiscovery
+  gallery:
+    - https://files.catbox.moe/m4sg44.png
+  example: satori run satori://web/nuclei.yml -d URL="http://testphp.vulnweb.com/" --report --output
+
+nuclei:
+  install:
+    - go install github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest 2>>/dev/null
+    - nuclei -update-templates 2>>/dev/null
+
+  test:
+    assertStdoutNotContains:
+      - "CRITICAL"
+      - "HIGH"
+    setSeverity: 4
+    run:
+      - nuclei -u ${{URL}} -rate-limit 10 -bulk-size 25 -c 10 -timeout 5 -silent -as

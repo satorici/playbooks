@@ -10,7 +10,7 @@ settings:
   redacted:
     - GITHUB_PAT
 
-gitxray:
+gitxray_email:
   install:
     - pip install git+https://github.com/kulkansecurity/gitxray.git -q --disable-pip-version-check --root-user-action=ignore
 

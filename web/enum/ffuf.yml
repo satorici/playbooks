@@ -1,0 +1,23 @@
+settings:
+  name: "FFuf Web Fuzzer"
+  description: "Fast web fuzzer for discovering hidden endpoints and parameters"
+  image: golang
+  author:
+    - https://github.com/ffuf
+  gallery:
+    - https://files.catbox.moe/4wqoh8.png
+  example: satori run satori://web/ffuf.yml -d URL="https://example.com" --report --output
+
+ffuf:
+  install:
+    - go install github.com/ffuf/ffuf@latest 2>>/dev/null
+    - mkdir -p /wordlists
+    - wget -q https://raw.githubusercontent.com/danielmiessler/SecLists/master/Discovery/Web-Content/common.txt -O /wordlists/common.txt
+
+  help:
+    - ffuf -h
+
+  test:
+    assertReturnCode: 0
+    run:
+      - ffuf -w /wordlists/common.txt -u ${{URL}}/FUZZ -mc 200,201,202,203,204,301,302,307,401,403

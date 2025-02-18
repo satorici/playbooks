@@ -1,0 +1,29 @@
+settings:
+  name: "Llama 3.2: Query this LLM"
+  description: "Queries Llama 3.2 with the provided input. Ensures the Ollama server runs correctly, pulls the specified model, and executes the query."
+  image: ollama/ollama
+  cpu: 16384
+  memory: 122880
+  timeout: 400
+  author:
+    - https://github.com/ollama
+  example: satori run satori://llm/llama3.2.yml -d INPUT="Hello World" --report --output
+
+MODEL:
+  - - "llama3.2"
+
+llama3_2:
+  install:
+    - apt update >> /dev/null; apt install -qy screen >> /dev/null
+
+  test:
+    assertReturnCode: 0
+    serve:
+      - ps aux | grep -v grep | grep -q ollama || screen -dm ollama serve
+      - sleep 1
+
+    pull:
+      - ollama pull ${{MODEL}}
+
+    query:
+      - ollama run ${{MODEL}} "${{INPUT}}"

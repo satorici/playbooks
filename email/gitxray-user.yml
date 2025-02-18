@@ -10,11 +10,11 @@ settings:
     - https://files.catbox.moe/v4epas.png
   example: satori run satori://email/gitxray-user.yml -d REPO=satorici/playbooks -d USER=satoridev01 --report --output
 
-gitxray:
+gitxray_email:
   install:
     - pip install git+https://github.com/kulkansecurity/gitxray.git -q --disable-pip-version-check --root-user-action=ignore
 
   test:
     assertStdoutContains: "@"
-    contributor:
+    user:
       - python3 -m gitxray.gitxray -r https://github.com/${{REPO}} -c ${{USER}} -f emails -outformat text --shush

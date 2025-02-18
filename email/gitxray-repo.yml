@@ -10,7 +10,7 @@ settings:
     - https://files.catbox.moe/qtnkry.png
   example: satori run satori://email/gitxray-repo.yml -d REPO="satorici/playbooks" --report --output
 
-gitxray:
+gitxray_email:
   install:
     - pip install git+https://github.com/kulkansecurity/gitxray.git -q --disable-pip-version-check --root-user-action=ignore
 
