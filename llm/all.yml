@@ -4,6 +4,7 @@ settings:
   image: ollama/ollama
   cpu: 16384
   memory: 122880
+  storageSize: 100
   timeout: 400
   author:
     - https://github.com/ollama
@@ -12,3 +13,4 @@ settings:
 import:
   - satori://llm/llama3.2-uncensored.yml
   - satori://llm/llama3.2.yml
+  - satori://llm/phi4.yml
