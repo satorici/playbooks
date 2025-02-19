@@ -20,4 +20,4 @@ gh-workflow-auditor-PR-19:
   test:
     assertStderrNotContains: WARNING
     run:
-      - export GITHUB_TOKEN=${{GITHUB_PAT}}; cd /tmp/gh-workflow-auditor; python main.py --type repo ${{REPO}}
+      - export GITHUB_TOKEN=${{GITHUB_PAT}}; cd /tmp/gh-workflow-auditor; python console.py --type repo ${{REPO}}
