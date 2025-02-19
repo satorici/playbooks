@@ -15,6 +15,6 @@ semgrep:
     - pip install semgrep -q --disable-pip-version-check
 
   test:
-    assertStdoutContains: "0 findings"
+    assertStdout: False
     github_action:
-      - semgrep --config 'p/github-actions' --max-chars-per-line 1024
+      - semgrep --config 'p/github-actions' --max-chars-per-line 1024 -q
