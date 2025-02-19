@@ -12,7 +12,7 @@ gh-workflow-auditor:
   install:
     - cd /tmp; git clone --depth 1 https://github.com/TinderSec/gh-workflow-auditor.git
     #- python3 -m pip install requests PyYAML -q --disable-pip-version-check --root-user-action=ignore
-    - pip3 install -r gh-workflow-auditor/requirements.txt -q --disable-pip-version-check
+    - pip3 install -r /tmp/gh-workflow-auditor/requirements.txt -q --disable-pip-version-check
 
   help:
     - cd /tmp/gh-workflow-auditor; python main.py --help
