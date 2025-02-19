@@ -19,4 +19,4 @@ ghwfauditor:
   test:
     assertStderrNotContains: WARNING
     run:
-      - export GITHUB_TOKEN=${{GITHUB_PAT}}; ghwfauditor --type repo ${{REPO}}
+      - ghwfauditor --type repo ${{REPO}} --token ${{GITHUB_PAT}}
