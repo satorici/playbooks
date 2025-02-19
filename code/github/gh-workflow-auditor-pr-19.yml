@@ -1,0 +1,23 @@
+settings:
+  name: "GitHub Workflow Auditor PR-19: dynamically identify vulnerabilities in Github Workflows with enhacements"
+  description: "GitHub Workflow Auditor identifies vulnerability in GitHub Workflows. It does so by scanning the workflow files for anti-patterns such as ingesting user inputs in an unsafe manner or using malicious commits in build process. The tool supports scanning individual repositories or all accessibe repositories of a user or organization."
+  image: python
+  author:
+    - https://github.com/TinderSec
+    - https://github.com/Xenorf
+  example: satori run satori://code/github/gh-workflow-auditor.yml -d GITHUB_PAT=TBC -d REPO=All-Hands-AI/OpenHands --report --output
+  redacted:
+    - GITHUB_PAT
+
+gh-workflow-auditor-PR-19:
+  install:
+    - cd /tmp; git clone --depth 1 https://github.com/TinderSec/gh-workflow-auditor.git; cd gh-workflow-auditor; git fetch origin pull/19/head:pr-19; git checkout pr-19
+    - python3 -m pip install requests PyYAML -q --disable-pip-version-check --root-user-action=ignore
+
+  help:
+    - cd /tmp/gh-workflow-auditor; python main.py --help
+
+  test:
+    assertStderrNotContains: WARNING
+    run:
+      - export GITHUB_TOKEN=${{GITHUB_PAT}}; cd /tmp/gh-workflow-auditor; python main.py --type repo ${{REPO}}
