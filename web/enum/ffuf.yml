@@ -1,5 +1,5 @@
 settings:
-  name: "FFuf Web Fuzzer"
+  name: "FFuf: Web fuzzer to discover hidden files and directories"
   description: "Fast web fuzzer for discovering hidden endpoints and parameters"
   image: golang
   author:
