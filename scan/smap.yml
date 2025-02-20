@@ -1,5 +1,5 @@
 settings:
-  name: "A port scanner built with shodan.io's free API"
+  name: "Smap: port scanner built with shodan.io's free API"
   description: "smap is a network scanner that functions as a faster, more efficient alternative to Nmap by leveraging masscan for high-speed host discovery and integrating Nmap’s service and vulnerability detection capabilities. It supports asynchronous scanning and provides detailed network insights."
   image: golang
   author:

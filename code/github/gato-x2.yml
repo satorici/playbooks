@@ -1,0 +1,47 @@
+settings:
+  name: "Gato-X: GitHub Attack Toolkit"
+  description: "Gato-X is a scanning and attack tool for GitHub Actions pipelines. You can use it to identify Pwn Requests, Actions Injection, TOCTOU Vulnerabilities, and Self-Hosted Runner takeover at scale using just a single API token. Gato-X is an operator focused tool that is tuned to avoid false negatives. It will have a higher false positive rate than SAST tools like CodeQL, but Gato-X will give you everything you need to quickly determine if something is a true positive or not."
+  author:
+    - https://github.com/AdnaneKhan
+  gallery:
+    - https://files.catbox.moe/o7f9sf.png
+  image: python
+  cpu: 256
+  memory: 512
+  example: satori run satori://code/github/gato-x.yml -d GITHUB_PAT=TBC -d REPO=udacity/deep-reinforcement-learning --report --output
+  redacted:
+    - GITHUB_PAT
+
+gato-x:
+  install:
+    - pip install git+https://github.com/AdnaneKhan/gato-x.git -q --disable-pip-version-check --root-user-action=ignore
+
+  help:
+    - gato-x --help
+
+  run:
+    - export GH_TOKEN=${{GITHUB_PAT}}; gato-x e --repository ${{REPO}}
+
+  high:
+    setSeverity: 5
+    assertStdoutNotContains:
+      - HIGH
+    run:
+      - echo ${{gato-x.run.stdout}}
+
+  medium:
+    setSeverity: 3
+    assertStdoutNotContains:
+      - MEDIUM
+    run:
+      - echo ${{run.stdout}}
+
+
+  low:
+    setSeverity: 1
+    assertStdoutNotContains:
+      - LOW
+      - UNKNOWN
+    run:
+      - echo ${{run.stdout}}
+

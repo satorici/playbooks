@@ -13,6 +13,8 @@ semgrep:
     - pip install semgrep -q --disable-pip-version-check
 
   test:
-    assertStdout: False
+    assertStdoutNotContains:
+      - " ❯❯❱ "
+      - " ❯❱ "
     javascript:
       - semgrep --config "p/javascript" --max-chars-per-line 1024

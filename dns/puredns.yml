@@ -1,5 +1,5 @@
 settings:
-  name: "Puredns: domain resolver and subdomain bruteforcing tool that filters out wildcard subdomains and DNS poisoned entries"
+  name: "Puredns: domain resolver and subdomain bruteforcing that filters out wildcard subdomains and poisoned entries"
   description: "puredns performs recursive DNS resolution and wildcard filtering to validate subdomains efficiently. It enhances subdomain enumeration by ensuring accurate results and reducing false positives in security assessments."
   image: golang
   author:
