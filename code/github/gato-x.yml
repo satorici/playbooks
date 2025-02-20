@@ -6,8 +6,6 @@ settings:
   gallery:
     - https://files.catbox.moe/o7f9sf.png
   image: python
-  cpu: 256
-  memory: 512
   example: satori run satori://code/github/gato-x.yml -d GITHUB_PAT=TBC -d REPO=udacity/deep-reinforcement-learning --report --output
   redacted:
     - GITHUB_PAT

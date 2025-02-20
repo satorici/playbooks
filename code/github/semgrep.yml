@@ -6,8 +6,6 @@ settings:
     - https://files.catbox.moe/ealtzu.png
   author:
     - https://github.com/semgrep
-  cpu: 256
-  memory: 512
   example: satori run ./ --playbook satori://code/github/semgrep.yml --report --output
 
 semgrep:
@@ -15,6 +13,7 @@ semgrep:
     - pip install semgrep -q --disable-pip-version-check
 
   test:
+    setSeverity: 3
     assertStdoutNotContains:
       - " ❯❯❱ "
       - " ❯❱ "
