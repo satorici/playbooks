@@ -1,5 +1,5 @@
 settings:
-  name: "Safety: check Python dependencies for known security vulnerabilities in their requirements.txt file"
+  name: "Safety: check Python dependencies for known security vulnerabilities in their requirements.txt"
   description: "Safety detects known vulnerabilities in Python dependencies by scanning installed packages against a vulnerability database. It helps identify insecure libraries and provides insights into potential security risks in software projects."
   image: python
   author:
