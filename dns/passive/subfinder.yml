@@ -1,0 +1,21 @@
+settings:
+  name: "Subfinder: Discover valid subdomains using passive online sources"
+  description: "subfinder discovers subdomains by querying public sources, certificate transparency logs, APIs, and brute-force techniques. It is designed for reconnaissance and security assessments, providing a comprehensive list of subdomains associated with a target domain."
+  image: golang
+  author:
+    - https://github.com/projectdiscovery
+  gallery:
+    - https://files.catbox.moe/6km2wy.png
+  example: satori run satori://dns/subfinder.yml  -d DOMAIN="satori.ci" --report --output
+
+subfinder:
+  install:
+    - go install github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest 2>>/dev/null
+
+  help:
+    - subfinder --help
+
+  test:
+    assertReturnCode: 0
+    run:
+      - subfinder -d ${{DOMAIN}}
