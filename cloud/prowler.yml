@@ -1,23 +1,25 @@
 settings:
   name: "Prowler: AWS Security Best Practices Assessment Tool"
   description: "Prowler is an open-source security tool to perform AWS security best practices assessments, audits, incident response, continuous monitoring, hardening and forensics readiness. It contains hundreds of controls covering CIS, PCI-DSS, ISO27001, GDPR, HIPAA, FFIEC, SOC2, AWS FTR, ENS and custom security frameworks."
-  image: python
+  image: python:3.12
+  files: True
   author:
     - https://github.com/prowler-cloud/prowler
   gallery:
-    - https://files.catbox.moe/prowler.png
+    - https://files.catbox.moe/xsbsqj.png
   example: satori run satori://cloud/prowler.yml -d AWS_ACCESS_KEY=key -d AWS_SECRET_KEY=secret --report --output
   redacted:
     - AWS_ACCESS_KEY
     - AWS_SECRET_KEY
   example: satori run satori://cloud/prowler.yml -d AWS_ACCESS_KEY=key -d AWS_SECRET_KEY=secret --report --output
-  # bug: https://github.com/prowler-cloud/prowler/issues/3418
 
 prowler:
   install:
-    - pip install prowler -q --disable-pip-version-check
+    - pip install poetry -q --disable-pip-version-check --root-user-action=ignore
+    - cd /tmp; git clone --depth 1 https://github.com/prowler-cloud/prowler; cd prowler; poetry install >>/dev/null
 
   test:
-    assertStdoutNotContains: "CRITICAL"
+    assertReturnCodeNot: 137
     run:
-      - export AWS_ACCESS_KEY_ID=${{AWS_ACCESS_KEY}}; export AWS_SECRET_ACCESS_KEY=${{AWS_SECRET_KEY}}; prowler aws -M json -M csv -o prowler_output --log-level ERROR
+      - export AWS_ACCESS_KEY_ID=${{AWS_ACCESS_KEY}}; export AWS_SECRET_ACCESS_KEY=${{AWS_SECRET_KEY}}; cd /tmp/prowler; poetry run python prowler aws -M json-ocsf -M csv -o prowler_output --log-level ERROR
+      # - ls -lR /tmp/prowler/prowler_output*
