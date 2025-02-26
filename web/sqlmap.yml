@@ -10,7 +10,7 @@ settings:
 
 sqlmap:
   install:
-    - apt update >>/dev/null; apt install -qy git
+    - apt-get update >>/dev/null; apt-get install -qy git
     - cd /tmp; git clone --depth 1 https://github.com/sqlmapproject/sqlmap.git
 
   help:

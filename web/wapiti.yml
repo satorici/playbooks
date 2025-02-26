@@ -11,8 +11,7 @@ settings:
 
 wapiti:
   install:
-    - apt update >>/dev/null
-    - apt install -qy wapiti >>/dev/null 2>>/dev/null
+    - apt-get update >>/dev/null; apt-get install -qy wapiti >>/dev/null 2>>/dev/null
 
   help:
     - wapiti -h

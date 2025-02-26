@@ -1,0 +1,22 @@
+settings:
+  name: "Cppcheck: Static analysis for C and C++"
+  description: "Cppcheck is a static analysis tool for detecting bugs, undefined behavior, and potential security vulnerabilities in C and C++ code."
+  image: debian
+  author:
+    - https://github.com/danmar/cppcheck
+  gallery:
+    - https://files.catbox.moe/e65th3.png
+  example: satori run ./ --playbook satori://code/cppcheck.yml --report --output
+
+cppcheck:
+  install:
+    - apt-get update >>/dev/null; apt-get install -qy cppcheck >>/dev/null
+
+  help:
+    - cppcheck --help
+
+  test:
+    assertReturnCode: 0
+    assertStdoutNotContains: "error"
+    run:
+      - cppcheck --enable=all --inconclusive --quiet .

@@ -10,7 +10,7 @@ settings:
 
 katana:
   install:
-    - apt install -qy wget git gcc >>/dev/null
+    - apt-get install -qy wget git gcc >>/dev/null
     - go install github.com/projectdiscovery/katana/cmd/katana@latest 2>>/dev/null
 
   help:

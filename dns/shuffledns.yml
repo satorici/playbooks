@@ -9,7 +9,7 @@ settings:
 shuffledns:
   install:
     - go install github.com/projectdiscovery/shuffledns/cmd/shuffledns@latest 2>>/dev/null
-    - apt update >>/dev/null; apt install git make gcc -qy >>/dev/null
+    - apt-get update >>/dev/null; apt-get install git make gcc -qy >>/dev/null
     - cd /tmp; git clone https://github.com/blechschmidt/massdns.git; cd massdns; make
 
   help:

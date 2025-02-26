@@ -10,7 +10,7 @@ settings:
 
 puredns:
   install:
-    - apt update >>/dev/null; apt install -y git make gcc >>/dev/null
+    - apt-get update >>/dev/null; apt-get install -y git make gcc >>/dev/null
     - cd /tmp; git clone https://github.com/blechschmidt/massdns.git; cd massdns; make
     - go install github.com/d3mondev/puredns/v2@latest 2>>/dev/null
     - echo "${{DOMAIN}}" > puredns_domain_file.txt

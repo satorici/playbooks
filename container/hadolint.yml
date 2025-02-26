@@ -10,7 +10,7 @@ settings:
 
 hadolint:
   install:
-    - apt update >>/dev/null; apt install -y wget >>/dev/null
+    - apt-get update >>/dev/null; apt-get install -y wget >>/dev/null
     - wget -q https://github.com/hadolint/hadolint/releases/latest/download/hadolint-Linux-x86_64 -O /usr/local/bin/hadolint
     - chmod +x /usr/local/bin/hadolint
 

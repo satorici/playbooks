@@ -10,7 +10,7 @@ settings:
 
 nikto:
   install:
-    - apt update >>/dev/null; apt install -qy wget build-essential cpanminus libssl-dev zlib1g-dev >>/dev/null
+    - apt-get update >>/dev/null; apt-get install -qy wget build-essential cpanminus libssl-dev zlib1g-dev >>/dev/null
     - cpanm Time::Local Net::hostent Time::HiRes Net::SSLeay IO::Socket::SSL >>/dev/null
     - cd /tmp; wget -qO nikto.tar.gz https://github.com/sullo/nikto/archive/master.tar.gz; tar xf nikto.tar.gz --strip-components=2 -C ./ nikto-master/program
 

@@ -10,8 +10,7 @@ settings:
 
 apkleaks:
   install:
-    - apt update >>/dev/null
-    - apt install -y android-tools-apktool wget unzip >>/dev/null
+    - apt-get update >>/dev/null; apt-get install -y android-tools-apktool wget unzip >>/dev/null
     - cd /tmp; wget -q https://github.com/skylot/jadx/releases/download/v1.4.7/jadx-1.4.7.zip
     - unzip -q /tmp/jadx-1.4.7.zip -d /opt/jadx
     - ln -s /opt/jadx/bin/jadx /usr/local/bin/

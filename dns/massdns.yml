@@ -21,7 +21,7 @@ RECORD:
 
 massdns:
   install:
-    - apt update >> /dev/null; apt install git make gcc -qy >> /dev/null
+    - apt-get update >> /dev/null; apt-get install git make gcc -qy >> /dev/null
     - cd /tmp; git clone https://github.com/blechschmidt/massdns.git; cd massdns && make
     - echo "${{DOMAIN}}" > domain.txt
 

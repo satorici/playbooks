@@ -10,7 +10,7 @@ settings:
 
 cloudscraper:
   install:
-    - apt update >>/dev/null; apt install -qy git >>/dev/null
+    - apt-get update >>/dev/null; apt-get install -qy git >>/dev/null
     - cd /tmp; git clone https://github.com/jordanpotti/CloudScraper.git --depth 1; pip3 install -r CloudScraper/requirements.txt -q --disable-pip-version-check
 
   help:

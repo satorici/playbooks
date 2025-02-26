@@ -1,0 +1,31 @@
+settings:
+  name: "Repo by file: Run a query to all files of a repository"
+  description: "Queries a GitHub repository using Llama 3.2 with Ollama. Clones the specified repository, compiles its file contents into a prompt, and queries the Llama model with the provided input. Ensures the Ollama server runs correctly, pulls the specified model, and executes the query."
+  image: ollama/ollama
+  cpu: 16384
+  memory: 122880
+  timeout: 1800
+  author:
+    - https://github.com/ollama
+  example: satori run repo-by-file.yml -d INPUT="What security vulnerabilities can you identify on this file?" -d REPO="hardik05/Damn_Vulnerable_C_Program" --report --output
+
+MODEL:
+  - - "artifish/llama3.2-uncensored"
+
+ollama:
+  install:
+    - apt-get update >> /dev/null; apt-get install -qy screen jq curl git >> /dev/null
+    - git clone --depth 1 https://github.com/${{REPO}}.git . 2>>/dev/null
+    - find . -type f \( -name "*.c" -o -name "*.cpp" -o -name "*.h" -o -name "*.java" -o -name "*.js" -o -name "*.py" -o -name "*.rb" -o -name "*.sh" -o -name "*.php" -o -name "*.go" -o -name "*.swift" -o -name "*.kt" -o -name "*.ts" -o -name "*.cs" \) -size -10k > /tmp/files.txt
+
+  test:
+    assertReturnCode: 0
+    serve:
+      - screen -dm ollama serve; sleep 1
+
+    pull:
+      - ollama pull ${{MODEL}}
+
+    query:
+      - cat /tmp/files.txt
+      - while read filename; do echo "$filename"; ollama run ${{MODEL}} "I will write the filename, the prompt and the file contents. Filename $filename, prompt ${{INPUT}}, content $(cat $filename)" </dev/null; done</tmp/files.txt

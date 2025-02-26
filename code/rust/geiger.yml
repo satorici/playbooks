@@ -11,7 +11,7 @@ settings:
 
 rust_geiger:
   install:
-    - apt install -qy pkg-config libssl-dev >>/dev/null
+    - apt-get install -qy pkg-config libssl-dev >>/dev/null
     - cargo install cargo-geiger 2>>/dev/null
 
   help:

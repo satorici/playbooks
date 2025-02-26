@@ -10,7 +10,7 @@ settings:
 
 urldedupe:
   install:
-    - apt update >>/dev/null; apt install -qy git build-essential make cmake >>/dev/null
+    - apt-get update >>/dev/null; apt-get install -qy git build-essential make cmake >>/dev/null
     - cd /tmp; git clone --depth 1 https://github.com/ameenmaali/urldedupe.git; cd urldedupe ; cmake CMakeLists.txt ; make
 
   test:
