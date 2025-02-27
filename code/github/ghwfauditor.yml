@@ -3,8 +3,8 @@ settings:
   description: "ghwfauditor, based on GitHub Workflow Auditor, identifies vulnerability in GitHub Workflows. It does so by scanning the workflow files for anti-patterns such as ingesting user inputs in an unsafe manner or using malicious commits in build process. The tool supports scanning individual repositories or all accessibe repositories of a user or organization."
   image: python
   author:
-    - https://github.com/Xenorf
     - https://github.com/TinderSec
+    - https://github.com/Xenorf
   example: satori run satori://code/github/ghwfauditor.yml -d GITHUB_PAT=TBC -d REPO=All-Hands-AI/OpenHands --report --output
   redacted:
     - GITHUB_PAT
@@ -16,7 +16,8 @@ ghwfauditor:
   help:
     - ghwfauditor --help
 
-  test:
+  medium:
+    setSeverity: 2
     assertStderrNotContains: WARNING
     run:
       - ghwfauditor --type repo ${{REPO}} --token ${{GITHUB_PAT}}

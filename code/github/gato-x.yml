@@ -17,11 +17,24 @@ gato-x:
   help:
     - gato-x --help
 
-  test:
-    assertStdoutNotContains:
-      - HIGH
-      - MEDIUM
-      - LOW
-      - UNKNOWN
-    run:
-      - export GH_TOKEN=${{GITHUB_PAT}}; gato-x e --repository ${{REPO}}
+  run:
+    - export GH_TOKEN=${{GITHUB_PAT}}; gato-x e --repository ${{REPO}}
+
+  high:
+    setOutput: gato-x.run
+    setSeverity: 3
+    assertStdoutNotContains: HIGH
+
+  medium:
+    setOutput: gato-x.run
+    setSeverity: 2
+    assertStdoutNotContains: MEDIUM
+
+  low:
+    setOutput: gato-x.run
+    setSeverity: 1
+    assertStdoutNotContains: LOW
+
+  info:
+    setOutput: gato-x.run
+    assertStdoutNotContains: UNKNOWN

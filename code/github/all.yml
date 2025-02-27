@@ -18,5 +18,5 @@ install:
 import:
   - satori://code/github/semgrep.yml
   - satori://code/github/octoscan.yml
-  - satori://code/github/gh-workflow-auditor.yml
+  - satori://code/github/ghwfauditor.yml
   - satori://code/github/gato-x.yml

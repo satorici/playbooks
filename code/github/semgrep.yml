@@ -12,10 +12,15 @@ semgrep:
   install:
     - pip install semgrep -q --disable-pip-version-check
 
-  test:
+  run:
+    - semgrep --config 'p/github-actions' --max-chars-per-line 1024 -q
+
+  high:
+    setOutput: semgrep.run
     setSeverity: 3
-    assertStdoutNotContains:
-      - " ❯❯❱ "
-      - " ❯❱ "
-    github_action:
-      - semgrep --config 'p/github-actions' --max-chars-per-line 1024 -q
+    assertStdoutNotContains: " ❯❯❱ "
+
+  medium:
+    setOutput: semgrep.run
+    setSeverity: 2
+    assertStdoutNotContains: " ❯❱ "
