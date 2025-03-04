@@ -23,18 +23,18 @@ gato-x:
   high:
     setOutput: gato-x.run
     setSeverity: 3
-    assertStdoutNotContains: HIGH
+    assertStdoutNotContains: High
 
   medium:
     setOutput: gato-x.run
     setSeverity: 2
-    assertStdoutNotContains: MEDIUM
+    assertStdoutNotContains: Medium
 
   low:
     setOutput: gato-x.run
     setSeverity: 1
-    assertStdoutNotContains: LOW
+    assertStdoutNotContains: Low
 
   info:
     setOutput: gato-x.run
-    assertStdoutNotContains: UNKNOWN
+    assertStdoutNotContains: Unknown
