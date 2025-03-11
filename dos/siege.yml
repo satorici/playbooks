@@ -1,12 +1,12 @@
 settings:
   name: "Siege - Load testing web servers"
-  description: "Knowing how much traffic your web server can handle when under stress is essential for planning 
-                future grow of your website or application. By using tool called siege, you can run a load test 
+  description: "Knowing how much traffic your web server can handle when under stress is essential for planning
+                future grow of your website or application. By using tool called siege, you can run a load test
                 on your server and see how your system performs under different circumstances.
-                You can use siege to evaluate the amount of data transferred, response time, transaction rate, 
-                throughput, concurrency and how many times the server returned responses. 
+                You can use siege to evaluate the amount of data transferred, response time, transaction rate,
+                throughput, concurrency and how many times the server returned responses.
                 The tool has three modes, in which it can operate – regression, internet simulation and brute force.
-                Siege must only be ran against servers you own or on such you have explicit permission to test. "
+                Siege must only be ran against servers you own or on such you have explicit permission to test."
   mitigation: "Use an anti DDoS service such as CloudFlare to prevent network attacks"
   image: debian
   count: 10
