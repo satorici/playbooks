@@ -7,7 +7,6 @@ settings:
     - https://github.com/prowler-cloud/prowler
   gallery:
     - https://files.catbox.moe/xsbsqj.png
-  example: satori run satori://cloud/prowler.yml -d AWS_ACCESS_KEY=key -d AWS_SECRET_KEY=secret --report --output
   redacted:
     - AWS_ACCESS_KEY
     - AWS_SECRET_KEY
