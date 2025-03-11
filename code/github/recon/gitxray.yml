@@ -14,7 +14,12 @@ gitxray:
   help:
     - python3 -m gitxray.gitxray --help
 
-  test:
-    assertReturnCode: 0
+  info:
+    assertStdoutContains: "Found results"
     repo:
       - python3 -m gitxray.gitxray -r https://github.com/${{REPO}} -outformat text --shush
+
+  medium:
+    setSeverity: 2
+    setOutput: gitxray.test
+    assertStdoutContains: "WARNING"
