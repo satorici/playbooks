@@ -7,7 +7,7 @@ settings:
   timeout: 1800
   author:
     - https://github.com/ollama
-  example: satori run satori://llm/tools/repo-by-file.yml -d INPUT="Identify security vulnerabilities on the following file referencing the line number." -d REPO="hardik05/Damn_Vulnerable_C_Program" --output
+  example: satori run satori://llm/tools/repo-by-file.yml -d INPUT="Identify security vulnerabilities on the following file referencing the line number." -d REPO="hardik05/Damn_Vulnerable_C_Program" --report --output
 
 MODEL:
   - - "artifish/llama3.2-uncensored"
