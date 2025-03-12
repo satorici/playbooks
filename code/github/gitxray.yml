@@ -1,0 +1,22 @@
+settings:
+  name: "Gitxray: Github repository OSSINT"
+  description: "Gitxray (short for Git X-Ray) is a multifaceted security tool designed for use on GitHub repositories. It serves various use cases, including OSINT, forensics, and security teams, as well as developers looking to secure their repositories, organizations, and related contributors. Gitxray leverages public GitHub REST APIs to gather information that would otherwise be very time-consuming to obtain manually. Additionally, it seeks out information in unconventional places."
+  image: python
+  clone: false
+  author:
+    - https://github.com/kulkansecurity
+  redacted:
+    - GITHUB_PAT
+  example: satori run satori://recon/gitxray.yml -d REPO="satorici/playbooks" --report --output
+
+gitxray:
+  install:
+    - pip install git+https://github.com/kulkansecurity/gitxray.git -q --disable-pip-version-check --root-user-action=ignore
+
+  help:
+    - python3 -m gitxray.gitxray --help
+
+  info:
+    assertStdoutContains: "Found results"
+    repo:
+      - python3 -m gitxray.gitxray -r https://github.com/${{REPO}} -outformat text --shush
