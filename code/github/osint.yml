@@ -1,0 +1,11 @@
+settings:
+  name: "Github OSINT: Semgrep & Gitxray"
+  description: "Get the potential security vulnerabilities and metadata of a Github repository"
+  image: python
+
+install:
+  - git clone --depth 1 https://github.com/${{REPO}}
+
+import:
+  - satori://code/semgrep.yml
+  - satori://code/github/recon/gitxray.yml
