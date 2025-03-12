@@ -13,8 +13,8 @@ gitxray:
   install:
     - pip install git+https://github.com/kulkansecurity/gitxray.git -q --disable-pip-version-check --root-user-action=ignore
 
-  help:
-    - python3 -m gitxray.gitxray --help
+  #help:
+  #  - python3 -m gitxray.gitxray --help
 
   info:
     assertStdoutContains: "Found results"

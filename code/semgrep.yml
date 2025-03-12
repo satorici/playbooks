@@ -10,10 +10,10 @@ settings:
 
 semgrep:
   install:
-    - pip install semgrep -q --disable-pip-version-check
+    - pip install semgrep -q --disable-pip-version-check --root-user-action=ignore
 
-  help:
-    - semgrep --help
+  #help:
+  #  - semgrep --help
 
   run:
     - semgrep --config auto --max-chars-per-line 1024 -q
