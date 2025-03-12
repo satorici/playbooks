@@ -8,4 +8,4 @@ install:
 
 import:
   - satori://code/semgrep.yml
-  - satori://code/github/recon/gitxray.yml
+  - satori://code/github/gitxray.yml
