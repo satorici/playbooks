@@ -5,6 +5,8 @@ settings:
   clone: false
   author:
     - https://github.com/kulkansecurity
+  gallery:
+    - https://files.catbox.moe/i1k5bz.gif
   redacted:
     - GITHUB_PAT
   example: satori run satori://code/github/gitxray.yml -d REPO="satorici/playbooks" --report --output
