@@ -7,7 +7,7 @@ settings:
     - https://github.com/kulkansecurity
   redacted:
     - GITHUB_PAT
-  example: satori run satori://recon/gitxray.yml -d REPO="satorici/playbooks" --report --output
+  example: satori run satori://code/github/gitxray.yml -d REPO="satorici/playbooks" --report --output
 
 gitxray:
   install:
