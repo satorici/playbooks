@@ -19,4 +19,4 @@ gitxray:
   info:
     assertStdoutContains: "Found results"
     repo:
-      - python3 -m gitxray.gitxray -r https://github.com/${{REPO}} -outformat text --shush | tail -n +16
+      - gitxray -r https://github.com/${{REPO}} -outformat text --shush | tail -n +16
