@@ -7,7 +7,7 @@ settings:
     - https://github.com/kulkansecurity
   gallery:
     - https://files.catbox.moe/tqqtbq.png
-  example: satori run satori://recon/gitverify.yml -d REPO="https://github.com/repo" --report --output
+  example: satori run satori://code/github/gitverify.yml -d REPO="https://github.com/repo" --report --output
 
 gitverify:
   install:
