@@ -5,7 +5,7 @@ settings:
   author:
     - https://github.com/jeremylong
   gallery:
-    - https://files.catbox.moe/4goi2y.gif
+    - https://files.catbox.moe/x3ffkf.gif
   example: satori run ./ --playbook satori://code/javascript/dependencycheck.yml --report --output
 
 dependency-check:
