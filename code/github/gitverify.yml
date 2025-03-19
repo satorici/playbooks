@@ -6,7 +6,7 @@ settings:
   author:
     - https://github.com/kulkansecurity
   gallery:
-    - https://files.catbox.moe/tqqtbq.png
+    - https://files.catbox.moe/gbqd9o.png
   example: satori run satori://code/github/gitverify.yml -d REPO="https://github.com/repo" --report --output
 
 gitverify:
