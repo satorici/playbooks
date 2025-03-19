@@ -5,6 +5,8 @@ settings:
   author:
     - https://github.com/TinderSec
     - https://github.com/Xenorf
+  gallery:
+    - https://files.catbox.moe/85nyiq.png
   example: satori run satori://code/github/ghwfauditor.yml -d GITHUB_PAT=TBC -d REPO=All-Hands-AI/OpenHands --report --output
   redacted:
     - GITHUB_PAT
