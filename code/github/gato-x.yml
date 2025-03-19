@@ -14,8 +14,8 @@ gato-x:
   install:
     - pip install git+https://github.com/AdnaneKhan/gato-x.git -q --disable-pip-version-check --root-user-action=ignore
 
-  help:
-    - gato-x --help
+  #help:
+  #  - gato-x --help
 
   run:
     - export GH_TOKEN=${{GITHUB_PAT}}; gato-x e --repository ${{REPO}}
