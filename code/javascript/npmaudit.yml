@@ -4,6 +4,8 @@ settings:
   image: satori
   author:
     - https://github.com/npm
+  gallery:
+    - https://files.catbox.moe/sb3wah.png
   example: satori run ./ --playbook satori://code/javascript/npmaudit.yml --report --output
 
 npm:
