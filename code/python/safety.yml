@@ -16,4 +16,4 @@ safety:
   test:
     assertStdoutNotContains: "No such file or directory"
     run:
-      - safety check -r requirements.txt
+      - safety scan --target */
