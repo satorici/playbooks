@@ -1,0 +1,19 @@
+settings:
+  name: "Pip Audit: Check for known vulnerabilities in Python dependencies"
+  description: "pip-audit scans Python dependencies for security vulnerabilities using the Python Packaging Advisory Database (PyPI). It helps ensure secure package management by identifying and reporting issues in installed dependencies."
+  image: python
+  author:
+    - https://github.com/pypa
+  example: satori run ./ --playbook satori://code/python/pip-audit.yml --report --output
+
+pip-audit:
+  install:
+    - pip install pip-audit -q --disable-pip-version-check
+
+  help:
+    - pip-audit --help
+
+  test:
+    assertStdoutContains: "No known vulnerabilities found"
+    run:
+      - pip-audit
