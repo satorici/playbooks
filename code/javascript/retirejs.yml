@@ -5,7 +5,7 @@ settings:
   author:
     - https://github.com/RetireJS
   gallery:
-    - https://files.catbox.moe/86vziv.png
+    - https://files.catbox.moe/g9dqm3.png
   example: satori run ./ --playbook satori://code/javascript/retirejs.yml --report --output
 
 retirejs:
