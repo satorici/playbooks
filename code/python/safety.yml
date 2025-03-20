@@ -16,4 +16,4 @@ safety:
   test:
     assertStdoutNotContains: "No such file or directory"
     run:
-      - safety scan --target */
+      - cd $(dirname $(find . -name requirements.txt -print -quit)) && safety scan
