@@ -4,6 +4,7 @@ settings:
   image: python
   author:
     - https://github.com/pyupio
+  clone: true
   example: satori run ./ --playbook satori://code/python/safety.yml --report --output
 
 safety:
