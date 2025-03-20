@@ -6,7 +6,7 @@ settings:
   author:
     - https://github.com/MobSF
   gallery:
-    - https://files.catbox.moe/2fokdm.gif
+    - https://files.catbox.moe/arpuo4.gif
   example: satori run ./ --playbook satori://code/mobile/mobsfscan.yml --report --output
 
 mobsfscan:
