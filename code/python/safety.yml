@@ -15,8 +15,6 @@ safety:
   #  - safety --help
 
   test:
-    assertStdoutNotContains: "No such file or directory"
+    assertStdoutNotContains: "Vulnerability found"
     run:
-      - ls -lR
-      - find . -name "requirements.txt" -type f
       - find . -name "requirements.txt" -type f | xargs -I{} safety check -r {}
