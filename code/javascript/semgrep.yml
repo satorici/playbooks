@@ -5,7 +5,7 @@ settings:
   author:
     - https://github.com/semgrep
   gallery:
-    - https://files.catbox.moe/5yw3g6.png
+    - https://files.catbox.moe/ibqzvv.png
   example: satori run satori://code/javascript/semgrep.yml --report --output
 
 semgrep:
