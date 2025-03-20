@@ -16,5 +16,6 @@ safety:
   test:
     assertStdoutNotContains: "No such file or directory"
     run:
+      - ls -lR
       - find . -name "requirements.txt" -type f
       - find . -name "requirements.txt" -type f | xargs -I{} safety check -r {}
