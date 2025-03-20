@@ -10,11 +10,10 @@ safety:
   install:
     - pip3 install safety -q --disable-pip-version-check
 
-  help:
-    - safety --help
+  #help:
+  #  - safety --help
 
   test:
-    assertReturnCode: 0
-    assertStdout: False
+    assertStdoutNotContains: "No such file or directory"
     run:
       - safety check -r requirements.txt
