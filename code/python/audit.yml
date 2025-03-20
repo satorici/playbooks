@@ -8,12 +8,13 @@ settings:
 
 pip-audit:
   install:
-    - pip install pip-audit -q --disable-pip-version-check
+    - pip install pip-audit -q --disable-pip-version-check --root-user-action=ignore
 
-  help:
-    - pip-audit --help
+  #help:
+  #  - pip-audit --help
 
   test:
     assertStdoutContains: "No known vulnerabilities found"
     run:
       - pip-audit
+      - find . -name "requirements.txt" -type f | xargs -I{} pip-audit -r {}
