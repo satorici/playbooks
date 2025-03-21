@@ -15,4 +15,6 @@ codeql:
 
   test:
     run:
-      - for lang in javascript python ruby; do /tmp/codeql/codeql database create codeql-db-$lang --language=$lang --source-root=.; /tmp/codeql/codeql database finalize codeql-db-$lang 2>/dev/null || true; /tmp/codeql/codeql database analyze codeql-db-$lang --format=text --output=- $lang-security-extended 2>/dev/null || true; done
+      #- for lang in javascript python ruby; do /tmp/codeql/codeql database create codeql-db-$lang --language=$lang --source-root=.; /tmp/codeql/codeql database finalize codeql-db-$lang 2>/dev/null || true; /tmp/codeql/codeql database analyze codeql-db-$lang --format=text --output=- $lang-security-extended 2>/dev/null || true; done
+      - /tmp/codeql/codeql resolve queries
+      - for lang in javascript python ruby; do /tmp/codeql/codeql database create codeql-db-$lang --language=$lang --source-root=. --verbose; /tmp/codeql/codeql database finalize codeql-db-$lang 2>/dev/null || true; /tmp/codeql/codeql database analyze codeql-db-$lang --format=text --output=- $lang-security-extended 2>/dev/null || true; if [ "$lang" = "javascript" ]; then /tmp/codeql/codeql database analyze codeql-db-$lang /tmp/codeql-repo/javascript/ql/src/Security/CWE-079 /tmp/codeql-repo/javascript/ql/src/Security/CWE-089 --format=text --output=-; elif [ "$lang" = "python" ]; then /tmp/codeql/codeql database analyze codeql-db-$lang /tmp/codeql-repo/python/ql/src/Security/CWE-022 /tmp/codeql-repo/python/ql/src/Security/CWE-078 /tmp/codeql-repo/python/ql/src/Security/CWE-089 --format=text --output=-; fi; done
