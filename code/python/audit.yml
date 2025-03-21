@@ -16,5 +16,5 @@ pip-audit:
   test:
     assertStdoutContains: "No known vulnerabilities found"
     run:
-      - ls -l
-      - find . -name "requirements.txt" -type f | xargs -I{} pip-audit -r {}
+      - pip-audit
+      #- find . -name "requirements.txt" -type f | xargs -I{} pip-audit -r {}
