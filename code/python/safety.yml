@@ -4,6 +4,8 @@ settings:
   image: python
   author:
     - https://github.com/pyupio
+  gallery:
+    - https://files.catbox.moe/txl2nf.gif
   clone: true
   example: satori run ./ --playbook satori://code/python/safety.yml --report --output
 
