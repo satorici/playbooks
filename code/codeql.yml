@@ -15,5 +15,5 @@ codeql:
 
   test:
     run:
-      - for lang in javascript python ruby; do /tmp/codeql/codeql database create codeql-db-$lang --language=$lang --source-root=.; /tmp/codeql/codeql database finalize codeql-db-$lang 2>/dev/null || true; /tmp/codeql/codeql database analyze codeql-db-$lang --format=csv --output=codeql-results-$lang.csv $lang-security-extended 2>/dev/null || true; done
-      - cat codeql-results-*.csv
+      - for lang in javascript python ruby; do /tmp/codeql/codeql database create codeql-db-$lang --language=$lang --source-root=.; /tmp/codeql/codeql database finalize codeql-db-$lang 2>/dev/null || true; /tmp/codeql/codeql database analyze codeql-db-$lang $lang-security-extended --format=sarif-latest --output=- 2>/dev/null || true; done
+      - cat codeql-results-*.sarif
