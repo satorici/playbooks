@@ -15,6 +15,6 @@ codeql:
 
   test:
     run:
-      - for lang in javascript python ruby; do /tmp/codeql/codeql database create codeql-db-$lang --language=$lang --source-root=.; /tmp/codeql/codeql database finalize codeql-db-$lang 2>/dev/null || true; /tmp/codeql/codeql database analyze codeql-db-$lang $lang-security-extended --format=sarif-latest --output=- 2>/dev/null || true; done
+      - for lang in javascript python ruby; do /tmp/codeql/codeql database create codeql-db-$lang --language=$lang --source-root=.; /tmp/codeql/codeql database finalize codeql-db-$lang 2>/dev/null || true; if [ "$lang" = "javascript" ]; then /tmp/codeql/codeql database analyze codeql-db-$lang javascript-security-and-quality --format=sarif-latest --output=codeql-results-$lang.sarif || true; elif [ "$lang" = "python" ]; then /tmp/codeql/codeql database analyze codeql-db-$lang python-security-and-quality --format=sarif-latest --output=codeql-results-$lang.sarif || true; elif [ "$lang" = "ruby" ]; then /tmp/codeql/codeql database analyze codeql-db-$lang ruby-security-and-quality --format=sarif-latest --output=codeql-results-$lang.sarif || true; fi; done
+      - ls -la
       - cat codeql-results-*.sarif
-      - ls -l
