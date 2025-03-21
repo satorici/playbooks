@@ -7,7 +7,7 @@ settings:
     - https://github.com/rustsec
   gallery:
     - https://files.catbox.moe/8j9ajr.png
-  example: satori run ./ satori://code/rust/geiger.yml --report --output
+  example: satori run ./ --playbook satori://code/rust/geiger.yml --report --output
 
 rust_geiger:
   install:
