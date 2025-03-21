@@ -6,7 +6,7 @@ settings:
   author:
     - https://github.com/rustsec
   gallery:
-    - https://files.catbox.moe/v1rxmj.png
+    - https://files.catbox.moe/0pixez.png
   example: satori run ./ --playbook satori://code/rust/audit.yml --report --output
 
 rust_audit:
