@@ -14,7 +14,7 @@ pip-audit:
   #  - pip-audit --help
 
   test:
-    assertStdoutContains: "No known vulnerabilities found"
+    assertStderrNotContains: Found
     run:
       - pip-audit
       - pip-audit -r requirements.txt
