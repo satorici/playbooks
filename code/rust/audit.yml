@@ -7,7 +7,7 @@ settings:
     - https://github.com/rustsec
   gallery:
     - https://files.catbox.moe/v1rxmj.png
-  example: satori run ./ satori://code/rust/audit.yml --report --output
+  example: satori run ./ --playbook satori://code/rust/audit.yml --report --output
 
 rust_audit:
   install:
