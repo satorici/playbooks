@@ -1,0 +1,18 @@
+settings:
+  name: CodeQL Javascript Python Ruby
+  image: python
+
+codeql:
+  install:
+    - apt-get update >>/dev/null; apt-get install -qy wget unzip git >>/dev/null
+    - wget -q -O /tmp/codeql-linux64.zip https://github.com/github/codeql-cli-binaries/releases/download/v2.15.5/codeql-linux64.zip
+    - unzip -q -d /tmp /tmp/codeql-linux64.zip
+    - rm /tmp/codeql-linux64.zip
+    - git clone --depth 1 -q https://github.com/github/codeql.git /tmp/codeql-repo
+
+  help:
+    - /tmp/codeql/codeql --help
+
+  test:
+    run:
+      - for lang in javascript python ruby; do /tmp/codeql/codeql database create codeql-db-$lang --language=$lang --source-root=.; /tmp/codeql/codeql database finalize codeql-db-$lang 2>/dev/null || true; /tmp/codeql/codeql database analyze codeql-db-$lang --format=text --output=- $lang-security-extended 2>/dev/null || true; done
