@@ -6,7 +6,7 @@ settings:
     - https://github.com/hadolint
   gallery:
     - https://files.catbox.moe/bvvc22.png
-  example: satori run ./ satori://container/hadolint.yml --report --output
+  example: satori run ./ --playbook satori://container/hadolint.yml --report --output
 
 hadolint:
   install:
