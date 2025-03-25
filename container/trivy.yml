@@ -7,7 +7,7 @@ settings:
   author:
     - https://github.com/aquasecurity
   gallery:
-    - https://files.catbox.moe/540h0u.png
+    - https://files.catbox.moe/sp3wlt.gif
   example: satori run satori://container/trivy.yml -d IMAGE=python:3.4-alpine --report --output
 
 trivy:
