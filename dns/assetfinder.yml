@@ -5,7 +5,7 @@ settings:
   author:
     - https://github.com/tomnomnom
   gallery:
-    - https://files.catbox.moe/f3apgb.png
+    - https://files.catbox.moe/ql6vqx.png
   example: satori run satori://dns/assetfinder.yml -d DOMAIN="satori.ci" --report --output
 
 assetFinder:
