@@ -5,7 +5,7 @@ settings:
   author:
     - https://github.com/rbsec
   gallery:
-    - https://files.catbox.moe/t5vgws.png
+    - https://files.catbox.moe/lrjg8l.png
   example: satori run satori://dns/dnscan.yml -d DOMAIN="satori.ci" --report --output
 
 dnscan:
