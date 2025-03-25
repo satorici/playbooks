@@ -11,7 +11,7 @@ settings:
   author:
     - https://github.com/darkoperator
   gallery:
-    - https://files.catbox.moe/b92mj7.gif
+    - https://files.catbox.moe/lolvht.png
   example: satori run satori://dns/dnsrecon.yml -d DOMAIN="satori.ci" --report --output
 
 dnsrecon:
