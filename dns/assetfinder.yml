@@ -6,7 +6,7 @@ settings:
     - https://github.com/tomnomnom
   gallery:
     - https://files.catbox.moe/f3apgb.png
-  example: satori run satori://recon/assetfinder.yml -d DOMAIN="satori.ci" --report --output
+  example: satori run satori://dns/assetfinder.yml -d DOMAIN="satori.ci" --report --output
 
 assetFinder:
   install:
