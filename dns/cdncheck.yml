@@ -6,7 +6,7 @@ settings:
     - https://github.com/projectdiscovery
   gallery:
     - https://files.catbox.moe/7cj3mn.png
-  example: satori run satori://recon/cdncheck.yml -d HOST="satori.ci" --report --output
+  example: satori run satori://dns/cdncheck.yml -d HOST="satori.ci" --report --output
 
 cdncheck:
   install:
