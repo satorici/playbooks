@@ -5,7 +5,7 @@ settings:
   author:
     - https://github.com/anchore/grype
   gallery:
-    - https://files.catbox.moe/pplls4.png
+    - https://files.catbox.moe/1jpc3y.gif
   example: satori run satori://container/grype.yml -d IMAGE="python:3.4-alpine" --report --output
 
 grype:
