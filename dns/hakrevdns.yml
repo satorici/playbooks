@@ -5,7 +5,7 @@ settings:
   author:
     - https://github.com/hakluke
   gallery:
-    - https://files.catbox.moe/ut84q3.png
+    - https://files.catbox.moe/97kw68.png
   example: satori run satori://dns/hakrevdns.yml -d IP="54.210.33.205" -d IP="3.93.207.195" --report --output
 
 hakrevdns:
