@@ -5,7 +5,7 @@ settings:
   author:
     - https://github.com/adrienverge
   gallery:
-    - https://files.catbox.moe/6dqhjw.png
+    - https://files.catbox.moe/2p8tza.png
   example: satori run ./ --playbook satori://code/yamllint.yml --report --output
 
 yamllint:
