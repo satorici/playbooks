@@ -8,6 +8,8 @@ settings:
   timeout: 400
   author:
     - https://github.com/ollama
+  gallery:
+    - https://files.catbox.moe/swcht3.png
   example: satori run satori://llm/all.yml -d INPUT="Hello World" --report --output
 
 import:
