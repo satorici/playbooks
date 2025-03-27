@@ -5,7 +5,7 @@ settings:
   author:
     - https://github.com/guelfoweb
   gallery:
-    - https://files.catbox.moe/r3cjdi.gif
+    - https://files.catbox.moe/hr1skj.gif
   example: satori run satori://dns/knockpy.yml -d DOMAIN="hackerone.com" --report --output
 
 knockpy:
