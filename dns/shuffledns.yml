@@ -4,6 +4,8 @@ settings:
   image: golang
   author:
     - https://github.com/projectdiscovery
+  gallery:
+    - https://files.catbox.moe/i41akq.png
   example: satori run satori://dns/shuffledns.yml -d DOMAIN="satori.ci" --report --output
 
 shuffledns:
