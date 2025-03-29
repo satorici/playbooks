@@ -5,7 +5,7 @@ settings:
   author:
     - https://github.com/s0md3v
   gallery:
-    - https://files.catbox.moe/9eflgb.png
+    - https://files.catbox.moe/n02p8o.png
   example: satori run satori://web/uro.yml -d URL="https://satori.ci/page/1/" -d URL="https://satori.ci/page/2/" --report --output
 
 uro:
