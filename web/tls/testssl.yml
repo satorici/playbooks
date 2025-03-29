@@ -5,7 +5,7 @@ settings:
   author:
     - https://github.com/testssl
   gallery:
-    - https://files.catbox.moe/44b58j.gif
+    - https://files.catbox.moe/5n2n6f.gif
   example: satori run satori://web/tls/testssl.yml -d URL="https://satori.ci" --report --output
 
 testssl:
