@@ -5,7 +5,7 @@ settings:
   author:
     - https://github.com/utkusen
   gallery:
-    - https://files.catbox.moe/1knj4c.png
+    - https://files.catbox.moe/l6nzfr.png
   example: satori run satori://web/passive/socialhunter.yml -d URL="https://www.satori.ci" --report --output
 
 socialhunter:
