@@ -2,10 +2,10 @@ settings:
   name: "TestSSL: Checks TLS/SSL ciphers and protocols for security flaws"
   description: "Check a server's service on any port for the support of TLS/SSL ciphers, protocols as well as some cryptographic flaws."
   image: debian
-  gallery:
-    - https://files.catbox.moe/44b58j.gif
   author:
     - https://github.com/testssl
+  gallery:
+    - https://files.catbox.moe/44b58j.gif
   example: satori run satori://web/tls/testssl.yml -d URL="https://satori.ci" --report --output
 
 testssl:
