@@ -6,7 +6,7 @@ settings:
     - https://github.com/tomnomnom
   gallery:
     - https://files.catbox.moe/17zqw9.gif
-  example: satori run satori://recon/waybackurls.yml -d URL="https://www.satori.ci" --report --output
+  example: satori run satori://web/passive/waybackurls.yml -d URL="https://www.satori.ci" --report --output
 
 waybackurls:
   install:
