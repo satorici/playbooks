@@ -5,7 +5,7 @@ settings:
   author:
     - https://github.com/s0md3v
   gallery:
-    - https://files.catbox.moe/arjun.png
+    - https://files.catbox.moe/zvz0m9.png
   example: satori run satori://web/arjun.yml -d URL="https://api.satori.ci" --report --output
 
 arjun:
