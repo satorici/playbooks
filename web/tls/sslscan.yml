@@ -6,7 +6,7 @@ settings:
     - https://github.com/rbsec
   gallery:
     - https://files.catbox.moe/o8ey2s.png
-  example: satori run satori://web/sslscan.yml -d HOST="satori.ci:443" --report --output
+  example: satori run satori://web/tls/sslscan.yml -d HOST="satori.ci:443" --report --output
 
 sslscan:
   install:
