@@ -5,7 +5,7 @@ settings:
   description: "Tool for searching URLs exposed through URL shortener services by analyzing collections of previously brute-forced and published shortened URLs. It allows users to filter results using keywords and define date ranges for analysis."
   author:
     - https://github.com/utkusen
-  example: satori run satori://web/urlhunter.yml -d URL="satori.ci" --report --output
+  example: satori run satori://web/passive/urlhunter.yml -d URL="satori.ci" --report --output
 
 urlhunter:
   install:
