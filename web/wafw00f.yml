@@ -5,7 +5,7 @@ settings:
   author:
     - https://github.com/EnableSecurity
   gallery:
-    - https://files.catbox.moe/gywp34.png
+    - https://files.catbox.moe/96pk0d.png
   example: satori run satori://web/wafw00f.yml -d URL="satori.ci" --report --output
 
 wafw00f:
