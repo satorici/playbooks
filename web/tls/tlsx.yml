@@ -5,7 +5,7 @@ settings:
   author:
     - https://github.com/projectdiscovery
   gallery:
-    - https://files.catbox.moe/b49mxt.png
+    - https://files.catbox.moe/x17b5m.png
   example: satori run satori://web/tls/tlsx.yml -d HOST="satori.ci" --report --output
 
 tlsx:
