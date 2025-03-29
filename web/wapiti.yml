@@ -6,7 +6,7 @@ settings:
   author:
     - https://github.com/wapiti-scanner
   gallery:
-    - https://files.catbox.moe/z8gws6.png
+    - https://files.catbox.moe/9ty871.png
   example: satori run satori://web/wapiti.yml -d URL="https://example.com" --report --output
 
 wapiti:
