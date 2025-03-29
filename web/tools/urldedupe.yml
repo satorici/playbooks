@@ -6,7 +6,7 @@ settings:
     - https://github.com/ameenmaali
   gallery:
     - https://files.catbox.moe/l0rcrt.png
-  example: satori run satori://web/urldedupe.yml -d URL="https://google.com/home?qs=value\nhttps://google.com/home?qs=secondValue" --report --output
+  example: satori run satori://web/tools/urldedupe.yml -d URL="https://google.com/home?qs=value\nhttps://google.com/home?qs=secondValue" --report --output
 
 urldedupe:
   install:
