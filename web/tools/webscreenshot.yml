@@ -6,7 +6,7 @@ settings:
     - https://github.com/maaaaz
   gallery:
     - https://files.catbox.moe/8jv7ts.gif
-  example: satori run satori://web/webscreenshot.yml -d URL="satori.ci" --report --output
+  example: satori run satori://web/tools/webscreenshot.yml -d URL="satori.ci" --report --output
 
 webscreenshot:
   install:
