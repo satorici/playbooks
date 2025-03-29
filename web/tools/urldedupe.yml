@@ -5,7 +5,7 @@ settings:
   author:
     - https://github.com/ameenmaali
   gallery:
-    - https://files.catbox.moe/l0rcrt.png
+    - https://files.catbox.moe/dgu0fx.png
   example: satori run satori://web/tools/urldedupe.yml -d URL="https://google.com/home?qs=value\nhttps://google.com/home?qs=secondValue" --report --output
 
 urldedupe:
