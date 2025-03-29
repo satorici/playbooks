@@ -6,7 +6,7 @@ settings:
     - https://github.com/projectdiscovery
   gallery:
     - https://files.catbox.moe/b49mxt.png
-  example: satori run satori://web/tlsx.yml -d HOST="satori.ci" --report --output
+  example: satori run satori://web/tls/tlsx.yml -d HOST="satori.ci" --report --output
 
 tlsx:
   install:
