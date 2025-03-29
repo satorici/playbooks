@@ -5,7 +5,7 @@ settings:
   author:
     - https://github.com/xnl-h4ck3r
   gallery:
-    - https://files.catbox.moe/y6sbh6.gif
+    - https://files.catbox.moe/t0945b.gif
   example: satori run satori://web/passive/waymore.yml -d URL="satori.ci" --report --output
 
 waymore:
