@@ -6,7 +6,7 @@ settings:
     - https://github.com/ffuf
   gallery:
     - https://files.catbox.moe/4wqoh8.png
-  example: satori run satori://web/ffuf.yml -d URL="https://example.com" --report --output
+  example: satori run satori://web/enum/ffuf.yml -d URL="https://example.com" --report --output
 
 ffuf:
   install:
