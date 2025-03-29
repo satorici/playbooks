@@ -5,7 +5,7 @@ settings:
   author:
     - https://github.com/bugBlocker
   gallery:
-    - https://files.catbox.moe/ur9imn.png
+    - https://files.catbox.moe/6kgq8j.png
   example: satori run satori://web/lotus.yml -d URL="http://testphp.vulnweb.com/listproducts.php?cat=1" --report --output
 
 lotus:
