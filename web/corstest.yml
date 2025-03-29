@@ -6,7 +6,7 @@ settings:
     - https://github.com/RUB-NDS
   gallery:
     - https://files.catbox.moe/iaoxhf.png
-  example: satori run satori://web/cors/corstest.yml -d URL="https://satori.ci" --report --output
+  example: satori run satori://web/corstest.yml -d URL="https://satori.ci" --report --output
 
 CORStest:
   install:
