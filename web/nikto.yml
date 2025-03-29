@@ -5,7 +5,7 @@ settings:
   author:
     - https://github.com/sullo
   gallery:
-    - https://files.catbox.moe/lkx3qy.png
+    - https://files.catbox.moe/mz5xyu.png
   example: satori run satori://web/nikto.yml -d URL="http://example.com" --report --output
 
 nikto:
