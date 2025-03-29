@@ -5,7 +5,7 @@ settings:
   author:
     - https://github.com/zmap
   gallery:
-    - https://files.catbox.moe/rg49iv.png
+    - https://files.catbox.moe/pua23k.png
   example: satori run satori://web/zgrab2.yml -d HOST="satori.ci" --report --output
 
 zgrab2:
