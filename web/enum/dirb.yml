@@ -6,7 +6,7 @@ settings:
     - https://github.com/v0re
   gallery:
     - https://files.catbox.moe/siqrj1.png
-  example: satori run satori://web/dirb.yml -d URL="http://example.com" --report --output
+  example: satori run satori://web/enum/dirb.yml -d URL="http://example.com" --report --output
 
 dirb:
   install:
