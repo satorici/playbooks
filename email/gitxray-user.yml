@@ -7,7 +7,7 @@ settings:
   author:
     - https://github.com/kulkansecurity
   gallery:
-    - https://files.catbox.moe/v4epas.png
+    - https://files.catbox.moe/vdoe3c.png
   example: satori run satori://email/gitxray-user.yml -d REPO=satorici/playbooks -d USER=satoridev01 --report --output
 
 gitxray_email:
