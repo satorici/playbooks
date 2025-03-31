@@ -1,0 +1,21 @@
+settings:
+  name: "Masscan: Scan a target host for a specific port"
+  description: "This playbook uses masscan to scan a target host for a specific port and rate, both defined by the user."
+  image: debian
+  author:
+    - https://github.com/robertdavidgraham
+  example: satori run ./ --playbook=./masscan.yml -d HOST="192.168.0.1" -d PORT="80" -d RATE="1000" --report --output
+  timeout: 80
+
+masscan:
+  install:
+    - apt-get update >>/dev/null; apt-get install -qy git gcc make libpcap-dev >>/dev/null
+    - cd /tmp; git clone --depth 1 https://github.com/robertdavidgraham/masscan.git; cd masscan; make >>/dev/null 2>/dev/null
+
+  #help:
+  #  - /tmp/masscan/bin/masscan --help
+
+  test:
+    assertStdoutContains: "Discovered open port"
+    run:
+      - /tmp/masscan/bin/masscan ${{HOST}} -p${{PORT}} --rate=${{RATE}} --seed 1 --shard ${{SHARD}} --excludefile /tmp/masscan/data/exclude.conf --source-ip 0.0.0.0-255.255.255.255
