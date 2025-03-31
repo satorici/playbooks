@@ -7,6 +7,8 @@ settings:
   example: satori run ./ --playbook=./masscan.yml -d HOST="192.168.0.1" -d PORT="80" -d RATE="1000" --report --output
   timeout: 80
 
+setShell: true
+
 masscan:
   install:
     - apt-get update >>/dev/null; apt-get install -qy git gcc make libpcap-dev >>/dev/null
