@@ -5,7 +5,7 @@ settings:
   author:
     - https://github.com/chm0dx
   gallery:
-    - https://files.catbox.moe/bnkkxg.png
+    - https://files.catbox.moe/mf7vui.png
   example: satori run satori://email/gitsome.yml -d USER=octocat --report --output
 
 gitsome:
