@@ -15,15 +15,23 @@ semgrep:
   #help:
   #  - semgrep --help
 
-  run:
-    - semgrep --config auto --max-chars-per-line 1024 -q
+  #run:
+  #  - semgrep --config auto --max-chars-per-line 1024 -q
 
-  high:
-    setOutput: semgrep.run
-    setSeverity: 3
-    assertStdoutNotContains: " ❯❯❱ "
+  #high:
+  #  setOutput: semgrep.run
+  #  setSeverity: 3
+  #  assertStdoutNotContains: " ❯❯❱ "
 
-  medium:
-    setOutput: semgrep.run
-    setSeverity: 2
-    assertStdoutNotContains: " ❯❱ "
+  #medium:
+  #  setOutput: semgrep.run
+  #  setSeverity: 2
+  #  assertStdoutNotContains: " ❯❱ "
+
+  test:
+    assertStdout: False
+    error:
+      - semgrep --config auto --severity ERROR -q
+
+    warning:
+      - semgrep --config auto --severity WARNING -q
