@@ -6,6 +6,8 @@ settings:
   clone: false
   author:
     - https://github.com/kulkansecurity
+  gallery:
+    - https://files.catbox.moe/vz9euq.png
   example: satori run satori://email/auth/gitxray-user.yml -d REPO=org/repo -d USER=whatever -d GITHUB_PAT=TBC --report --output
   redacted:
     - GITHUB_PAT
