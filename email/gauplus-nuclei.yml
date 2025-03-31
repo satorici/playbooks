@@ -6,7 +6,7 @@ settings:
     - https://github.com/bp0lr
     - https://github.com/projectdiscovery
   gallery:
-    - https://files.catbox.moe/7tozqa.png
+    - https://files.catbox.moe/9rb4yd.png
   example: satori run satori://email/gauplus-nuclei.yml -d DOMAIN="satori.ci" --report --output
 
 email_gauplus-nuclei:
