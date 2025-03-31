@@ -2,6 +2,7 @@ settings:
   name: "Github OSINT: Semgrep & Gitxray"
   description: "Get the potential security vulnerabilities and metadata of a Github repository"
   image: python
+  example: satori run satori://code/github/osint.yml -d REPO=satorici/playbooks --report --output
 
 install:
   - git clone --depth 1 https://github.com/${{REPO}}
