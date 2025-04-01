@@ -3,8 +3,11 @@ settings:
   image: threatpatrols/sshamble
   timeout: 300
 
+install:
+  - wget --quiet https://raw.githubusercontent.com/danielmiessler/SecLists/refs/heads/master/Passwords/Common-Credentials/top-20-common-SSH-passwords.txt
+
 sshamble:
-  - sshamble scan -o ${{IP}}.json $ip
+  - sshamble scan -o ${{IP}}.json $ip --users root,admin,4DGift,jenkins --password-file top-20-common-SSH-passwords.txt 
   - sshamble analyze -o results-directory-${{IP}} ${{IP}}.json
 
 output:
