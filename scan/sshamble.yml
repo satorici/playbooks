@@ -9,7 +9,8 @@ passwords:
   # https://github.com/danielmiessler/SecLists/blob/master/Passwords/Common-Credentials/top-20-common-SSH-passwords.txt
   - echo -e "root\ntoor\nraspberry\ndietpi\ntest\nuploader\npassword\nadmin\nadministrator\nmarketing\n12345678\n1234\n12345\nqwerty\nwebadmin\nwebmaster\nmaintenance\ntechsupport\nletmein\nlogon\nPassw@rd\nalpine" > passwords
 ips:
-  - echo "${{IPS}}" >> ips
+  - echo "${{IPS}}" | tr "," "\n" >> ips
+  - cat ips
   
 sshamble:
   assertReturnCode: 0
