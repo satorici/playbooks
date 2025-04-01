@@ -1,19 +1,16 @@
 settings:
   name: "SSHamble: Unexpected Exposures in SSH"
   image: threatpatrols/sshamble
-  timeout: 300
+  timeout: 10000
+  author:
+    - https://github.com/runZeroInc
 
 install:
   # https://github.com/danielmiessler/SecLists/blob/master/Passwords/Common-Credentials/top-20-common-SSH-passwords.txt
-  - echo -e "root\ntoor\nraspberry\ndietpi\ntest\nuploader\npassword\nadmin\nadministrator\nmarketing\n12345678\n1234\n12345\nqwerty\nwebadmin\nwebmaster\nmaintenance\ntechsupport\nletmein\nlogon\nPassw@rd\nalpine" > passwords.txt
-
+  - echo -e "root\ntoor\nraspberry\ndietpi\ntest\nuploader\npassword\nadmin\nadministrator\nmarketing\n12345678\n1234\n12345\nqwerty\nwebadmin\nwebmaster\nmaintenance\ntechsupport\nletmein\nlogon\nPassw@rd\nalpine" > passwords
+  - echo "${{IPS}}" > ips
+  
 sshamble:
   assertReturnCode: 0
   scan:
-    - sshamble scan -o ${{IP}}.json $ip --users root,admin,4DGift,jenkins --password-file passwords.txt 
-  analyze:
-    - sshamble analyze -o results-directory-${{IP}} ${{IP}}.json
-
-output:
-  - ls -lR
-  - cat results-directory-${{IP}}/*
+    - sshamble scan -p 22 -u root,admin,4DGift,jenkins --password-file passwords -i ips
