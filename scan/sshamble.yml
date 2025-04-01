@@ -13,4 +13,4 @@ install:
 sshamble:
   assertReturnCode: 0
   scan:
-    - sshamble scan -p 22 -u root,admin,4DGift,jenkins --password-file passwords -i ips
+    - sshamble scan -p 22 -u root,admin,4DGift,jenkins,test --password-file passwords -i ips
