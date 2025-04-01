@@ -4,6 +4,8 @@ settings:
   image: golang
   author:
     - https://github.com/anshumanbh
+  gallery:
+    - https://files.catbox.moe/yq4tzy.png
   example: satori run satori://dns/tko-subs.yml -d DOMAIN="example.com" --report --output
 
 tko-subs:
