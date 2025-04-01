@@ -1,0 +1,12 @@
+settings:
+  name: sshamble
+  image: threatpatrols/sshamble
+  timeout: 300
+
+sshamble:
+  - sshamble scan -o ${{IP}}.json $ip
+  - sshamble analyze -o results-directory-${{IP}} ${{IP}}.json
+
+output:
+  - ls -lR
+  - cat results-directory-${{IP}}/*
