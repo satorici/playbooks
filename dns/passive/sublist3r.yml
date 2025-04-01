@@ -8,7 +8,7 @@ settings:
 
 sublist3r:
   install:
-    - pip install git+https://github.com/aboul3la/Sublist3r.git -q --disable-pip-version-check --root-user-action=ignore
+    - pip install git+https://github.com/aboul3la/Sublist3r.git -q --disable-pip-version-check
 
   help:
     - sublist3r -h
