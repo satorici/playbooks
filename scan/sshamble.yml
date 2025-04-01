@@ -5,10 +5,11 @@ settings:
   author:
     - https://github.com/runZeroInc
 
-install:
+passwords:
   # https://github.com/danielmiessler/SecLists/blob/master/Passwords/Common-Credentials/top-20-common-SSH-passwords.txt
   - echo -e "root\ntoor\nraspberry\ndietpi\ntest\nuploader\npassword\nadmin\nadministrator\nmarketing\n12345678\n1234\n12345\nqwerty\nwebadmin\nwebmaster\nmaintenance\ntechsupport\nletmein\nlogon\nPassw@rd\nalpine" > passwords
-  - echo "${{IPS}}" > ips
+ips:
+  - echo "${{IPS}}" >> ips
   
 sshamble:
   assertReturnCode: 0
