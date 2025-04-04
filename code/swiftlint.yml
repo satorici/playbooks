@@ -4,6 +4,8 @@ settings:
   image: norionomura/swiftlint
   author:
     - https://github.com/realm
+  gallery:
+    - https://files.catbox.moe/l5zl3n.gif
   example: satori run ./ --playbook satori://code/swiftlint.yml --report --output
 
 swiftlint:
