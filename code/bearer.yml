@@ -1,11 +1,11 @@
 settings:
   name: "Bearer: static source code analysis"
   description: "Bearer is a static application security testing (SAST) tool designed to scan your source code and analyze data flows to identify, filter, and prioritize security and privacy risks."
+  image: python
   author:
     - https://github.com/Bearer
   gallery:
     - https://files.catbox.moe/h45mju.gif
-  image: python
   example: satori run ./ --playbook=satori://code/bearer.yml --report --output
 
 bearer:
