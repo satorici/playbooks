@@ -6,7 +6,7 @@ settings:
   author:
     - https://github.com/rustsec
   gallery:
-    - https://files.catbox.moe/8j9ajr.png
+    - https://files.catbox.moe/pyh0hm.gif
   example: satori run ./ --playbook satori://code/rust/geiger.yml --report --output
 
 rust_geiger:
