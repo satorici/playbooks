@@ -11,27 +11,16 @@ settings:
 semgrep:
   install:
     - pip install semgrep -q --disable-pip-version-check --root-user-action=ignore
+    
+  run:
+    - semgrep --config auto --max-chars-per-line 1024 -q
 
-  #help:
-  #  - semgrep --help
+  high:
+    setOutput: semgrep.run
+    setSeverity: 3
+    assertStdoutNotContains: " ❯❯❱ "
 
-  #run:
-  #  - semgrep --config auto --max-chars-per-line 1024 -q
-
-  #high:
-  #  setOutput: semgrep.run
-  #  setSeverity: 3
-  #  assertStdoutNotContains: " ❯❯❱ "
-
-  #medium:
-  #  setOutput: semgrep.run
-  #  setSeverity: 2
-  #  assertStdoutNotContains: " ❯❱ "
-
-  test:
-    assertStdout: False
-    error:
-      - semgrep --config auto --severity ERROR -q
-
-    warning:
-      - semgrep --config auto --severity WARNING -q
+  medium:
+    setOutput: semgrep.run
+    setSeverity: 2
+    assertStdoutNotContains: " ❯❱ "
