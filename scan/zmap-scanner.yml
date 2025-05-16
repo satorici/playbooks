@@ -19,5 +19,5 @@ analyze:
   - while read LINE; do
     IP=$(echo $LINE | cut -d , -f 1);
     IP_BANNER=$(echo $LINE | cut -d , -f 2);
-    if [ "${{BANNER}}" in "$IP_BANNER" ]; then satori run ${{PLAYBOOK}} -d IP=$IP fi;
+    if [[ "$IP_BANNER" == *"${{BANNER}}"* ]]; then satori run ${{PLAYBOOK}} -d IP=$IP fi;
     done < all-banners.txt
