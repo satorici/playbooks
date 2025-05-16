@@ -12,12 +12,12 @@ install:
 scan:
   - satori-v2 run satori://scan/zmap-webbanner.yml
     --count ${{SHARDS}} -d PORT=${{PORT}} -d RANGE=${{RANGE}}
-    --files --image python
+    --files --image python --output
 
 analyze:
-  - for file in *.tar.gz; do tar -Oxf $file banners.txt >> all-banners.txt; done
-  - while read LINE; do
+  - for file in *.tar.gz; do tar -Oxf $file ./banners.txt >> all-banners.txt; done
+  - 'while read LINE; do
     IP=$(echo $LINE | cut -d , -f 1);
     IP_BANNER=$(echo $LINE | cut -d , -f 2);
-    if [[ "$IP_BANNER" == *"${{BANNER}}"* ]]; then satori run ${{PLAYBOOK}} -d IP=$IP fi;
-    done < all-banners.txt
+    $(echo "$IP_BANNER" | grep -q "${{BANNER}}") && satori run ${{PLAYBOOK}} -d IP=$IP -d PORT=${{PORT}};
+    done < all-banners.txt'
