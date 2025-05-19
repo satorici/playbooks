@@ -15,4 +15,4 @@ zmap:
     -p ${{PORT}} ${{RANGE}} | tee found.txt
 
 banners:
-  - banner-scanner found.txt ${{PORT}} | tee banners.txt
+  - banner-scanner found.txt ${{PORT}} > banners.txt 2> no-banners.txt
