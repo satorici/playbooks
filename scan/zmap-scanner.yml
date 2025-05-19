@@ -19,5 +19,6 @@ analyze:
   - 'while read LINE; do
     IP=$(echo $LINE | cut -d , -f 1);
     IP_BANNER=$(echo $LINE | cut -d , -f 2);
-    $(echo "$IP_BANNER" | grep -q "${{BANNER}}") && satori run ${{PLAYBOOK}} -d IP=$IP -d PORT=${{PORT}};
+    $(echo "$IP_BANNER" | grep -q "${{BANNER}}") && [ "${{PLAYBOOK}}" != "" ] &&
+    satori run ${{PLAYBOOK}} -d IP=$IP -d PORT=${{PORT}};
     done < all-banners.txt'
