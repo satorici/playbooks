@@ -1,5 +1,6 @@
 settings:
   image: python
+  files: true
   example: satori run satori://scan/zmap-scanner.yml
     -d RANGE=0.0.0.0/8 -d PORT=80 -d PLAYBOOK=satori://sap/Onapsys.yml -d BANNER=SAP -d SHARDS=500
     -d TOKEN_V1=abc -d TOKEN_V2=abc
@@ -14,11 +15,20 @@ scan:
     --count ${{SHARDS}} -d PORT=${{PORT}} -d RANGE=${{RANGE}}
     --files --image python --output
 
-analyze:
+join-files:
   - for file in *.tar.gz; do tar -Oxf $file ./banners.txt >> all-banners.txt; done
+  - for file in *.tar.gz; do tar -Oxf $file ./found.txt >> all-found.txt; done
+
+update-lists:
+  - git clone --depth 1 https://x-access-token:${{TOKEN_GITHUB}}@github.com/satorici/blacklists /tmp/blacklists
+  - cp all-found.txt /tmp/blacklists/${{PORT}}/$(date -u +%Y%m%d).open
+  - cp banners.txt /tmp/blacklists/${{PORT}}/$(date -u +%Y%m%d).banner
+  - cd /tmp/blacklists && git add . && git commit -m "${{PORT}}} $(date -u +%Y%m%d)" && git push
+
+analyze:
   - 'while read LINE; do
     IP=$(echo $LINE | cut -d , -f 1);
     IP_BANNER=$(echo $LINE | cut -d , -f 2);
     $(echo "$IP_BANNER" | grep -q "${{BANNER}}") && [ "${{PLAYBOOK}}" != "" ] &&
-    satori run ${{PLAYBOOK}} -d IP=$IP -d PORT=${{PORT}};
+    satori local ${{PLAYBOOK}} -d IP=$IP -d PORT=${{PORT}};
     done < all-banners.txt'
