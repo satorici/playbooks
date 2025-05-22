@@ -1,3 +1,4 @@
+#V2
 settings:
   image: python
   files: true
@@ -7,7 +8,14 @@ setShell: true
 
 install:
   - pip install git+https://github.com/satorici/banner-scanner > /dev/null
+  - git clone --depth 1 https://github.com/satorici/blacklists /tmp/blacklists > /dev/null
   - apt-get update > /dev/null && apt-get install -y zmap > /dev/null
+
+update-blacklist:
+  - cat /tmp/blacklists/${{PORT}}/*.banner | cut -d , -f 1 > with-banners.txt
+  - cat /tmp/blacklists/${{PORT}}/*.open > open.txt
+  - grep -Fvxf with-banners.txt open.txt | sed 's/$/\/32/' >> /etc/zmap/blacklist.conf
+  - rm *.txt
 
 zmap:
   - zmap -i eth1
