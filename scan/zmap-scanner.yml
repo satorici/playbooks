@@ -13,11 +13,12 @@ install:
 scan:
   - satori-v2 run satori://scan/zmap-webbanner.yml
     --count ${{SHARDS}} -d PORT=${{PORT}} -d RANGE=${{RANGE}}
-    --files --image python --output
+    --files --image python
 
 join-files:
   - for file in *.tar.gz; do tar -Oxf $file ./banners.txt >> all-banners.txt; done
   - for file in *.tar.gz; do tar -Oxf $file ./found.txt >> all-found.txt; done
+  - rm *.tar.gz
 
 update-lists:
   - git clone --depth 1 https://x-access-token:${{TOKEN_GITHUB}}@github.com/satorici/blacklists /tmp/blacklists
