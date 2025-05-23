@@ -21,9 +21,10 @@ join-files:
 
 update-lists:
   - git clone --depth 1 https://x-access-token:${{TOKEN_GITHUB}}@github.com/satorici/blacklists /tmp/blacklists
+  - mkdir /tmp/blacklists/${{PORT}}
   - cp all-found.txt /tmp/blacklists/${{PORT}}/$(date -u +%Y%m%d).open
-  - cp banners.txt /tmp/blacklists/${{PORT}}/$(date -u +%Y%m%d).banner
-  - cd /tmp/blacklists && git add . && git commit -m "${{PORT}}} $(date -u +%Y%m%d)" && git push
+  - cp all-banners.txt /tmp/blacklists/${{PORT}}/$(date -u +%Y%m%d).banner
+  - cd /tmp/blacklists && git add . && git commit -m "${{PORT}} $(date -u +%Y%m%d)" && git push
 
 analyze:
   - 'while read LINE; do
