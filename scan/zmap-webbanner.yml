@@ -12,8 +12,8 @@ install:
   - apt-get update > /dev/null && apt-get install -y zmap > /dev/null
 
 update-blacklist:
-  - cat /tmp/blacklists/${{PORT}}/*.banner | cut -d , -f 1 > with-banners.txt
-  - cat /tmp/blacklists/${{PORT}}/*.open > open.txt
+  - cat /tmp/blacklists/*/*.banner | cut -d , -f 1 > with-banners.txt
+  - cat /tmp/blacklists/*/*.open > open.txt
   - grep -Fvxf with-banners.txt open.txt | sed 's/$/\/32/' >> /etc/zmap/blacklist.conf
   - rm *.txt
 
