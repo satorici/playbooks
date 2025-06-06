@@ -1,25 +1,18 @@
 #V2
 settings:
-  image: python
+  image: fedora
   files: true
   example: satori run satori://scan/zmap-webbanner.yml --output --count 3 -d PORT=80 -d RANGE=1.1.1.0/29
 
 setShell: true
 
 install:
+  - dnf install -y zmap git python python-pip > /dev/null
   - pip install git+https://github.com/satorici/banner-scanner > /dev/null
-  - git clone --depth 1 https://github.com/satorici/blacklists /tmp/blacklists > /dev/null
-  - apt-get update > /dev/null && apt-get install -y zmap > /dev/null
-
-update-blacklist:
-  - cat /tmp/blacklists/*/*.banner | cut -d , -f 1 > with-banners.txt
-  - cat /tmp/blacklists/*/*.open > open.txt
-  - grep -Fvxf with-banners.txt open.txt | sed 's/$/\/32/' >> /etc/zmap/blacklist.conf
-  - rm *.txt
 
 zmap:
   - zmap -i eth1
-    --seed 1 --shards $SATORI_COUNT --shard $SATORI_COUNT_INDEX
+    --seed 1 --shards $SATORI_COUNT --shard $SATORI_COUNT_INDEX --rate 1000
     -p ${{PORT}} ${{RANGE}} | tee found.txt
 
 banners:
