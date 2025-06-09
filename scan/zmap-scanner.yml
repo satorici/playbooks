@@ -7,7 +7,7 @@ settings:
     - TOKEN_V2
     - TOKEN_GITHUB
   example: satori run satori://scan/zmap-scanner.yml
-    -d RANGE=0.0.0.0/8 -d PORT=80 -d PLAYBOOK=satori://sap/Onapsys.yml -d BANNER=SAP -d SHARDS=500
+    -d RANGE=0.0.0.0/8 -d PORT=80 -d BANNER=SAP -d SHARDS=500
     -d TOKEN_V1=abc -d TOKEN_V2=abc
 
 install:
@@ -25,19 +25,19 @@ join-files:
   - for file in *.tar.gz; do tar -Oxf $file ./banners.txt >> all-banners.txt; done
   - for file in *.tar.gz; do tar -Oxf $file ./found.txt >> all-found.txt; done
   - rm *.tar.gz
-
-update-lists:
-  - git clone --depth 1 https://x-access-token:${{TOKEN_GITHUB}}@github.com/satorici/blacklists /tmp/blacklists
-  - mkdir /tmp/blacklists/${{PORT}}
-  - cp all-found.txt /tmp/blacklists/${{PORT}}/$(date -u +%Y%m%d-%H%M).open
-  - cp all-banners.txt /tmp/blacklists/${{PORT}}/$(date -u +%Y%m%d-%H%M).banner
-  - cd /tmp/blacklists && git add . && git commit -m "${{PORT}} $(date -u +%Y%m%d-%H%M)" && git push
   - wc -l all-found.txt all-banners.txt
 
-analyze:
-  - '[ "${{PLAYBOOK}}" != "" ] && while read LINE; do
-    IP=$(echo $LINE | cut -d , -f 1);
-    IP_BANNER=$(echo $LINE | cut -d , -f 2);
-    $(echo "$IP_BANNER" | grep -q "${{BANNER}}") &&
-    satori local ${{PLAYBOOK}} -d IP=$IP -d PORT=${{PORT}} --output;
-    done < all-banners.txt'
+# update-lists:
+#   - git clone --depth 1 https://x-access-token:${{TOKEN_GITHUB}}@github.com/satorici/blacklists /tmp/blacklists
+#   - mkdir /tmp/blacklists/${{PORT}}
+#   - cp all-found.txt /tmp/blacklists/${{PORT}}/$(date -u +%Y%m%d-%H%M).open
+#   - cp all-banners.txt /tmp/blacklists/${{PORT}}/$(date -u +%Y%m%d-%H%M).banner
+#   - cd /tmp/blacklists && git add . && git commit -m "${{PORT}} $(date -u +%Y%m%d-%H%M)" && git push
+
+# analyze:
+#   - '[ "${{PLAYBOOK}}" != "" ] && while read LINE; do
+#     IP=$(echo $LINE | cut -d , -f 1);
+#     IP_BANNER=$(echo $LINE | cut -d , -f 2);
+#     $(echo "$IP_BANNER" | grep -q "${{BANNER}}") &&
+#     satori local ${{PLAYBOOK}} -d IP=$IP -d PORT=${{PORT}} --output;
+#     done < all-banners.txt'
