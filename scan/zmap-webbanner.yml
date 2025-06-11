@@ -7,13 +7,13 @@ settings:
 setShell: true
 
 install:
-  - dnf install -y zmap git python python-pip > /dev/null
-  - pip install git+https://github.com/satorici/banner-scanner > /dev/null
+  - dnf install -y zmap > /dev/null
+  # - pip install git+https://github.com/satorici/banner-scanner > /dev/null
 
 zmap:
   - zmap -i eth1
     --seed 1 --shards $SATORI_COUNT --shard $SATORI_COUNT_INDEX --rate ${{RATE}}
     -p ${{PORT}} ${{RANGE}} | tee found.txt
 
-banners:
-  - banner-scanner found.txt ${{PORT}} > banners.txt 2> no-banners.txt
+# banners:
+#   - banner-scanner found.txt ${{PORT}} > banners.txt 2> no-banners.txt
