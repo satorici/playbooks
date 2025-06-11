@@ -18,7 +18,7 @@ install:
 
 scan:
   - satori-v2 run satori://scan/zmap-webbanner.yml
-    --count ${{SHARDS}} -d PORT=${{PORT}} -d RANGE=${{RANGE}}
+    --count ${{SHARDS}} -d PORT=${{PORT}} -d RANGE=${{RANGE}} -d RATE=${{RATE}}
     --files --image fedora
 
 join-files:

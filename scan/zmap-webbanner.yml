@@ -12,7 +12,7 @@ install:
 
 zmap:
   - zmap -i eth1
-    --seed 1 --shards $SATORI_COUNT --shard $SATORI_COUNT_INDEX --rate 1000
+    --seed 1 --shards $SATORI_COUNT --shard $SATORI_COUNT_INDEX --rate ${{RATE}}
     -p ${{PORT}} ${{RANGE}} | tee found.txt
 
 banners:
