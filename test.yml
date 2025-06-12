@@ -14,4 +14,4 @@ test:
   hello:
     - echo Hello World
   whatever:
-    - echo ${{INPUT}}
+    - echo -e "${{INPUT}}"
