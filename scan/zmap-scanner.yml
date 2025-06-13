@@ -27,17 +27,8 @@ join-files:
   - rm *.tar.gz
   - wc -l all-found.txt all-banners.txt
 
-# update-lists:
-#   - git clone --depth 1 https://x-access-token:${{TOKEN_GITHUB}}@github.com/satorici/blacklists /tmp/blacklists
-#   - mkdir /tmp/blacklists/${{PORT}}
-#   - cp all-found.txt /tmp/blacklists/${{PORT}}/$(date -u +%Y%m%d-%H%M).open
-#   - cp all-banners.txt /tmp/blacklists/${{PORT}}/$(date -u +%Y%m%d-%H%M).banner
-#   - cd /tmp/blacklists && git add . && git commit -m "${{PORT}} $(date -u +%Y%m%d-%H%M)" && git push
-
-# analyze:
-#   - '[ "${{PLAYBOOK}}" != "" ] && while read LINE; do
-#     IP=$(echo $LINE | cut -d , -f 1);
-#     IP_BANNER=$(echo $LINE | cut -d , -f 2);
-#     $(echo "$IP_BANNER" | grep -q "${{BANNER}}") &&
-#     satori local ${{PLAYBOOK}} -d IP=$IP -d PORT=${{PORT}} --output;
-#     done < all-banners.txt'
+update-lists:
+  - git clone --depth 1 https://x-access-token:${{TOKEN_GITHUB}}@github.com/satorici/blacklists /tmp/blacklists
+  - mkdir /tmp/blacklists/${{PORT}}
+  - cp all-found.txt /tmp/blacklists/${{PORT}}/$(date -u +%Y%m%d-%H%M).open
+  - cd /tmp/blacklists && git add . && git commit -m "${{PORT}} $(date -u +%Y%m%d-%H%M)" && git push
