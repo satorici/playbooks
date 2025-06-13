@@ -1,0 +1,15 @@
+settings:
+  name: Banner scanner
+  files: true
+  image: python
+
+install:
+  - pip install git+https://github.com/satorici/banner-scanner
+    --disable-pip-version-check --root-user-action=ignore > /dev/null
+
+scan:
+  - banner-scanner --concurrency ${{CONCURRENCY}} --timeout ${{TIMEOUT}}
+    ${{INPUT}} ${{PORT}} > banners.txt
+
+debug:
+  - wc -l banners.txt
