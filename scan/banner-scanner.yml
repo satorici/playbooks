@@ -7,9 +7,11 @@ install:
   - pip install git+https://github.com/satorici/banner-scanner
     --disable-pip-version-check --root-user-action=ignore > /dev/null
 
+save:
+  - echo "${{INPUT}}" > /tmp/input.txt
 scan:
   - banner-scanner --concurrency ${{CONCURRENCY}} --timeout ${{TIMEOUT}}
-    ${{INPUT}} ${{PORT}} > banners.txt
+    /tmp/input.txt ${{PORT}} > banners.txt
 
 debug:
   - wc -l banners.txt
