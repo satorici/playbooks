@@ -1,0 +1,11 @@
+settings:
+  name: ZGrab2
+  image: golang
+  example: satori run satori://scan/zgrab2.yml -i input.txt -d PORT=80 --output --test run
+
+install:
+  - git clone https://github.com/zmap/zgrab2.git --depth 1
+  - cd zgrab2; export GOTOOLCHAIN=auto; make install
+
+run:
+  - zgrab2 http --input-file=input.txt --method HEAD --endpoint "/?satori.ci/opt" --port ${{PORT}} --target-timeout 1 --connect-timeout 0.5 --senders 1000
