@@ -1,0 +1,23 @@
+#V2
+settings:
+  name: ZMap + ZGrab2
+  image: fedora
+  files: true
+
+setShell: true
+
+install:
+  - dnf install -y zmap make git go > /dev/null
+  - git clone --depth 1 https://github.com/zmap/zgrab2.git /tmp/zgrab2
+  - make -C /tmp/zgrab2 install
+  - ln -s ~/go/bin/zgrab2 /bin/zgrab2
+
+zmap:
+  - zmap -i eth1
+    --seed 1 --shards $SATORI_COUNT --shard $SATORI_COUNT_INDEX --rate ${{RATE}}
+    -p ${{PORT}} ${{RANGE}} | tee found.txt
+
+zgrab2:
+  - zgrab2 http --input-file=found.txt --method HEAD --endpoint '/?satori.ci/opt'
+    --port ${{PORT}} --target-timeout 1 --connect-timeout 0.5 --senders 1000
+    -o zgrab2.json
