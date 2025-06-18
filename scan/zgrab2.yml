@@ -1,7 +1,11 @@
 settings:
-  name: ZGrab2
+  name: "ZGrab2: grab port banners"
   image: golang
   files: true
+  author:
+    - https://github.com/zmap
+  gallery:
+    - https://files.catbox.moe/r4dcs8.png
   example: satori run satori://scan/zgrab2.yml -i input.txt -d PORT=80 --output --test run --files
 
 install:
