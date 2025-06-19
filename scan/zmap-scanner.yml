@@ -22,7 +22,7 @@ scan:
     --files --image fedora --cpu 2048 --memory 4096
 
 join-files:
-  - for file in *.tar.gz; do tar -Oxf $file ./banners.txt >> all-banners.txt; done
+  - for file in *.tar.gz; do tar -Oxf $file ./zgrab2.json >> all-zgrab2.jsonl; done
   - for file in *.tar.gz; do tar -Oxf $file ./found.txt >> all-found.txt; done
   - rm *.tar.gz
   - wc -l all-found.txt all-banners.txt
