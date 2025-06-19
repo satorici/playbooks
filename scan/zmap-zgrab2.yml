@@ -3,6 +3,8 @@ settings:
   name: ZMap + ZGrab2
   image: fedora
   files: true
+  cpu: 2048
+  memory: 4096
 
 setShell: true
 
@@ -14,7 +16,7 @@ install:
 
 zmap:
   - zmap -i eth1
-    --seed 1 --shards $SATORI_COUNT --shard $SATORI_COUNT_INDEX --rate ${{RATE}}
+    --seed 1 --shards $SATORI_COUNT --shard $SATORI_COUNT_INDEX --rate 14000
     -p ${{PORT}} ${{RANGE}} | tee found.txt
 
 zgrab2:
