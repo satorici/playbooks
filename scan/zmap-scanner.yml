@@ -17,9 +17,9 @@ install:
   - satori-v2 config refresh_token ${{TOKEN_V2}}
 
 scan:
-  - satori-v2 run satori://scan/zmap-webbanner.yml
-    --count ${{SHARDS}} -d PORT=${{PORT}} -d RANGE=${{RANGE}} -d RATE=${{RATE}}
-    --files --image fedora
+  - satori-v2 run satori://scan/zmap-zgrab2.yml
+    --count ${{SHARDS}} -d PORT=${{PORT}} -d RANGE=${{RANGE}}
+    --files --image fedora --cpu 2048 --memory 4096
 
 join-files:
   - for file in *.tar.gz; do tar -Oxf $file ./banners.txt >> all-banners.txt; done
