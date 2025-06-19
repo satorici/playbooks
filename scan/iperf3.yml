@@ -1,0 +1,19 @@
+settings:
+  name: "IPerf3: Measures performance"
+  author:
+    - https://github.com/esnet
+  gallery:
+    - https://files.catbox.moe/99cy9f.png
+  example: satori run satori://scan/iperf3.yml --output --test iperf3.run.client.stdout --cpu 2048 --memory 4096
+
+install:
+  - apt-get update -q >>/dev/null; apt-get install iperf3 -qy >>/dev/null
+
+iperf3:
+  help:
+    - iperf3 --help
+
+  run: 
+    assertStderrNotContains: "error"
+    client:
+      - iperf3 -c iperf.he.net -t 15 -P 2 -J --reverse
