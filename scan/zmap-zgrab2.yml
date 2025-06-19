@@ -13,6 +13,8 @@ install:
   - git clone --depth 1 https://github.com/zmap/zgrab2.git /tmp/zgrab2
   - make -C /tmp/zgrab2 install
   - ln -s ~/go/bin/zgrab2 /bin/zgrab2
+  - git clone --depth 1 https://github.com/satorici/blacklists.git /tmp/blacklists
+  - cp /tmp/blacklists/blacklist.conf /etc/zmap/blocklist.conf
 
 zmap:
   - zmap -i eth1
