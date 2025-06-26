@@ -3,18 +3,17 @@ settings:
   image: python
   files: true
   redacted:
-    - TOKEN_V1
-    - TOKEN_V2
-    - TOKEN_GITHUB
+    - SATORI_TOKEN
+    - GITHUB_TOKEN
   example: satori run satori://scan/zmap-scanner.yml
     -d RANGE=0.0.0.0/8 -d PORT=80 -d BANNER=SAP -d SHARDS=500
-    -d TOKEN_V1=abc -d TOKEN_V2=abc
+    -d SATORI_TOKEN=abc -d GITHUB_TOKEN=
 
 install:
   - pip install git+https://github.com/satorici/cli-v2
     --disable-pip-version-check --root-user-action=ignore > /dev/null
-  # - satori config token ${{TOKEN_V1}}
-  - satori-v2 config refresh_token ${{TOKEN_V2}}
+  # - satori config token ${{SATORI_TOKEN}}
+  - satori-v2 config refresh_token ${{SATORI_TOKEN}}
 
 scan:
   - satori-v2 run satori://scan/zmap-zgrab2.yml
@@ -28,7 +27,7 @@ join-files:
   - wc -l all-found.txt; echo $(grep status.*success all-zgrab2.jsonl | wc -l) all-zgrab2.jsonl
 
 update-lists:
-  - git clone --depth 1 https://x-access-token:${{TOKEN_GITHUB}}@github.com/satorici/blacklists /tmp/blacklists
+  - git clone --depth 1 https://x-access-token:${{GITHUB_TOKEN}}@github.com/satorici/blacklists /tmp/blacklists
   - mkdir /tmp/blacklists/${{PORT}}
   - cp all-found.txt /tmp/blacklists/${{PORT}}/$(date -u +%Y%m%d-%H%M).open
   - cd /tmp/blacklists && git add . && git commit -m "${{PORT}} $(date -u +%Y%m%d-%H%M)" && git push
