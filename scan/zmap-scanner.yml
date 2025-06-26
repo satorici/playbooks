@@ -5,7 +5,7 @@ settings:
   redacted:
     - SATORI_TOKEN
     - GITHUB_TOKEN
-  example: satori run satori://scan/zmap-scanner.yml -d RANGE=0.0.0.0/8 -d PORT=80 -d SHARDS=500 -d SATORI_TOKEN=TBC -d GITHUB_TOKEN=TBC 
+  example: satori run satori://scan/zmap-scanner.yml -d RANGE=0.0.0.0/8 -d PORT=80 -d SHARDS=500 -d SATORI_TOKEN=TBC -d GITHUB_TOKEN=TBC --output --visibility public
 
 install:
   - pip install git+https://github.com/satorici/cli-v2 --disable-pip-version-check --root-user-action=ignore > /dev/null
