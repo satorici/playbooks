@@ -1,5 +1,5 @@
 settings:
-  name: ZMap Scanner
+  name: "Scan for a vulnerability in Internet"
   image: python
   files: true
   redacted:
