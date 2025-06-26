@@ -1,7 +1,7 @@
 settings:
   name: "Scan for a vulnerability in Internet"
   image: python
-  files: true
+  files: false
   redacted:
     - SATORI_TOKEN
     - GITHUB_TOKEN
@@ -28,7 +28,7 @@ update-blacklists:
   - df -h
   - git clone --depth 1 https://x-access-token:${{GITHUB_TOKEN}}@github.com/satorici/blacklists /tmp/blacklists
   - mkdir -p /tmp/blacklists/${{RANGE}}/${{PORT}}
-  - cp all-found.txt /tmp/blacklists/${{RANGE}}/${{PORT}}/$(date -u +%Y%m%d-%H%M).open
-  - cp all-zgrab2.jsonl /tmp/blacklists/${{RANGE}}/${{PORT}}/$(date -u +%Y%m%d-%H%M).banners.jsonl
+  - mv all-found.txt /tmp/blacklists/${{RANGE}}/${{PORT}}/$(date -u +%Y%m%d-%H%M).open
+  - mv all-zgrab2.jsonl /tmp/blacklists/${{RANGE}}/${{PORT}}/$(date -u +%Y%m%d-%H%M).banners.jsonl
   - 'cd /tmp/blacklists && git add . && git commit -m "Shards: 500" && git push'
   - df -h
