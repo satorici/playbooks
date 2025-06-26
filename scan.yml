@@ -10,6 +10,7 @@ settings:
 install:
   - pip install git+https://github.com/satorici/cli-v2 --disable-pip-version-check --root-user-action=ignore > /dev/null
   - satori-v2 config token ${{SATORI_TOKEN}}
+  - apt-get update && apt-get install -y git-lfs
 
 scan:
   - satori-v2 run satori://scan/zmap-zgrab2.yml --count 500 -d PORT=${{PORT}} -d RANGE=${{RANGE}} --files --image fedora --cpu 2048 --memory 4096
