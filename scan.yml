@@ -5,17 +5,14 @@ settings:
   redacted:
     - SATORI_TOKEN
     - GITHUB_TOKEN
-  example: satori run satori://scan.yml -d RANGE=0.0.0.0/8 -d PORT=80 -d SATORI_TOKEN=$SATORI_TOKEN -d GITHUB_TOKEN=$GITHUB_TOKEN --output --visibility public
-
-SHARDS:
-- - 500
+  example: satori run satori://scan.yml -d RANGE=0.0.0.0/0 -d PORT=80 -d SATORI_TOKEN=$SATORI_TOKEN -d GITHUB_TOKEN=$GITHUB_TOKEN --output --visibility public
 
 install:
   - pip install git+https://github.com/satorici/cli-v2 --disable-pip-version-check --root-user-action=ignore > /dev/null
   - satori-v2 config token ${{SATORI_TOKEN}}
 
 scan:
-  - satori-v2 run satori://scan/zmap-zgrab2.yml --count ${{SHARDS}} -d PORT=${{PORT}} -d RANGE=${{RANGE}} --files --image fedora --cpu 2048 --memory 4096
+  - satori-v2 run satori://scan/zmap-zgrab2.yml --count 500 -d PORT=${{PORT}} -d RANGE=${{RANGE}} --files --image fedora --cpu 2048 --memory 4096
 
 join-files:
   - for file in *.tar.gz; do tar -Oxf $file ./zgrab2.json >> all-zgrab2.jsonl; done
@@ -28,4 +25,4 @@ update-lists:
   - mkdir /tmp/blacklists/${{PORT}}
   - cp all-found.txt /tmp/blacklists/${{PORT}}/$(date -u +%Y%m%d-%H%M).open
   - cp all-zgrab2.jsonl /tmp/blacklists/${{PORT}}/$(date -u +%Y%m%d-%H%M).banners.jsonl
-  - 'cd /tmp/blacklists && git add . && git commit -m "Range: ${{RANGE}} - Shards: ${{SHARDS}}" && git push'
+  - 'cd /tmp/blacklists && git add . && git commit -m "Range: ${{RANGE}} - Shards:500" && git push'
