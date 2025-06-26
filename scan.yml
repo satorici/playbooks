@@ -10,19 +10,19 @@ settings:
 install:
   - pip install git+https://github.com/satorici/cli-v2 --disable-pip-version-check --root-user-action=ignore > /dev/null
   - satori-v2 config token ${{SATORI_TOKEN}}
-  - apt-get update && apt-get install -y git-lfs
+  - apt-get update >>/dev/null; apt-get install -qy git-lfs >>/dev/null
 
 scan:
   - satori-v2 run satori://scan/zmap-zgrab2.yml --count 500 -d PORT=${{PORT}} -d RANGE=${{RANGE}} --files --image fedora --cpu 2048 --memory 4096
 
-join-files:
+join-scans:
   - for file in *.tar.gz; do tar -Oxf $file ./zgrab2.json >> all-zgrab2.jsonl; done
   - for file in *.tar.gz; do tar -Oxf $file ./found.txt >> all-found.txt; done
   - rm *.tar.gz
   - ls -lh
   - wc -l all-found.txt; echo $(grep status.*success all-zgrab2.jsonl | wc -l) all-zgrab2.jsonl
 
-update-lists:
+update-blacklists:
   - git clone --depth 1 https://x-access-token:${{GITHUB_TOKEN}}@github.com/satorici/blacklists /tmp/blacklists
   - mkdir -p /tmp/blacklists/${{RANGE}}/${{PORT}}
   - cp all-found.txt /tmp/blacklists/${{RANGE}}/${{PORT}}/$(date -u +%Y%m%d-%H%M).open
