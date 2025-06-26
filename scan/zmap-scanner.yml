@@ -24,4 +24,4 @@ update-lists:
   - git clone --depth 1 https://x-access-token:${{GITHUB_TOKEN}}@github.com/satorici/blacklists /tmp/blacklists
   - mkdir /tmp/blacklists/${{PORT}}
   - cp all-found.txt /tmp/blacklists/${{PORT}}/$(date -u +%Y%m%d-%H%M).open
-  - cd /tmp/blacklists && git add . && git commit -m "Shards: ${{SHARDS}} - Port:${{PORT}} - Date:$(date -u +%Y%m%d-%H%M)" && git push
+  - cd /tmp/blacklists && git add . && git commit -m "Range: ${{RANGE}} - Shards: ${{SHARDS}}" && git push
