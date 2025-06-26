@@ -30,5 +30,5 @@ update-blacklists:
   - mkdir -p /tmp/blacklists/${{RANGE}}/${{PORT}}
   - mv all-found.txt /tmp/blacklists/${{RANGE}}/${{PORT}}/$(date -u +%Y%m%d-%H%M).open
   - mv all-zgrab2.jsonl /tmp/blacklists/${{RANGE}}/${{PORT}}/$(date -u +%Y%m%d-%H%M).banners.jsonl
-  - 'cd /tmp/blacklists && git add . && git commit -m "Shards: 500" && git push'
+  - 'cd /tmp/blacklists && git add . && git commit -m "Range: ${{RANGE}} / Port: ${{PORT}} / Shards: 500" && git push'
   - df -h
