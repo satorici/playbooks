@@ -25,6 +25,7 @@ update-blacklists:
   - export GIT_LFS_SKIP_SMUDGE=1;
     git clone --filter=blob:none --depth 1 https://x-access-token:${{GITHUB_TOKEN}}@github.com/satorici/blacklists /tmp/blacklists
   - ls -lhR
+  - ls -lhR /tmp
   - mkdir -p /tmp/blacklists/${{RANGE}}/${{PORT}}
   - mv all-found.txt /tmp/blacklists/${{RANGE}}/${{PORT}}/$(date -u +%Y%m%d-%H%M).open
   - mv all-zgrab2.jsonl /tmp/blacklists/${{RANGE}}/${{PORT}}/$(date -u +%Y%m%d-%H%M).banners.jsonl
