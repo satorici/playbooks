@@ -22,11 +22,10 @@ join-scans:
   - wc -l all-found.txt; echo $(grep status.*success all-zgrab2.jsonl | wc -l) all-zgrab2.jsonl
 
 update-blacklists:
-  - export GIT_LFS_SKIP_SMUDGE=1;
-    cd /tmp; git clone --no-checkout --depth 1 https://x-access-token:${{GITHUB_TOKEN}}@github.com/satorici/blacklists; cd blacklists; git sparse-checkout init --cone; git sparse-checkout set --no-cone ''
+  - cd /tmp; git clone --no-checkout --depth 1 https://x-access-token:${{GITHUB_TOKEN}}@github.com/satorici/blacklists; cd blacklists; git sparse-checkout init --cone; git sparse-checkout set --no-cone /*
   - ls -lh
   - du -sh /tmp/blacklists/
   - mkdir -p /tmp/blacklists/${{RANGE}}/${{PORT}}
   - mv all-found.txt /tmp/blacklists/${{RANGE}}/${{PORT}}/$(date -u +%Y%m%d-%H%M).open
   - mv all-zgrab2.jsonl /tmp/blacklists/${{RANGE}}/${{PORT}}/$(date -u +%Y%m%d-%H%M).banners.jsonl
-  - 'cd /tmp/blacklists && git add . && git -c user.name="a" -c user.email="b@c" commit -m "Range: ${{RANGE}} / Port: ${{PORT}} / Shards: ${{SHARDS}}" && git push'
+  - 'cd /tmp/blacklists; git add --sparse . && git -c user.name="a" -c user.email="b@c" commit -m "Range: ${{RANGE}} / Port: ${{PORT}} / Shards: ${{SHARDS}}"; git push'
