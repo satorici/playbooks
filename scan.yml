@@ -23,7 +23,8 @@ join-scans:
   - wc -l all-found.txt; echo $(grep status.*success all-zgrab2.jsonl | wc -l) all-zgrab2.jsonl
 
 update-blacklists:
-  - git clone --depth 1 https://x-access-token:${{GITHUB_TOKEN}}@github.com/satorici/blacklists /tmp/blacklists
+  - export GIT_LFS_SKIP_SMUDGE=1;
+    git clone --filter=blob:none --depth 1 https://x-access-token:${{GITHUB_TOKEN}}@github.com/satorici/blacklists /tmp/blacklists
   - mkdir -p /tmp/blacklists/${{RANGE}}/${{PORT}}
   - mv all-found.txt /tmp/blacklists/${{RANGE}}/${{PORT}}/$(date -u +%Y%m%d-%H%M).open
   - mv all-zgrab2.jsonl /tmp/blacklists/${{RANGE}}/${{PORT}}/$(date -u +%Y%m%d-%H%M).banners.jsonl
