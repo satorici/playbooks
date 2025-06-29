@@ -1,5 +1,5 @@
 settings:
-  name: "Scan a range for a vulnerability"
+  name: "Scan for a vulnerability"
   image: python
   files: false
   redacted:
@@ -18,12 +18,12 @@ scan:
 join-scans:
   - for file in *.tar.gz; do tar -Oxf $file ./zgrab2.json >> all-zgrab2.jsonl; done
   - for file in *.tar.gz; do tar -Oxf $file ./found.txt >> all-found.txt; done
-  - rm *.tar.gz
   - ls -lh
+  - rm *.tar.gz
   - wc -l all-found.txt; echo $(grep status.*success all-zgrab2.jsonl | wc -l) all-zgrab2.jsonl
 
 update-blacklists:
-  - cd /tmp; git clone --no-checkout https://x-access-token:${{GITHUB_TOKEN}}@github.com/satorici/blacklists; cd blacklists; git sparse-checkout init --cone; git sparse-checkout set --no-cone /*; git checkout HEAD --quiet; git fetch origin main; git reset origin/main --mixed
+  - cd /tmp; git clone --no-checkout https://x-access-token:${{GITHUB_TOKEN}}@github.com/satorici/blacklists; cd blacklists; git sparse-checkout init --cone; git sparse-checkout set --no-cone /*; git checkout HEAD --quiet; git fetch origin main; git reset origin/main --mixed; git lfs install --skip-smudge; git lfs track "*.jsonl"; git add .gitattributes
   - mkdir -p /tmp/blacklists/${{RANGE}}/${{PORT}}
   - mv all-found.txt /tmp/blacklists/${{RANGE}}/${{PORT}}/$(date -u +%Y%m%d-%H%M).open
   - mv all-zgrab2.jsonl /tmp/blacklists/${{RANGE}}/${{PORT}}/$(date -u +%Y%m%d-%H%M).banners.jsonl
