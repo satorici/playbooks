@@ -41,13 +41,13 @@ update-blacklists:
     git add --sparse .
     git -c user.name="a" -c user.email="b@c" commit -m "Range ${{RANGE}} / Port ${{PORT}} / Shards ${{SHARDS}}"
 
-    for i in $(seq 1 3); do
+    for i in $(seq 1 10); do
       if git pull --rebase origin main && git push; then
         echo "Successful push"
         break
       else
-        echo "Push rejected, retry in ($i/3) en 5s..."
-        sleep 5
+        echo "Push rejected, retry ($i/10)..."
+        sleep $(( RANDOM % 10 + 1 ))
       fi
 
       if [ "$i" -eq 3 ]; then
