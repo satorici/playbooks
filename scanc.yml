@@ -23,37 +23,43 @@ join-scans:
   - wc -l all-found.txt; echo $(grep status.*success all-zgrab2.jsonl | wc -l) all-zgrab2.jsonl
 
 update-blacklists:
-  assertStdoutNotContains: "Push failed"
   run:
-  - |
-    export GIT_LFS_SKIP_SMUDGE=1
-    git clone --no-checkout https://x-access-token:${{GITHUB_TOKEN}}@github.com/satorici/blacklists /tmp/blacklists
-    cd /tmp/blacklists
-    git sparse-checkout init --cone
-    git sparse-checkout set --no-cone '/*' '.gitattributes'
-    git checkout HEAD --quiet
-    git fetch origin main
-    git reset origin/main --mixed
-    git lfs install --skip-smudge
+    - |
+      export GIT_LFS_SKIP_SMUDGE=1
+      TEMP_BRANCH="tmp-$(date +%s)-$RANDOM"
 
-    mkdir -p /tmp/blacklists/scan/${{RANGE}}/${{PORT}}
-    mv "${OLDPWD}/all-found.txt" "/tmp/blacklists/scan/${{RANGE}}/${{PORT}}/$(date -u +%Y%m%d-%H%M).open"
-    mv "${OLDPWD}/all-zgrab2.jsonl" "/tmp/blacklists/scan/${{RANGE}}/${{PORT}}/$(date -u +%Y%m%d-%H%M).banners.jsonl"
+      git clone --no-checkout https://x-access-token:${{GITHUB_TOKEN}}@github.com/satorici/blacklists /tmp/blacklists
+      cd /tmp/blacklists
 
-    git add --sparse .
-    git -c user.name="a" -c user.email="b@c" commit -m "Range ${{RANGE}} / Port ${{PORT}} / Shards ${{SHARDS}}"
+      git sparse-checkout init --cone
+      git sparse-checkout set --no-cone '/*' '.gitattributes'
+      git checkout -b "$TEMP_BRANCH"
+      git fetch origin main
+      git reset origin/main --mixed
+      git lfs install --skip-smudge
 
-    for i in $(seq 1 10); do
-      if git pull --rebase origin main && git push; then
-        echo "Successful push"
-        break
-      else
-        echo "Push rejected, retry ($i/10)..."
-        sleep $(( RANDOM % 10 + 1 ))
-      fi
+      mkdir -p "/tmp/blacklists/scan/${{RANGE}}/${{PORT}}"
+      TIMESTAMP=$(date -u +%Y%m%d-%H%M)
+      mv "${OLDPWD}/all-found.txt" "/tmp/blacklists/scan/${{RANGE}}/${{PORT}}/${TIMESTAMP}.open"
+      mv "${OLDPWD}/all-zgrab2.jsonl" "/tmp/blacklists/scan/${{RANGE}}/${{PORT}}/${TIMESTAMP}.banners.jsonl"
 
-      if [ "$i" -eq 3 ]; then
-        echo "Push failed after 3 attemps"
-        exit 1
-      fi
-    done
+      git add --sparse .
+      git -c user.name="a" -c user.email="b@c" commit -m "Range ${{RANGE}} / Port ${{PORT}} / Shards ${{SHARDS}}"
+      git push origin "$TEMP_BRANCH"
+
+      git checkout main
+      for i in $(seq 1 5); do
+        if git pull origin main && git merge --no-ff "$TEMP_BRANCH" && git push origin main; then
+          echo "Merge and push to main successful"
+          git push origin --delete "$TEMP_BRANCH"
+          break
+        else
+          echo "Merge rejected, retrying ($i/5)..."
+          sleep $(( RANDOM % 5 + 1 ))
+        fi
+
+        if [ "$i" -eq 5 ]; then
+          echo "Merge failed after 5 attempts"
+          exit 1
+        fi
+      done
