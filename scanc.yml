@@ -26,7 +26,7 @@ update-blacklists:
   run:
     - |
       export GIT_LFS_SKIP_SMUDGE=1
-      TEMP_BRANCH="tmp-$(date +%s)-$RANDOM"
+      TEMP_BRANCH="tmp-$(date +%s)-$RANDOM-$(openssl rand -hex 4)"
 
       git clone --no-checkout https://x-access-token:${{GITHUB_TOKEN}}@github.com/satorici/blacklists /tmp/blacklists
       cd /tmp/blacklists
@@ -35,7 +35,7 @@ update-blacklists:
       git sparse-checkout set --no-cone '/*' '.gitattributes'
       git checkout -b "$TEMP_BRANCH"
       git fetch origin main
-      git reset origin/main --mixed
+      git reset --mixed origin/main
       git lfs install --skip-smudge
 
       mkdir -p "/tmp/blacklists/scan/${{RANGE}}/${{PORT}}"
@@ -49,7 +49,9 @@ update-blacklists:
 
       git checkout main
       for i in $(seq 1 5); do
-        if git pull origin main && git merge --no-ff "$TEMP_BRANCH" && git push origin main; then
+        git fetch origin main
+        git reset --hard origin/main
+        if git merge --no-ff "$TEMP_BRANCH" && git push origin main; then
           echo "Merge and push to main successful"
           git push origin --delete "$TEMP_BRANCH"
           break
