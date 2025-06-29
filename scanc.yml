@@ -1,5 +1,5 @@
 settings:
-  name: "Scan for a vulnerability"
+  name: "Scan a vulnerability on a range"
   image: python
   files: false
   redacted:
@@ -18,13 +18,39 @@ scan:
 join-scans:
   - for file in *.tar.gz; do tar -Oxf $file ./zgrab2.json >> all-zgrab2.jsonl; done
   - for file in *.tar.gz; do tar -Oxf $file ./found.txt >> all-found.txt; done
-  - ls -lh
   - rm *.tar.gz
   - wc -l all-found.txt; echo $(grep status.*success all-zgrab2.jsonl | wc -l) all-zgrab2.jsonl
 
 update-blacklists:
-  - cd /tmp; git clone --no-checkout https://x-access-token:${{GITHUB_TOKEN}}@github.com/satorici/blacklists; cd blacklists; git sparse-checkout init --cone; git sparse-checkout set --no-cone /*; git checkout HEAD --quiet; git fetch origin main; git reset origin/main --mixed; git lfs install --skip-smudge; git lfs track "*.jsonl"; git add .gitattributes
-  - mkdir -p /tmp/blacklists/${{RANGE}}/${{PORT}}
-  - mv all-found.txt /tmp/blacklists/${{RANGE}}/${{PORT}}/$(date -u +%Y%m%d-%H%M).open
-  - mv all-zgrab2.jsonl /tmp/blacklists/${{RANGE}}/${{PORT}}/$(date -u +%Y%m%d-%H%M).banners.jsonl
-  - cd /tmp/blacklists; git add --sparse .; git -c user.name="a" -c user.email="b@c" commit -m "Range ${{RANGE}} / Port ${{PORT}} / Shards ${{SHARDS}}"; git pull --rebase origin main; git push
+  - |
+    export GIT_LFS_SKIP_SMUDGE=1
+    git clone --no-checkout https://x-access-token:${{GITHUB_TOKEN}}@github.com/satorici/blacklists /tmp/blacklists
+    cd /tmp/blacklists
+    git sparse-checkout init --cone
+    git sparse-checkout set --no-cone '/*' '.gitattributes'
+    git checkout HEAD --quiet
+    git fetch origin main
+    git reset origin/main --mixed
+    git lfs install --skip-smudge
+
+    mkdir -p /tmp/blacklists/scan/${{RANGE}}/${{PORT}}
+    mv "${OLDPWD}/all-found.txt" "/tmp/blacklists/scan/${{RANGE}}/${{PORT}}/$(date -u +%Y%m%d-%H%M).open"
+    mv "${OLDPWD}/all-zgrab2.jsonl" "/tmp/blacklists/scan/${{RANGE}}/${{PORT}}/$(date -u +%Y%m%d-%H%M).banners.jsonl"
+
+    git add --sparse .
+    git -c user.name="a" -c user.email="b@c" commit -m "Range ${{RANGE}} / Port ${{PORT}} / Shards ${{SHARDS}}"
+
+    for i in $(seq 1 3); do
+      if git pull --rebase origin main && git push; then
+        echo "Successful push"
+        break
+      else
+        echo "Push rejected, retry in ($i/3) en 5s..."
+        sleep 5
+      fi
+
+      if [ "$i" -eq 3 ]; then
+        echo "Push failed after 3 attemps"
+        exit 1
+      fi
+    done
