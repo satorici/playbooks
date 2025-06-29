@@ -23,6 +23,8 @@ join-scans:
   - wc -l all-found.txt; echo $(grep status.*success all-zgrab2.jsonl | wc -l) all-zgrab2.jsonl
 
 update-blacklists:
+  assertStdoutNotContains: "Push failed"
+  run:
   - |
     export GIT_LFS_SKIP_SMUDGE=1
     git clone --no-checkout https://x-access-token:${{GITHUB_TOKEN}}@github.com/satorici/blacklists /tmp/blacklists
