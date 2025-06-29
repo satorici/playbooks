@@ -26,9 +26,4 @@ update-blacklists:
   - mkdir -p /tmp/blacklists/${{RANGE}}/${{PORT}}
   - mv all-found.txt /tmp/blacklists/${{RANGE}}/${{PORT}}/$(date -u +%Y%m%d-%H%M).open
   - mv all-zgrab2.jsonl /tmp/blacklists/${{RANGE}}/${{PORT}}/$(date -u +%Y%m%d-%H%M).banners.jsonl
-  - |
-    cd /tmp/blacklists && \
-    git add --sparse . && \
-    git -c user.name="a" -c user.email="b@c" commit -m "Range: ${{RANGE}} / Port: ${{PORT}} / Shards: ${{SHARDS}}" && \
-    git pull --rebase origin main && \
-    git push
+  - cd /tmp/blacklists &&; git add --sparse .; git -c user.name="a" -c user.email="b" commit -m "Range: ${{RANGE}} / Port: ${{PORT}} / Shards: ${{SHARDS}}"; git pull --rebase origin main; git push
