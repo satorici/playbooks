@@ -33,9 +33,7 @@ update-blacklists:
 
       git sparse-checkout init --cone
       git sparse-checkout set --no-cone '/*' '.gitattributes'
-      git checkout -b "$TEMP_BRANCH"
-      git fetch origin main
-      git reset --mixed origin/main
+      git checkout -B "$TEMP_BRANCH" origin/main
       git lfs install --skip-smudge
 
       mkdir -p "/tmp/blacklists/scan/${{RANGE}}/${{PORT}}"
@@ -43,7 +41,9 @@ update-blacklists:
       mv "${OLDPWD}/all-found.txt" "/tmp/blacklists/scan/${{RANGE}}/${{PORT}}/${TIMESTAMP}.open"
       mv "${OLDPWD}/all-zgrab2.jsonl" "/tmp/blacklists/scan/${{RANGE}}/${{PORT}}/${TIMESTAMP}.banners.jsonl"
 
-      git add --sparse .
+      git add "scan/${{RANGE}}/${{PORT}}/${TIMESTAMP}.open"
+      git add "scan/${{RANGE}}/${{PORT}}/${TIMESTAMP}.banners.jsonl"
+
       git -c user.name="a" -c user.email="b@c" commit -m "Range ${{RANGE}} / Port ${{PORT}} / Shards ${{SHARDS}}"
       git push origin "$TEMP_BRANCH"
 
