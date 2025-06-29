@@ -19,6 +19,7 @@ join-scans:
   - for file in *.tar.gz; do tar -Oxf $file ./zgrab2.json >> all-zgrab2.jsonl; done
   - for file in *.tar.gz; do tar -Oxf $file ./found.txt >> all-found.txt; done
   - rm *.tar.gz
+  - ls -lh
   - wc -l all-found.txt; echo $(grep status.*success all-zgrab2.jsonl | wc -l) all-zgrab2.jsonl
 
 update-blacklists:
