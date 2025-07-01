@@ -1,0 +1,26 @@
+#V2
+settings:
+  name: ZMap + ZGrab2
+  image: fedora
+  files: true
+  cpu: 2048
+  memory: 4096
+
+setShell: true
+
+install:
+  - dnf install -y zmap make git go > /dev/null
+  - git clone --depth 1 https://github.com/zmap/zgrab2.git /tmp/zgrab2
+  - make -C /tmp/zgrab2 install
+  - ln -s ~/go/bin/zgrab2 /bin/zgrab2
+  - cd /tmp; git clone --no-checkout https://github.com/satorici/blacklists.git; cd blacklists; git sparse-checkout init --cone; git sparse-checkout set blacklist.conf; git checkout; cp blacklist.conf /etc/zmap/blocklist.conf
+
+zmap:
+  - zmap -i eth1
+    --seed 1 --rate 14000
+    -p ${{PORT}} $SATORI_COUNT.0.0.0/8 | tee found.txt
+
+zgrab2:
+  - zgrab2 http --input-file=found.txt --method HEAD --endpoint '/?satori.ci/opt'
+    --port ${{PORT}} --target-timeout 1 --connect-timeout 0.5 --senders 1000
+    -o zgrab2.json
