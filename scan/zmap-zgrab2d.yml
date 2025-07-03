@@ -7,4 +7,4 @@ setShell: true
 
 echo:
   - echo "index:$SATORI_COUNT_INDEX" >> zgrab2.json
-  - echo "shards:$SATORI_COUNT,port:${{PORT}},range=${{RANGE}}" >> all-found.txt
+  - echo "shards:$SATORI_COUNT,port:${{PORT}},range=${{RANGE}}" >> found.txt
