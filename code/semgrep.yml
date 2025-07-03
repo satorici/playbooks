@@ -1,7 +1,7 @@
 settings:
   name: "Semgrep: static source code analysis"
   description: "Semgrep is a code analysis tool that searches for patterns in source code to detect vulnerabilities, enforce best practices, and identify code structure issues. It supports multiple programming languages and allows users to define custom rules for static analysis."
-  image: python
+  image: python:3.10-slim
   author:
     - https://github.com/semgrep
   gallery:
