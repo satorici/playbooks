@@ -1,0 +1,20 @@
+# Placeholder for IP information playbook
+settings:
+  name: "IP Information: Get Netrange, Organization, and ASN"
+  description: "Uses whois to retrieve netrange, organization, and ASN information for a given IP address."
+  image: debian
+  author:
+    - "Satori Community"
+  example: satori run satori://scan/ipinfo.yml -d IP="8.8.8.8" --report --output
+
+ipinfo:
+  install:
+    - apt-get update >>/dev/null; apt-get install -qy whois >>/dev/null
+
+  help:
+    - whois --help
+
+  test:
+    assertReturnCode: 0
+    run:
+      - whois ${{IP}}
