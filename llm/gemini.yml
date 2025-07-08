@@ -1,0 +1,12 @@
+settings:
+  name: Gemini CLI
+  image: node
+  redacted:
+    - GEMINI_API_KEY
+
+install:
+  - apt-get update >>/dev/null; apt-get install -qy git >>/dev/null
+  - git clone --depth 1 https://github.com/${{REPO}}.git .
+
+gemini:
+  - rm -fr ".git*"; export GEMINI_API_KEY=${{GEMINI_API_KEY}}; npx https://github.com/google-gemini/gemini-cli -a -y -p "${{PROMPT}}"
