@@ -1,6 +1,7 @@
 settings:
   name: Gemini CLI
   image: node
+  timeout: 900
   redacted:
     - GEMINI_API_KEY
 
