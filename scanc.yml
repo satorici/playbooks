@@ -1,67 +1,29 @@
 settings:
   name: "Scan a vulnerability on a range"
   image: python
-  files: false
+  files: true
   redacted:
     - SATORI_TOKEN
-    - GITHUB_TOKEN
-  example: satori run satori://scan.yml -d RANGE=0.0.0.0/0 -d PORT=80 -d SATORI_TOKEN=$SATORI_TOKEN -d GITHUB_TOKEN=$GITHUB_TOKEN --output --visibility public
+  example: satori run satori://scan.yml -d RANGE=0.0.0.0/0 -d PORT=80 -d SATORI_TOKEN=$SATORI_TOKEN --output --visibility public
+  # satori run coso12.yml -d RANGE=52.0.0.0/8 -d PORT=80 -d SATORI_TOKEN=$SATORI_TOKEN -d SHARDS=50 --output --visibility public
 
 install:
-  - pip install git+https://github.com/satorici/cli-v2 --disable-pip-version-check --root-user-action=ignore > /dev/null
-  - satori-v2 config token ${{SATORI_TOKEN}}
-  - apt-get update >>/dev/null; apt-get install -qy git-lfs >>/dev/null
+  assertReturnCode: 0
+  run:
+    - pip install git+https://github.com/satorici/cli-v2 --disable-pip-version-check --root-user-action=ignore > /dev/null
+    - satori-v2 config token ${{SATORI_TOKEN}}
 
 scan:
-  - satori-v2 run satori://scan/zmap-zgrab2c.yml --count ${{SHARDS}} -d PORT=${{PORT}} -d RANGE=${{RANGE}} --files --image fedora --cpu 2048 --memory 4096
+  assertReturnCode: 0
+  run:
+    - satori-v2 run satori://scan/zmap-zgrab2c.yml --count ${{SHARDS}} -d PORT=${{PORT}} -d RANGE=${{RANGE}} --files --image fedora --cpu 2048 --memory 4096
 
 join-scans:
-  - for file in *.tar.gz; do tar -Oxf $file ./zgrab2.json >> all-zgrab2.jsonl; done
-  - for file in *.tar.gz; do tar -Oxf $file ./found.txt >> all-found.txt; done
-  - ls -lh
-  - rm *.tar.gz
-  - wc -l all-found.txt; echo $(grep status.*success all-zgrab2.jsonl | wc -l) all-zgrab2.jsonl
-
-update-blacklists:
-  run:
-    - |
-      export GIT_LFS_SKIP_SMUDGE=1
-      TEMP_BRANCH="tmp-$(date +%s)-$RANDOM-$(openssl rand -hex 4)"
-
-      git clone --no-checkout https://x-access-token:${{GITHUB_TOKEN}}@github.com/satorici/blacklists /tmp/blacklists
-      cd /tmp/blacklists
-
-      git sparse-checkout init --cone
-      git sparse-checkout set --no-cone '/*' '.gitattributes'
-      git checkout -B "$TEMP_BRANCH" origin/main
-      git lfs install --skip-smudge
-
-      mkdir -p "/tmp/blacklists/scan/${{RANGE}}/${{PORT}}"
-      TIMESTAMP=$(date -u +%Y%m%d-%H%M)
-      mv "${OLDPWD}/all-found.txt" "/tmp/blacklists/scan/${{RANGE}}/${{PORT}}/${TIMESTAMP}.open"
-      mv "${OLDPWD}/all-zgrab2.jsonl" "/tmp/blacklists/scan/${{RANGE}}/${{PORT}}/${TIMESTAMP}.banners.jsonl"
-
-      git add "scan/${{RANGE}}/${{PORT}}/${TIMESTAMP}.open"
-      git add "scan/${{RANGE}}/${{PORT}}/${TIMESTAMP}.banners.jsonl"
-
-      git -c user.name="a" -c user.email="b@c" commit -m "Range ${{RANGE}} / Port ${{PORT}} / Shards ${{SHARDS}}"
-      git push origin "$TEMP_BRANCH"
-
-      git checkout main
-      for i in $(seq 1 5); do
-        git fetch origin main
-        git reset --hard origin/main
-        if git merge --no-ff "$TEMP_BRANCH" && git push origin main; then
-          echo "Merge and push to main successful"
-          git push origin --delete "$TEMP_BRANCH"
-          break
-        else
-          echo "Merge rejected, retrying ($i/5)..."
-          sleep $(( RANDOM % 5 + 1 ))
-        fi
-
-        if [ "$i" -eq 5 ]; then
-          echo "Merge failed after 5 attempts"
-          exit 1
-        fi
-      done
+  - |
+    TIMESTAMP=$(date -u +%Y%m%d-%H%M)
+    PORTS=$(echo $TIMESTAMP_$RANGE_$PORT.open.txt | tr '/' '_')
+    BANNERS=$(echo $TIMESTAMP_$RANGE_$PORT.banners.jsonl | tr '/' '_')
+    for file in *.tar.gz; do tar -Oxf $file ./found.txt >> $PORTS; done
+    for file in *.tar.gz; do tar -Oxf $file ./zgrab2.json >> $BANNERS; done
+    ls -lh
+    rm *.tar.gz
