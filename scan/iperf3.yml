@@ -7,7 +7,7 @@ settings:
   example: satori run satori://scan/iperf3.yml --output --test iperf3.run.client.stdout --cpu 2048 --memory 4096
 
 install:
-  - apt-get update -q >>/dev/null; apt-get install iperf3 jq -qy >>/dev/null
+  - apt-get update -q >>/dev/null; apt-get install iperf3 -qy >>/dev/null
 
 iperf3:
   #help:
