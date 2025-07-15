@@ -16,4 +16,4 @@ iperf3:
   run: 
     assertStderrNotContains: "error"
     client:
-      - iperf3 -c iperf.he.net -t 15 -P 2 -J --reverse | jq '.end.sum_received.bits_per_second / 1000000'
+      - iperf3 -c iperf.he.net -t 15 -P 2 -J --reverse | jq '{sent: (.end.sum_sent.bits_per_second / 1000000),received:(.end.sum_received.bits_per_second / 1000000)}'
