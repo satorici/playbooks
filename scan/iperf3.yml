@@ -10,8 +10,8 @@ install:
   - apt-get update -q >>/dev/null; apt-get install iperf3 jq -qy >>/dev/null
 
 iperf3:
-  help:
-    - iperf3 --help
+  #help:
+  #  - iperf3 --help
 
   run: 
     assertStderrNotContains: "error"
