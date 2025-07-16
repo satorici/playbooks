@@ -1,11 +1,10 @@
 settings:
-  name: "Scan a vulnerability on a range"
+  name: "Port scan on a range"
   image: python
   files: true
   redacted:
     - SATORI_TOKEN
-  example: satori run satori://scan.yml -d RANGE=0.0.0.0/0 -d PORT=80 -d SATORI_TOKEN=$SATORI_TOKEN --output --visibility public
-  # satori run coso12.yml -d RANGE=52.0.0.0/8 -d PORT=80 -d SATORI_TOKEN=$SATORI_TOKEN -d SHARDS=50 --output --visibility public
+  example: satori run satori://scan.yml -d RANGE=52.0.0.0/8 -d PORT=80 -d SATORI_TOKEN=$SATORI_TOKEN -d SHARDS=500 --output --visibility public
 
 install:
   assertReturnCode: 0
