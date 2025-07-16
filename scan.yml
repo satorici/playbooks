@@ -15,7 +15,7 @@ install:
 scan:
   assertReturnCode: 0
   run:
-    - satori-v2 run satori://scan/zmap-zgrab2c.yml --count ${{SHARDS}} -d PORT=${{PORT}} -d RANGE=${{RANGE}} --files --image fedora --cpu 2048 --memory 7168
+    - satori-v2 run satori://scan/zmap-zgrab2.yml --count ${{SHARDS}} -d PORT=${{PORT}} -d RANGE=${{RANGE}} --files --image fedora --cpu 2048 --memory 7168
 
 join-scans:
   - |
