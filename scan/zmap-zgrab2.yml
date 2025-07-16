@@ -17,7 +17,7 @@ install:
 
 zmap:
   - zmap -i eth1
-    --seed 1 --shards $SATORI_COUNT --shard $SATORI_COUNT_INDEX --rate 14000
+    --seed 1 --shards $SATORI_COUNT --shard $SATORI_COUNT_INDEX --rate 28000
     -p ${{PORT}} ${{RANGE}} | tee found.txt
 
 zgrab2:
