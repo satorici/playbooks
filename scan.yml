@@ -20,9 +20,9 @@ scan:
 join-scans:
   - |
     TIMESTAMP=$(date -u +%Y%m%d-%H%M)
-    PORTS=$(echo $TIMESTAMP_$RANGE_$PORT.open.txt | tr '/' '_')
-    BANNERS=$(echo $TIMESTAMP_$RANGE_$PORT.banners.jsonl | tr '/' '_')
-    for file in *.tar.gz; do tar -Oxf $file ./found.txt >> $PORTS; done
-    for file in *.tar.gz; do tar -Oxf $file ./zgrab2.json >> $BANNERS; done
-    ls -lh $PORTS $BANNERS *.tar.gz
+    PORTS=$(echo "${TIMESTAMP}_${RANGE}_${PORT}.open.txt" | tr '/' '_')
+    BANNERS=$(echo "${TIMESTAMP}_${RANGE}_${PORT}.banners.jsonl" | tr '/' '_')
+    for file in *.tar.gz; do tar -Oxf "$file" ./found.txt >> "$PORTS"; done
+    for file in *.tar.gz; do tar -Oxf "$file" ./zgrab2.json >> "$BANNERS"; done
+    ls -lh "$PORTS" "$BANNERS" *.tar.gz
     rm *.tar.gz
