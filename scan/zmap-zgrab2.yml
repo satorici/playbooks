@@ -23,4 +23,4 @@ zmap:
 zgrab2:
   - zgrab2 http --input-file=found.txt --method HEAD --endpoint '/?satori.ci/opt'
     --port ${{PORT}} --target-timeout 1 --connect-timeout 0.5 --senders 2000
-    --output-filter=success -o zgrab2.json
+    -o zgrab2.json
