@@ -9,7 +9,7 @@ settings:
 setShell: true
 
 install:
-  - dnf install -y zmap make git go > /dev/null
+  - dnf install -y zmap make git go jq > /dev/null
   - git clone --depth 1 https://github.com/zmap/zgrab2.git /tmp/zgrab2
   - make -C /tmp/zgrab2 install
   - ln -s ~/go/bin/zgrab2 /bin/zgrab2
@@ -23,4 +23,7 @@ zmap:
 zgrab2:
   - zgrab2 http --input-file=found.txt --method HEAD --endpoint '/?satori.ci/opt'
     --port ${{PORT}} --target-timeout 1 --connect-timeout 0.5 --senders 2000
-    -o zgrab2.json
+    | grep -v '"result":{}' | jq -c 'del(.data.http.result.response.request)' > zgrab2.jsonl
+
+clean:
+  - rm found.txt
