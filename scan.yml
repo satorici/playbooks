@@ -21,9 +21,7 @@ scan:
 join-scans:
   - |
     TIMESTAMP=$(date -u +%Y-%m-%d_%H-%M)
-    PORTS=$(echo "${TIMESTAMP}_${{RANGE}}_${{PORT}}.open.txt" | tr '/' '_')
     BANNERS=$(echo "${TIMESTAMP}_${{RANGE}}_${{PORT}}.banners.jsonl" | tr '/' '_')
-    for file in *.tar.gz; do tar -Oxf "$file" ./found.txt >> "$PORTS"; done
     for file in *.tar.gz; do tar -Oxf "$file" ./zgrab2.jsonl >> "$BANNERS"; done
-    ls -lh "$PORTS" "$BANNERS" *.tar.gz
     rm *.tar.gz
+    ls -lh
