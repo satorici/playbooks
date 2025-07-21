@@ -23,6 +23,7 @@ zmap:
 zgrab2:
   - zgrab2 http --input-file=found.txt --method HEAD --endpoint '/?satori.ci/opt'
     --port ${{PORT}} --target-timeout 1 --connect-timeout 0.5 --senders 4000
+    --user-agent "w3m/0.52"
     | grep -v '"result":{}' | jq -c 'del(.data.http.result.response.request)' > zgrab2.jsonl
 
 clean:
