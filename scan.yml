@@ -4,7 +4,6 @@ settings:
   files: true
   redacted:
     - SATORI_TOKEN
-  storageSize: 100
   example: satori run satori://scan.yml -d RANGE=52.0.0.0/8 -d PORT=80 -d SATORI_TOKEN=$SATORI_TOKEN -d SHARDS=500 --output --visibility public
 
 install:
