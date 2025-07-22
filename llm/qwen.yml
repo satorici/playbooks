@@ -4,7 +4,7 @@ settings:
   image: ollama/ollama
   cpu: 16384
   memory: 122880
-  storageSize: 100
+  storage: 100
   timeout: 400
   author:
     - https://github.com/ollama
