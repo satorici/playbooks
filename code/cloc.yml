@@ -1,5 +1,5 @@
 settings:
-  name: "ClOC: Count Lines of Code"
+  name: "CLOC: Count Lines of Code"
   image: aldanial/cloc
   author:
     - https://github.com/AlDanial
