@@ -1,6 +1,7 @@
 settings:
   name: Python linters
   image: satori
+  example: satori run ./ --playbook satori://code/python/lint/all.yml --report --output
 
 import:
   - satori://code/python/lint/flake8.yml
