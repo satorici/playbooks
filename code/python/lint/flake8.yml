@@ -12,9 +12,6 @@ flake8:
   install:
     - pip install flake8 -q --disable-pip-version-check
 
-  help:
-    - flake8 --help
-
   test:
     assertReturnCode: 0
     assertStdout: False

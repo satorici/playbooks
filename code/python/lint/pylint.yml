@@ -12,9 +12,6 @@ pylint:
   install:
     - apt-get update >>/dev/null; apt-get install -qy pylint >>/dev/null
 
-  help:
-    - pylint --help
-
   test:
     assertReturnCode: 0
     run:
