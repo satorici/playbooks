@@ -1,0 +1,18 @@
+settings:
+  name: 'Pyright: Fast Static Type Checker'
+  description: Pyright is a full-featured, standards-based static type checker for Python. It is designed for high performance and can be used with large Python source bases.
+  author:
+    - https://github.com/microsoft
+  gallery:
+    - https://files.catbox.moe/6v72yy.png
+  example: satori run ./ --playbook satori://code/python/lint/pyright.yml --report --output
+
+pyright:
+  install:
+    - pip install pyright
+
+  test:
+    assertReturnCode: 0
+    assertStdout: false
+    run:
+      - pyright *.py

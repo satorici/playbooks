@@ -1,0 +1,18 @@
+settings:
+  name: 'Black: Opinionated Code Formatter'
+  description: Black is an uncompromising Python code formatter that enforces a consistent style. It reformats code automatically and minimizes diff noise by using strict formatting rules.
+  author:
+    - https://github.com/psf
+  gallery:
+    - https://files.catbox.moe/4msdu3.png
+  example: satori run ./ --playbook satori://code/python/lint/black.yml --report --output
+
+black:
+  install:
+    - pip install black
+
+  test:
+    assertReturnCode: 0
+    assertStdout: false
+    run:
+      - black *.py -v

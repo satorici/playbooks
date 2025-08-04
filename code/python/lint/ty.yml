@@ -1,0 +1,18 @@
+settings:
+  name: "Ty: Python type checker"
+  description: "An extremely fast Python type checker and language server, written in Rust."
+  author:
+    - https://github.com/astral-sh
+  gallery:
+    - https://files.catbox.moe/r4ict2.png
+  example: satori run ./ --playbook satori://code/python/lint/ty.yml --report --output
+
+ty:
+  install:
+    - pip install ty
+
+  test:
+    assertReturnCode: 0
+    assertStdout: false
+    run:
+      - ty init

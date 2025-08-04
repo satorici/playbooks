@@ -1,0 +1,18 @@
+settings:
+  name: 'Pycodestyle: PEP 8 Style Checker'
+  description: Pycodestyle checks Python code against the PEP 8 style guide. It's useful for maintaining consistent formatting and identifying common stylistic issues.
+  author:
+    - https://github.com/PyCQA
+  gallery:
+    - https://files.catbox.moe/ql1mha.png
+  example: satori run ./ --playbook satori://code/python/lint/pycodestyle.yml --report --output
+
+pycodestyle:
+  install:
+    - pip install pycodestyle
+
+  test:
+    assertReturnCode: 0
+    assertStdout: false
+    run:
+      - pycodestyle --first *.py

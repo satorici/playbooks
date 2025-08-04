@@ -1,0 +1,18 @@
+settings:
+  name: 'Pytype: Static Type Checker'
+  description: Pytype is a static type checker for Python that can catch type errors in your code before you run it.
+  author:
+    - https://github.com/google
+  gallery:
+    - https://files.catbox.moe/6motev.png
+  example: satori run ./ --playbook satori://code/python/lint/pytype.yml --report --output
+
+pytype:
+  install:
+    - pip install pytype
+
+  test:
+    assertReturnCode: 0
+    assertStdout: false
+    run:
+      - pytype *.py

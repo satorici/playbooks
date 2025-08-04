@@ -1,0 +1,18 @@
+settings:
+  name: 'Prospector: Meta-Linter for Python'
+  description: Prospector runs a collection of Python analysis tools like pylint, mypy, and pep8. It offers an aggregated view of code quality issues in a unified report.
+  author:
+    - https://github.com/hhatto
+  gallery:
+    - https://files.catbox.moe/op1xe8.png
+  example: satori run ./ --playbook satori://code/python/lint/prospector.yml --report --output
+
+prospector:
+  install:
+    - pip install prospector
+
+  test:
+    assertReturnCode: 0
+    assertStdout: false
+    run:
+      - prospector *.py

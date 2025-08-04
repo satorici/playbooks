@@ -1,0 +1,19 @@
+settings:
+  name: 'Mypy: Type Checking for Python'
+  description: ' Mypy is a static type checker for Python that helps enforce type annotations. It can detect type errors and inconsistencies before runtime, improving code safety and maintainability.'
+  image: python
+  author:
+    - https://github.com/python
+  gallery:
+    - https://files.catbox.moe/0guc5w.png
+  example: satori run ./ --playbook satori://code/python/lint/mypy.yml --report --output
+
+mypy:
+  install:
+    - python3 -m pip install -U mypy
+
+  test:
+    assertReturnCode: 0
+    assertStdout: false
+    run:
+      - dmypy run -- *.py

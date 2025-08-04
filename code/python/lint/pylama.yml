@@ -1,0 +1,18 @@
+settings:
+  name: 'Pylama: Code Audit Wrapper'
+  description: Pylama is a code audit tool that aggregates results from multiple linters and static analyzers. It's ideal for batch linting and unified output during CI/CD workflows.
+  author:
+    - https://github.com/klen
+  gallery:
+    - https://files.catbox.moe/r4ict2.png
+  example: satori run ./ --playbook satori://code/python/lint/pylama.yml --report --output
+
+pylama:
+  install:
+    - pip install pylama
+
+  test:
+    assertReturnCode: 0
+    assertStdout: false
+    run:
+      - pylama *.py

@@ -1,0 +1,18 @@
+settings:
+  name: 'Darglint: Docstring Argument Validation'
+  description: Darglint checks that the arguments in your docstrings match the function signature.
+  author:
+  - https://github.com/terrencepreilly
+  gallery:
+  - https://files.catbox.moe/r4ict2.png
+  example: satori run ./ --playbook satori://code/python/lint/darglint.yml --report --output
+
+darglint:
+  install:
+    - pip install darglint
+
+  test:
+    assertReturnCode: 0
+    assertStdout: false
+    run:
+      - darglint -v 2 *.py

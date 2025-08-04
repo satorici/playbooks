@@ -1,0 +1,18 @@
+settings:
+  name: 'Vulture: Dead Code Detection'
+  description: Vulture scans Python code to find unused variables, functions, and classes. It helps identify dead code that can be removed to improve code quality and maintainability.
+  author:
+    - https://github.com/jendrikseipp
+  gallery:
+    - https://files.catbox.moe/ehn1n9.png
+  example: satori run ./ --playbook satori://code/python/lint/vulture.yml --report --output
+
+vulture:
+  install:
+    - pip install vulture
+
+  test:
+    assertReturnCode: 0
+    assertStdout: false
+    run:
+      - vulture *.py

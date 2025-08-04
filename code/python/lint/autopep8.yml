@@ -1,0 +1,18 @@
+settings:
+  name: 'Autopep8: Automatic PEP 8 Formatter'
+  description: Autopep8 automatically formats Python code to conform to the PEP 8 style guide.
+  author:
+    - https://github.com/hhatto
+  gallery:
+    - https://files.catbox.moe/aytnzh.png
+  example: satori run ./ --playbook satori://code/python/lint/autopep8.yml --report --output
+
+autopep8:
+  install:
+    - pip install autopep8
+
+  test:
+    assertReturnCode: 0
+    assertStdout: False
+    run:
+      - autopep8 -i -a -v *.py

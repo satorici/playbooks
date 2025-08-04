@@ -1,0 +1,18 @@
+settings:
+  name: 'Pyflakes: Fast Code Linter'
+  description: Pyflakes analyzes Python source files to detect errors such as unused imports and undefined variables. It focuses on correctness rather than style.
+  author:
+    - https://github.com/PyCQA
+  gallery:
+    - https://files.catbox.moe/gccczy.png
+  example: satori run ./ --playbook satori://code/python/lint/pyflakes.yml --report --output
+
+pyflakes:
+  install:
+    - pip install pyflakes
+
+  test:
+    assertReturnCode: 0
+    assertStdout: false
+    run:
+      - pyflakes *.py

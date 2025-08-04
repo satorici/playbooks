@@ -1,0 +1,18 @@
+settings:
+  name: 'YAPF: Python Formatter by Google'
+  description: YAPF reformats Python code to the best formatting that conforms to style guides. It focuses on readability and style consistency using a configurable engine.
+  author:
+    - https://github.com/google
+  gallery:
+    - https://files.catbox.moe/nrbg4g.png
+  example: satori run ./ --playbook satori://code/python/lint/yapf.yml --report --output
+
+yapf:
+  install:
+    - pip install yapf
+
+  test:
+    assertReturnCode: 0
+    assertStdout: false
+    run:
+      - yapf *.py

@@ -1,0 +1,18 @@
+settings:
+  name: 'Pydocstyle: Docstring Convention Checker'
+  description: Pydocstyle checks compliance with Python docstring conventions as specified in PEP 257.
+  author:
+    - https://github.com/PyCQA
+  gallery:
+    - https://files.catbox.moe/6motev.png
+  example: satori run ./ --playbook satori://code/python/lint/pydocstyle.yml --report --output
+
+pydocstyle:
+  install:
+    - pip install pydocstyle
+
+  test:
+    assertReturnCode: 0
+    assertStdout: false
+    run:
+      - pydocstyle *.py
