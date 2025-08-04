@@ -1,0 +1,11 @@
+settings:
+  name: "ClOC: Count Lines of Code"
+  image: aldanial/cloc
+  author:
+    - https://github.com/AlDanial
+  example: satori local ./ --playbook satori://code/cloc.yml --report --output
+
+cloc:
+  assertStdoutContains: SUM
+  run:
+    - export PATH="/usr/src:$PATH"; cloc .
