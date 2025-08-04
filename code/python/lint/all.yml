@@ -1,0 +1,8 @@
+settings:
+  name: Python linters
+  image: satori
+
+import:
+  - satori://code/python/lint/flake8.yml
+  - satori://code/python/lint/pylint.yml
+  - satori://code/python/lint/ruff.yml
