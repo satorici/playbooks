@@ -9,7 +9,7 @@ settings:
 
 yapf:
   install:
-    - pip install yapf
+    - pip install yapf -q --disable-pip-version-check
 
   test:
     assertReturnCode: 0

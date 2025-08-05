@@ -9,7 +9,7 @@ settings:
 
 pycodestyle:
   install:
-    - pip install pycodestyle
+    - pip install pycodestyle -q --disable-pip-version-check
 
   test:
     assertReturnCode: 0

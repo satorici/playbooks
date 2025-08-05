@@ -9,7 +9,7 @@ settings:
 
 pytype:
   install:
-    - pip install pytype
+    - pip install pytype -q --disable-pip-version-check
 
   test:
     assertReturnCode: 0

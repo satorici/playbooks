@@ -9,7 +9,7 @@ settings:
 
 pylama:
   install:
-    - pip install pylama
+    - pip install pylama -q --disable-pip-version-check
 
   test:
     assertReturnCode: 0

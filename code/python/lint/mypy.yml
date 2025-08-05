@@ -10,7 +10,7 @@ settings:
 
 mypy:
   install:
-    - python3 -m pip install -U mypy
+    - pip install mypy -q --disable-pip-version-check
 
   test:
     assertReturnCode: 0

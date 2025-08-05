@@ -9,7 +9,7 @@ settings:
 
 pydocstyle:
   install:
-    - pip install pydocstyle
+    - pip install pydocstyle -q --disable-pip-version-check
 
   test:
     assertReturnCode: 0

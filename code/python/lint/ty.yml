@@ -9,7 +9,7 @@ settings:
 
 ty:
   install:
-    - pip install ty
+    - pip install ty -q --disable-pip-version-check
 
   test:
     assertReturnCode: 0

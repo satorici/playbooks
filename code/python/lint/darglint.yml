@@ -9,7 +9,7 @@ settings:
 
 darglint:
   install:
-    - pip install darglint
+    - pip install darglint -q --disable-pip-version-check
 
   test:
     assertReturnCode: 0

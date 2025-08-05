@@ -9,7 +9,7 @@ settings:
 
 pyrefly:
   install:
-    - pip install pyrefly
+    - pip install pyrefly -q --disable-pip-version-check
 
   test:
     assertReturnCode: 0

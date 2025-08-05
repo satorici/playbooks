@@ -9,7 +9,7 @@ settings:
 
 autopep8:
   install:
-    - pip install autopep8
+    - pip install autopep8 -q --disable-pip-version-check
 
   test:
     assertReturnCode: 0

@@ -9,7 +9,7 @@ settings:
 
 black:
   install:
-    - pip install black
+    - pip install black -q --disable-pip-version-check
 
   test:
     assertReturnCode: 0
