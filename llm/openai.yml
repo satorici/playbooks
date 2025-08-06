@@ -1,0 +1,29 @@
+settings:
+  name: "OpenAI gpt-oss:20b"
+  image: ollama/ollama
+  cpu: 16384
+  memory: 122880
+  timeout: 400
+  author:
+    - https://github.com/ollama
+  example: satori run openai.yml --output -d INPUT="Hello World"
+
+MODEL:
+  - - "gpt-oss:20b"
+
+openai:
+  install:
+    - apt-get update >> /dev/null; apt-get install -qy screen >> /dev/null
+    #- apk add --no-cache screen
+
+  test:
+    assertReturnCode: 0
+    serve:
+      - ps aux | grep -v grep | grep -q ollama || screen -dm ollama serve
+      - sleep 1
+
+    pull:
+      - ollama pull ${{MODEL}}
+
+    query:
+      - ollama run ${{MODEL}} "${{INPUT}}"
