@@ -6,7 +6,7 @@ settings:
     - https://github.com/PyCQA
   gallery:
     - https://files.catbox.moe/wxgkt6.png
-  example: satori run ./ --playbook satori://code/python/flake8.yml --report --output
+  example: satori local ./ --playbook satori://code/python/lint/flake8.yml --report --output
 
 flake8:
   install:
