@@ -6,7 +6,7 @@ settings:
   timeout: 400
   author:
     - https://github.com/ollama
-  example: satori run openai.yml --output -d INPUT="Hello World"
+  example: satori run openai.yml -d INPUT="Hello World" --output
 
 MODEL:
   - - "gpt-oss:20b"
@@ -14,12 +14,11 @@ MODEL:
 openai:
   install:
     - apt-get update >> /dev/null; apt-get install -qy screen >> /dev/null
-    #- apk add --no-cache screen
 
   test:
     assertReturnCode: 0
     serve:
-      - ps aux | grep -v grep | grep -q ollama || screen -dm ollama serve
+      - screen -dm ollama serve
       - sleep 1
 
     pull:
