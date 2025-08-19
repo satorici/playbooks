@@ -1,6 +1,7 @@
 settings:
   name: "Ty: Python type checker"
   description: "An extremely fast Python type checker and language server, written in Rust."
+  image: python
   author:
     - https://github.com/astral-sh
   gallery:

@@ -1,6 +1,7 @@
 settings:
   name: 'Pycodestyle: PEP 8 Style Checker'
   description: Pycodestyle checks Python code against the PEP 8 style guide. It's useful for maintaining consistent formatting and identifying common stylistic issues.
+  image: python
   author:
     - https://github.com/PyCQA
   gallery:

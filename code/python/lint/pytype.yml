@@ -1,6 +1,7 @@
 settings:
   name: 'Pytype: Static Type Checker'
   description: Pytype is a static type checker for Python that can catch type errors in your code before you run it.
+  image: python
   author:
     - https://github.com/google
   gallery:

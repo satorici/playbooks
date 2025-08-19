@@ -1,6 +1,7 @@
 settings:
   name: "Pyrefly: Python Static Analyzer"
   description: "Pyrefly is a static analysis tool for Python that helps identify potential issues in code."
+  image: python
   author:
     - https://github.com/facebook
   gallery:

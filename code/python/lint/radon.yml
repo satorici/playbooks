@@ -1,6 +1,7 @@
 settings:
   name: 'Radon: Code Metrics for Python'
   description: Radon provides various code metrics for Python, including cyclomatic complexity, raw metrics, and maintainability index.
+  image: python
   author:
     - https://github.com/rubik
   gallery:

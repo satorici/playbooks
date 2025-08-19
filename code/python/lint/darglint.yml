@@ -1,6 +1,7 @@
 settings:
   name: 'Darglint: Docstring Argument Validation'
   description: Darglint checks that the arguments in your docstrings match the function signature.
+  image: python
   author:
   - https://github.com/terrencepreilly
   gallery:

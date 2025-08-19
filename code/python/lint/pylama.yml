@@ -1,6 +1,7 @@
 settings:
   name: 'Pylama: Code Audit Wrapper'
   description: Pylama is a code audit tool that aggregates results from multiple linters and static analyzers. It's ideal for batch linting and unified output during CI/CD workflows.
+  image: python
   author:
     - https://github.com/klen
   gallery:

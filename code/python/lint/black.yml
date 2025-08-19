@@ -1,6 +1,7 @@
 settings:
   name: 'Black: Opinionated Code Formatter'
   description: Black is an uncompromising Python code formatter that enforces a consistent style. It reformats code automatically and minimizes diff noise by using strict formatting rules.
+  image: python
   author:
     - https://github.com/psf
   gallery:

@@ -1,6 +1,7 @@
 settings:
   name: 'Prospector: Meta-Linter for Python'
   description: Prospector runs a collection of Python analysis tools like pylint, mypy, and pep8. It offers an aggregated view of code quality issues in a unified report.
+  image: python
   author:
     - https://github.com/hhatto
   gallery:
