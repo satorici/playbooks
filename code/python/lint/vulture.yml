@@ -16,4 +16,4 @@ vulture:
     assertReturnCode: 0
     assertStdout: false
     run:
-      - vulture *.py
+      - find . -type f -name "*.py" -exec vulture {} +

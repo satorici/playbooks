@@ -16,4 +16,4 @@ ty:
     assertReturnCode: 0
     assertStdout: false
     run:
-      - ty init
+      - ty check ./

@@ -16,4 +16,4 @@ yapf:
     assertReturnCode: 0
     assertStdout: false
     run:
-      - yapf *.py
+      - find . -type f -name "*.py" -exec yapf {} +

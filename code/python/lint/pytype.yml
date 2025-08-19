@@ -16,4 +16,4 @@ pytype:
     assertReturnCode: 0
     assertStdout: false
     run:
-      - pytype *.py
+      - find . -type f -name "*.py" -exec pytype {} +

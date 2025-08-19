@@ -16,4 +16,4 @@ pyrefly:
     assertReturnCode: 0
     assertStdout: false
     run:
-      - pyrefly check *py
+      - find . -type f -name "*.py" -exec pyrefly check {} +

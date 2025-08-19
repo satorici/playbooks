@@ -16,4 +16,4 @@ isort:
     assertReturnCode: 0
     assertStdout: false
     run:
-      - isort *.py
+      - find . -type f -name "*.py" -exec isort {} \;

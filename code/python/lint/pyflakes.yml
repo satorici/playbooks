@@ -16,4 +16,4 @@ pyflakes:
     assertReturnCode: 0
     assertStdout: false
     run:
-      - pyflakes *.py
+      - find . -type f -name "*.py" -exec pyflakes {} +

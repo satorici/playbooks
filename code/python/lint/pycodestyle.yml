@@ -16,4 +16,4 @@ pycodestyle:
     assertReturnCode: 0
     assertStdout: false
     run:
-      - pycodestyle --first *.py
+      - find . -type f -name "*.py" -exec pycodestyle --first {} +

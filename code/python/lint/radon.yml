@@ -16,4 +16,4 @@ radon:
     assertReturnCode: 0
     assertStdout: false
     run:
-      - radon cc *.py -a -nc
+      - find . -type f -name "*.py" -exec radon cc {} + -a -nc \;

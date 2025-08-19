@@ -16,4 +16,4 @@ prospector:
     assertReturnCode: 0
     assertStdout: false
     run:
-      - prospector *.py
+      - find . -type f -name "*.py" -exec prospector {} +
