@@ -16,4 +16,4 @@ darglint:
     assertReturnCode: 0
     assertStdout: false
     run:
-      - darglint -v 2 *.py
+      - find . -type f -name "*.py" -exec darglint -v 2 {} +
