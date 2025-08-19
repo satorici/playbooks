@@ -16,4 +16,4 @@ pylama:
     assertReturnCode: 0
     assertStdout: false
     run:
-      - find . -type f -name "*.py" -exec pylama {} +
+      - pylama ./
