@@ -16,4 +16,4 @@ black:
     assertReturnCode: 0
     assertStdout: false
     run:
-      - black *.py -v
+      - find . -type f -name "*.py" -exec black {} -v \;
