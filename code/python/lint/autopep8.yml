@@ -16,4 +16,4 @@ autopep8:
     assertReturnCode: 0
     assertStdout: False
     run:
-      - autopep8 -i -a -v *.py
+      - find . -type f -name "*.py" -exec autopep8 -i -a -v {} +
