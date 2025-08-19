@@ -1,6 +1,7 @@
 settings:
   name: 'Autopep8: Automatic PEP 8 Formatter'
   description: Autopep8 automatically formats Python code to conform to the PEP 8 style guide.
+  image: python
   author:
     - https://github.com/hhatto
   gallery:
