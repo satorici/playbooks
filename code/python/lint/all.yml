@@ -10,7 +10,6 @@ import:
   - satori://code/python/lint/mypy.yml
   - satori://code/python/lint/black.yml
   - satori://code/python/lint/pyright.yml
-  - satori://code/python/lint/yapf.yml
   - satori://code/python/lint/pycodestyle.yml
   - satori://code/python/lint/isort.yml
   - satori://code/python/lint/autopep8.yml
