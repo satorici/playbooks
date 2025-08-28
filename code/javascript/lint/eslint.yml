@@ -6,7 +6,7 @@ settings:
     - https://github.com/eslint/eslint
   gallery:
     - https://files.catbox.moe/p4ygpv.png
-  example: satori run ./ --playbook satori://code/javascript/eslint.yml --report --output
+  example: satori run ./ --playbook satori://code/javascript/lint/eslint.yml --report --output
 
 eslint:
   install:
