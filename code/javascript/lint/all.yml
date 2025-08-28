@@ -1,0 +1,16 @@
+settings:
+  name: JavaScript linters
+  image: satori
+  example: satori run ./ --playbook satori://code/javascript/lint/all.yml --report --output
+
+import:
+  - satori://code/javascript/lint/eslint.yml
+  - satori://code/javascript/lint/prettier.yml
+  - satori://code/javascript/lint/tsc.yml
+  - satori://code/javascript/lint/jshint.yml
+  - satori://code/javascript/lint/standard.yml
+  - satori://code/javascript/lint/biome.yml
+  - satori://code/javascript/lint/jsdoc.yml
+  - satori://code/javascript/lint/stylelint.yml
+  - satori://code/javascript/lint/eslint-security.yml
+  - satori://code/javascript/lint/jscpd.yml

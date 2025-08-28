@@ -1,0 +1,19 @@
+settings:
+  name: "StandardJS: JavaScript style guide, linter, and formatter"
+  description: "StandardJS is a JavaScript style guide, linter, and formatter. It enforces a consistent style with no configuration required, helping teams avoid bikeshedding over code style and focus on what matters."
+  image: node
+  author:
+    - https://github.com/standard
+  gallery:
+    - https://files.catbox.moe/x9p3l4.png
+  example: satori run ./ --playbook satori://code/javascript/lint/standard.yml --report --output
+
+standard:
+  install:
+    - npm install -g standard --silent
+
+  test:
+    assertReturnCode: 0
+    assertStdout: false
+    run:
+      - find . -type f \( -name "*.js" -o -name "*.jsx" \) -exec standard {} +

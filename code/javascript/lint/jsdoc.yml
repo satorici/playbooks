@@ -1,0 +1,19 @@
+settings:
+  name: "JSDoc: API documentation generator for JavaScript"
+  description: "JSDoc is a markup language used to annotate JavaScript source code files and an API documentation generator for JavaScript. It allows developers to document their code using comments formatted in a particular way."
+  image: node
+  author:
+    - https://github.com/jsdoc
+  gallery:
+    - https://files.catbox.moe/t7y2k9.png
+  example: satori run ./ --playbook satori://code/javascript/lint/jsdoc.yml --report --output
+
+jsdoc:
+  install:
+    - npm install -g jsdoc --silent
+
+  test:
+    assertReturnCode: 0
+    assertStdout: false
+    run:
+      - find . -type f \( -name "*.js" -o -name "*.jsx" \) -exec jsdoc -d /tmp/jsdoc-out {} + || true

@@ -1,0 +1,19 @@
+settings:
+  name: "JSHint: A Static Code Analysis Tool for JavaScript"
+  description: "JSHint is a community-driven tool that detects errors and potential problems in JavaScript code. It is more flexible than JSLint and allows developers to configure many options to fit their coding style and needs."
+  image: node
+  author:
+    - https://github.com/jshint
+  gallery:
+    - https://files.catbox.moe/5h6k2m.png
+  example: satori run ./ --playbook satori://code/javascript/lint/jshint.yml --report --output
+
+jshint:
+  install:
+    - npm install -g jshint --silent
+
+  test:
+    assertReturnCode: 0
+    assertStdout: false
+    run:
+      - find . -type f \( -name "*.js" -o -name "*.jsx" \) -exec jshint {} +

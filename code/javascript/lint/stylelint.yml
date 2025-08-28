@@ -1,0 +1,19 @@
+settings:
+  name: "Stylelint: A mighty, modern linter for CSS and SCSS"
+  description: "Stylelint is a mighty, modern linter that helps you avoid errors and enforce conventions in your styles. It understands the latest CSS syntax including custom properties and level 4 selectors."
+  image: node
+  author:
+    - https://github.com/stylelint
+  gallery:
+    - https://files.catbox.moe/m4n8q3.png
+  example: satori run ./ --playbook satori://code/javascript/lint/stylelint.yml --report --output
+
+stylelint:
+  install:
+    - npm install -g stylelint stylelint-config-standard --silent
+
+  test:
+    assertReturnCode: 0
+    assertStdout: false
+    run:
+      - find . -type f \( -name "*.css" -o -name "*.scss" -o -name "*.sass" -o -name "*.less" \) -exec stylelint --config-basedir=. {} +

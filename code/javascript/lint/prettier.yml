@@ -1,0 +1,19 @@
+settings:
+  name: "Prettier: Opinionated Code Formatter"
+  description: "Prettier is an opinionated code formatter that supports many languages and integrates with most editors. It removes all original styling and ensures that all outputted code conforms to a consistent style."
+  image: node
+  author:
+    - https://github.com/prettier
+  gallery:
+    - https://files.catbox.moe/8k3m9p.png
+  example: satori run ./ --playbook satori://code/javascript/lint/prettier.yml --report --output
+
+prettier:
+  install:
+    - npm install -g prettier --silent
+
+  test:
+    assertReturnCode: 0
+    assertStdout: false
+    run:
+      - find . -type f \( -name "*.js" -o -name "*.jsx" -o -name "*.ts" -o -name "*.tsx" -o -name "*.json" -o -name "*.css" -o -name "*.scss" -o -name "*.html" -o -name "*.md" \) -exec prettier --check {} +
