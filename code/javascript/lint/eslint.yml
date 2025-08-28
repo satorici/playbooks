@@ -13,9 +13,6 @@ eslint:
     - npm install eslint-plugin-security --save-dev
     - npm init @eslint/config@latest
 
-  help:
-    - npx eslint --help
-
   test:
     assertStdoutNotContains: "error"
     run:
