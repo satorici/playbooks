@@ -10,7 +10,7 @@ settings:
 
 pylint:
   install:
-    - apt-get update >>/dev/null && apt-get install -qy pylint >>/dev/null
+    - export DEBIAN_FRONTEND=noninteractive; apt-get update >>/dev/null && apt-get install -qy pylint >>/dev/null
 
   test:
     assertReturnCode: 0
