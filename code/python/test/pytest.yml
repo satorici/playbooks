@@ -3,11 +3,12 @@ settings:
   image: python
 
 install:
-  - find . -name "*.txt" -path "*req*" -exec pip install -r {} -q --disable-pip-version-check --root-user-action=ignore \; 2>/dev/null
-  - if [ -f "setup.py" ] || [ -f "pyproject.toml" ]; then pip install -e . -q --disable-pip-version-check --root-user-action=ignore 2>/dev/null; fi
-  - pip show pytest &>/dev/null || pip install pytest -q --disable-pip-version-check --root-user-action=ignore
+  - python -m venv venv
+  - find . -name "*.txt" -path "*req*" -exec venv/bin/pip install -r {} -q --disable-pip-version-check \; 2>/dev/null
+  - if [ -f "setup.py" ] || [ -f "pyproject.toml" ]; then venv/bin/pip install -e . -q --disable-pip-version-check 2>/dev/null; fi
+  - venv/bin/pip show pytest &>/dev/null || venv/bin/pip install pytest -q --disable-pip-version-check
 
 pytest:
   assertReturnCode: 0
   run:
-    - ls -l; pytest -vv --disable-warnings
+    - ls -l; venv/bin/pytest -vv --disable-warnings
