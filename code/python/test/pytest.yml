@@ -37,39 +37,34 @@ install:
     done
   - venv/bin/pip install pytest-xdist pytest-cov pytest-mock pytest-html pytest-json-report
   - venv/bin/pip install tomli packaging setuptools wheel
-  - venv/bin/pip install binaryornot fields filelock selenium behave
+  - venv/bin/pip install binaryornot filelock fields pyjson5 selenium pydantic_ai
+  - |
+    if [ "${TORCH_CPU:-0}" = "1" ]; then
+      venv/bin/pip install --index-url https://download.pytorch.org/whl/cpu torch
+    fi
   - venv/bin/pip list
+  - ls -la
+  - "venv/bin/python -c 'import pytest; print(f\"pytest version: {pytest.__version__}\")'"
 
 pytest:
   assertReturnCode: 1
   run:
-    - ls -la
-    - "venv/bin/python -c 'import pytest; print(f\"pytest version: {pytest.__version__}\")'"
     - |
-      TEST_RESULT=0
+      CMD=""
       if [ -d "tests" ]; then
         echo "Running tests from tests/ directory"
-        venv/bin/pytest tests/ -v --tb=short --disable-warnings -x --maxfail=1 || TEST_RESULT=$?
+        CMD="venv/bin/pytest tests/ -v --tb=short --disable-warnings"
       elif [ -d "test" ]; then
         echo "Running tests from test/ directory"
-        venv/bin/pytest test/ -v --tb=short --disable-warnings -x --maxfail=1 || TEST_RESULT=$?
+        CMD="venv/bin/pytest test/ -v --tb=short --disable-warnings"
       else
         echo "Auto-discovering test files"
         if find . -name "test_*.py" -o -name "*_test.py" | head -5 | grep -q .; then
-          venv/bin/pytest -v --tb=short --disable-warnings -x --maxfail=1 || TEST_RESULT=$?
+          CMD="venv/bin/pytest -v --tb=short --disable-warnings"
         else
           echo "No test files found with standard naming convention"
-          venv/bin/pytest . -v --tb=short --disable-warnings -x --maxfail=1 --collect-only > /dev/null 2>&1 && \
-          venv/bin/pytest . -v --tb=short --disable-warnings -x --maxfail=1 || TEST_RESULT=$?
+          venv/bin/pytest . -v --tb=short --disable-warnings --collect-only
+          exit 0
         fi
       fi
-      if [ "${TEST_RESULT:-0}" -ne 0 ]; then
-        echo "Initial test run failed, trying with minimal options..."
-        if [ -d "tests" ]; then
-          venv/bin/pytest tests/ --tb=no -q --disable-warnings -x || echo "Fallback test run also failed"
-        elif [ -d "test" ]; then
-          venv/bin/pytest test/ --tb=no -q --disable-warnings -x || echo "Fallback test run also failed"
-        else
-          venv/bin/pytest --tb=no -q --disable-warnings -x --collect-only || echo "Cannot collect any tests"
-        fi
-      fi
+      eval "$CMD"
