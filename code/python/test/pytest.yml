@@ -4,9 +4,8 @@ settings:
 
 install:
   - pip install pytest pytest-bdd pytest-cov pytest-xdist pytest-html execnet coverage selenium assertpy docutils tomli -q --disable-pip-version-check --root-user-action=ignore
-  - [ -f requirements.txt ] && pip install -r requirements.txt -q --disable-pip-version-check --root-user-action=ignore
-  - [ -f setup.py ] && pip install -e . -q --disable-pip-version-check --root-user-action=ignore
-  - [ -f pyproject.toml ] && pip install -e . -q --disable-pip-version-check --root-user-action=ignore
+  - pip install -r requirements.txt -q --disable-pip-version-check --root-user-action=ignore
+  - pip install -e . -q --disable-pip-version-check --root-user-action=ignore
 
 pytest:
   assertReturnCode: 0
