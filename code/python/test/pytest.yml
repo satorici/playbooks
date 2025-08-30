@@ -3,9 +3,9 @@ settings:
   image: python
 
 install:
-  - pip install pytest pytest-bdd pytest-cov pytest-xdist pytest-html execnet coverage selenium assertpy docutils tomli mock -q --disable-pip-version-check --root-user-action=ignore
-  - for req in $(find . -name "*.txt" -path "*/require*" 2>/dev/null); do pip install -r "$req" -q --disable-pip-version-check --root-user-action=ignore 2>/dev/null; done
-  - pip install -e . -q --disable-pip-version-check --root-user-action=ignore
+  - find . -name "*.txt" -path "*req*" -exec pip install -r {} -q --disable-pip-version-check --root-user-action=ignore \; 2>/dev/null
+  - if [ -f "setup.py" ] || [ -f "pyproject.toml" ]; then pip install -e . -q --disable-pip-version-check --root-user-action=ignore 2>/dev/null; fi
+  - pip show pytest &>/dev/null || pip install pytest -q --disable-pip-version-check --root-user-action=ignore
 
 pytest:
   assertReturnCode: 0
