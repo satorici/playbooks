@@ -3,9 +3,9 @@ settings:
   image: python
 
 install:
-  - python -m venv venv
-  - venv/bin/pip install --upgrade pip setuptools wheel
-  - venv/bin/pip install pytest
+  - python -m venv venv >>/dev/null
+  - venv/bin/pip install --upgrade pip setuptools wheel -q --disable-pip-version-check --root-user-action=ignore
+  - venv/bin/pip install pytest -q --disable-pip-version-check --root-user-action=ignore
   - |
     if [ -f "pyproject.toml" ]; then
       echo "Found pyproject.toml, attempting installation..."
@@ -35,16 +35,16 @@ install:
         venv/bin/pip install -r "$req_file" || echo "Failed to install $req_file"
       fi
     done
-  - venv/bin/pip install pytest-xdist pytest-cov pytest-mock pytest-html pytest-json-report
-  - venv/bin/pip install tomli packaging setuptools wheel
-  - venv/bin/pip install binaryornot filelock fields pyjson5 selenium pydantic_ai
+  - venv/bin/pip install pytest-xdist pytest-cov pytest-mock pytest-html pytest-json-report -q --disable-pip-version-check --root-user-action=ignore
+  - venv/bin/pip install tomli packaging setuptools wheel -q --disable-pip-version-check --root-user-action=ignore
+  - venv/bin/pip install binaryornot filelock fields pyjson5 selenium pydantic_ai -q --disable-pip-version-check --root-user-action=ignore
   - |
     if [ "${TORCH_CPU:-0}" = "1" ]; then
       venv/bin/pip install --index-url https://download.pytorch.org/whl/cpu torch
     fi
   - venv/bin/pip list
-  - ls -la
   - "venv/bin/python -c 'import pytest; print(f\"pytest version: {pytest.__version__}\")'"
+  - ls -la
 
 pytest:
   assertReturnCode: 1
@@ -67,4 +67,5 @@ pytest:
           exit 0
         fi
       fi
+      echo "$CMD"
       eval "$CMD"
