@@ -1,0 +1,9 @@
+settings:
+  name: "pytest - unit test for Python"
+  image: python
+
+install:
+  - pip install pytest -q --disable-pip-version-check --root-user-action=ignore
+
+pytest:
+  - pytest -vv --disable-warnings
