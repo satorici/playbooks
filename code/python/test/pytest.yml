@@ -5,16 +5,27 @@ settings:
 install:
   - python -m venv venv
   - venv/bin/pip install --upgrade pip setuptools wheel
-  # Install all requirements files
-  - find . -name "*requirements*.txt" -o -name "requirements*.txt" -o -path "*/requirements/*.txt" | xargs -I {} venv/bin/pip install -r {} || true
-  # Install package in development mode
-  - if [ -f "setup.py" ] || [ -f "pyproject.toml" ]; then venv/bin/pip install -e .[dev,test,testing] || venv/bin/pip install -e .; fi
-  # Ensure pytest is available
-  - venv/bin/pip install pytest pytest-xdist
-  # Show what was actually installed for debugging
+  # Install common test dependencies first
+  - venv/bin/pip install pytest pytest-xdist pytest-cov pytest-mock tomli
+  # Try to install requirements files
+  - find . -name "*requirements*.txt" -o -name "requirements*.txt" -o -path "*/requirements/*.txt" | head -10 | xargs -I {} sh -c 'venv/bin/pip install -r "{}" || echo "Failed to install {}"'
+  # Try to install the project itself
+  - if [ -f "pyproject.toml" ] || [ -f "setup.py" ]; then venv/bin/pip install -e . 2>/dev/null || venv/bin/pip install -e .[dev,test,testing] 2>/dev/null || echo "Package installation failed"; fi
   - venv/bin/pip list
-  
+
 pytest:
-  assertReturnCode: 0
+  assertReturnCode: 0  # You might want to change this to 1 to allow test failures
   run:
-    - ls -l; venv/bin/pytest -vv --disable-warnings
+    - ls -la
+    # Try different common test locations and configurations
+    - |
+      if [ -d "tests" ]; then
+        venv/bin/pytest tests/ -v --tb=short --disable-warnings -x
+      elif [ -d "test" ]; then
+        venv/bin/pytest test/ -v --tb=short --disable-warnings -x  
+      elif find . -name "test_*.py" -o -name "*_test.py" | grep -q .; then
+        venv/bin/pytest -v --tb=short --disable-warnings -x
+      else
+        echo "No tests found"
+        exit 1
+      fi
