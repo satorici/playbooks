@@ -4,10 +4,16 @@ settings:
 
 install:
   - python -m venv venv
-  - find . -name "*.txt" -path "*req*" -exec venv/bin/pip install -r {} -q --disable-pip-version-check \; 2>/dev/null
-  - if [ -f "setup.py" ] || [ -f "pyproject.toml" ]; then venv/bin/pip install -e . -q --disable-pip-version-check 2>/dev/null; fi
-  - venv/bin/pip show pytest &>/dev/null || venv/bin/pip install pytest -q --disable-pip-version-check
-
+  - venv/bin/pip install --upgrade pip setuptools wheel
+  # Install all requirements files
+  - find . -name "*requirements*.txt" -o -name "requirements*.txt" -o -path "*/requirements/*.txt" | xargs -I {} venv/bin/pip install -r {} || true
+  # Install package in development mode
+  - if [ -f "setup.py" ] || [ -f "pyproject.toml" ]; then venv/bin/pip install -e .[dev,test,testing] || venv/bin/pip install -e .; fi
+  # Ensure pytest is available
+  - venv/bin/pip install pytest pytest-xdist
+  # Show what was actually installed for debugging
+  - venv/bin/pip list
+  
 pytest:
   assertReturnCode: 0
   run:
