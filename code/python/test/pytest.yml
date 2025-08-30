@@ -3,7 +3,9 @@ settings:
   image: python
 
 install:
-  - pip install pytest -q --disable-pip-version-check --root-user-action=ignore
+  - pip install pytest pytest-bdd pytest-cov pytest-xdist pytest-html execnet coverage selenium assertpy docutils tomli -q --disable-pip-version-check --root-user-action=ignore
 
 pytest:
-  - pytest -vv --disable-warnings
+  assertReturnCode: 0
+  run:
+    - ls -l; pytest -vv --disable-warnings
