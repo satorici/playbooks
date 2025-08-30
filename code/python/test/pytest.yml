@@ -3,7 +3,7 @@ settings:
   image: python
 
 install:
-  - python -m venv venv >>/dev/null
+  - python -m venv venv >>/dev/null 
   - venv/bin/pip install --upgrade pip setuptools wheel -q --disable-pip-version-check --root-user-action=ignore
   - venv/bin/pip install pytest -q --disable-pip-version-check --root-user-action=ignore
   - |
