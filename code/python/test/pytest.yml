@@ -5,15 +5,7 @@ settings:
 install:
   - python -m venv venv
   - venv/bin/pip install --upgrade pip setuptools wheel
-  
-  # Install system dependencies that might be needed
-  #- apt-get update -qq && apt-get install -y -qq build-essential git
-  
-  # Install base testing framework first
   - venv/bin/pip install pytest
-  
-  # Try to install project dependencies in order of preference
-  # 1. Try pyproject.toml with all extras
   - |
     if [ -f "pyproject.toml" ]; then
       echo "Found pyproject.toml, attempting installation..."
@@ -22,8 +14,6 @@ install:
       venv/bin/pip install -e . 2>/dev/null || \
       echo "Failed to install via pyproject.toml"
     fi
-  
-  # 2. Try setup.py with extras
   - |
     if [ -f "setup.py" ] && [ ! -f "pyproject.toml" ]; then
       echo "Found setup.py, attempting installation..."
@@ -31,8 +21,6 @@ install:
       venv/bin/pip install -e . 2>/dev/null || \
       echo "Failed to install via setup.py"
     fi
-  
-  # 3. Install from requirements files (multiple attempts for different patterns)
   - |
     for req_file in requirements.txt requirements/test.txt requirements-test.txt test-requirements.txt requirements/testing.txt requirements/dev.txt dev-requirements.txt; do
       if [ -f "$req_file" ]; then
@@ -40,59 +28,41 @@ install:
         venv/bin/pip install -r "$req_file" || echo "Failed to install $req_file"
       fi
     done
-  
-  # 4. Find and install other requirements files
   - |
-    find . -maxdepth 3 -name "*requirements*.txt" -o -name "requirements*.txt" | head -10 | while read req_file; do
+    find . -maxdepth 3 \( -name "*requirements*.txt" -o -name "requirements*.txt" \) | head -10 | while read req_file; do
       if [ -f "$req_file" ]; then
         echo "Installing from $req_file"
         venv/bin/pip install -r "$req_file" || echo "Failed to install $req_file"
       fi
     done
-  
-  # 5. Install common test dependencies that might be missing
-  - venv/bin/pip install pytest-xdist pytest-cov pytest-mock pytest-html pytest-json-report || true
-  
-  # 6. Install dependencies that commonly cause import errors
-  - venv/bin/pip install tomli packaging setuptools wheel || true
-  
-  # 7. Try to install common missing dependencies seen in failures
-  - venv/bin/pip install binaryornot fields filelock selenium behave || true
-  
-  # List final installed packages for debugging
+  - venv/bin/pip install pytest-xdist pytest-cov pytest-mock pytest-html pytest-json-report
+  - venv/bin/pip install tomli packaging setuptools wheel
+  - venv/bin/pip install binaryornot fields filelock selenium behave
   - venv/bin/pip list
 
 pytest:
-  assertReturnCode: 1  # Allow test failures, focus on test execution not results
+  assertReturnCode: 1
   run:
     - ls -la
-    
-    # Check if pytest can import successfully
-    - venv/bin/python -c "import pytest; print(f'pytest version: {pytest.__version__}')"
-    
-    # Try to run tests with multiple fallback strategies
+    - "venv/bin/python -c 'import pytest; print(f\"pytest version: {pytest.__version__}\")'"
     - |
-      # Strategy 1: Run specific test directory with basic options
+      TEST_RESULT=0
       if [ -d "tests" ]; then
         echo "Running tests from tests/ directory"
         venv/bin/pytest tests/ -v --tb=short --disable-warnings -x --maxfail=1 || TEST_RESULT=$?
       elif [ -d "test" ]; then
-        echo "Running tests from test/ directory"  
+        echo "Running tests from test/ directory"
         venv/bin/pytest test/ -v --tb=short --disable-warnings -x --maxfail=1 || TEST_RESULT=$?
       else
-        # Strategy 2: Auto-discover test files
         echo "Auto-discovering test files"
         if find . -name "test_*.py" -o -name "*_test.py" | head -5 | grep -q .; then
           venv/bin/pytest -v --tb=short --disable-warnings -x --maxfail=1 || TEST_RESULT=$?
         else
           echo "No test files found with standard naming convention"
-          # Strategy 3: Try to run pytest on the current directory (last resort)
           venv/bin/pytest . -v --tb=short --disable-warnings -x --maxfail=1 --collect-only > /dev/null 2>&1 && \
           venv/bin/pytest . -v --tb=short --disable-warnings -x --maxfail=1 || TEST_RESULT=$?
         fi
       fi
-      
-      # If tests failed, try with even more basic options
       if [ "${TEST_RESULT:-0}" -ne 0 ]; then
         echo "Initial test run failed, trying with minimal options..."
         if [ -d "tests" ]; then
