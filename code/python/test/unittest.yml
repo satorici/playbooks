@@ -2,5 +2,7 @@ settings:
   name: unittest
   image: python
 
-run:
-  - python3 -m unittest discover -v
+unittest:
+  assertReturnCode: 0
+  run:
+    - python3 -m unittest discover -v
