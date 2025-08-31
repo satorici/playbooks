@@ -1,0 +1,6 @@
+settings:
+  name: unittest
+  image: python
+
+run:
+  - python -m unittest discover -v
