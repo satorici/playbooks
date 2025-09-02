@@ -27,17 +27,22 @@ trivy:
   run:
     - trivy fs .
     
+  critical:
+    setOutput: trivy.run
+    setSeverity: 2
+    assertStdoutNotRegex: "CRITICAL: [1-9].*"
+    
   high:
     setOutput: trivy.run
     setSeverity: 2
-    assertStdoutNotContains: "HIGH"
+    assertStdoutNotRegex: "HIGH: [1-9].*"
 
   medium:
     setOutput: trivy.run
     setSeverity: 3
-    assertStdoutNotContains: "MEDIUM"
+    assertStdoutNotRegex: "MEDIUM: [1-9].*"
     
   low:
     setOutput: trivy.run
     setSeverity: 4
-    assertStdoutNotContains: "LOW"
+    assertStdoutNotRegex: "LOW: [1-9].*"
