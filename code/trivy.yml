@@ -24,9 +24,20 @@ install:
   - command -v trivy >/dev/null 2>&1 || curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
 
 trivy:
-  #help:
-  #  - trivy --help
-  ls:
-    - ls -l
   run:
     - trivy fs .
+    
+  high:
+    setOutput: trivy.run
+    setSeverity: 2
+    assertStdoutNotContains: "HIGH"
+
+  medium:
+    setOutput: trivy.run
+    setSeverity: 3
+    assertStdoutNotContains: "MEDIUM"
+    
+  low:
+    setOutput: trivy.run
+    setSeverity: 4
+    assertStdoutNotContains: "LOW"
