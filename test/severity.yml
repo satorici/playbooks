@@ -5,21 +5,11 @@ settings:
 echo:
   output:
     - |
-      if [ "${{CRITICAL}}" = "True" ]; 
-        echo Critical
-      fi
-      if [ "${{HIGH}}" = "True" ]; 
-        echo High
-      fi
-      if [ "${{MEDIUM}}" = "True" ]; 
-        echo Medium
-      fi
-      if [ "${{LOW}}" = "True" ]; 
-        echo Low
-      fi
-      if [ "${{INFO}}" = "True" ]; 
-        echo Informational
-      fi
+      [ "${{CRITICAL}}" = "True" ] && echo "Critical"
+      [ "${{HIGH}}"     = "True" ] && echo "High"
+      [ "${{MEDIUM}}"   = "True" ] && echo "Medium"
+      [ "${{LOW}}"      = "True" ] && echo "Low"
+      [ "${{INFO}}"     = "True" ] && echo "Info"
     
   critical:
     setOutput: echo.output
