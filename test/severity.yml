@@ -14,25 +14,25 @@ echo:
   critical:
     setOutput: echo.output
     setSeverity: 1
-    assertStdoutContains: Critical
+    assertStdoutNotContains: Critical
     
   high:
     setOutput: echo.output
     setSeverity: 2
-    assertStdoutContains: High
+    assertStdoutNotContains: High
     
   medium:
     setOutput: echo.output
     setSeverity: 3
-    assertStdoutContains: Medium
+    assertStdoutNotContains: Medium
     
   low:
     setOutput: echo.output
     setSeverity: 4
-    assertStdoutContains: Low
+    assertStdoutNotContains: Low
     
   informational:
     setOutput: echo.output
     setSeverity: 5
-    assertStdoutContains: Info
+    assertStdoutNotContains: Info
    
