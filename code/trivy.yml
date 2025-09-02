@@ -1,0 +1,30 @@
+settings:
+  name: Trivy
+  description: |
+               Trivy has scanners that look for security issues, and targets where it can find those issues.
+
+               Targets (what Trivy can scan):
+               - Container Image
+               - Filesystem
+               - Git Repository (remote)
+               - Virtual Machine Image
+               - Kubernetes
+
+               Scanners (what Trivy can find there):
+               - OS packages and software dependencies in use (SBOM)
+               - Known vulnerabilities (CVEs)
+               - IaC issues and misconfigurations
+               - Sensitive information and secrets
+               - Software licenses
+
+install:
+  - export DEBIAN_FRONTEND=noninteractive; apt-get update >>/dev/null && apt-get install -qy curl >>/dev/null
+  - curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+
+trivy:
+  help:
+    - trivy --help
+  ls:
+    - ls -l
+  run:
+    - trivy fs .
