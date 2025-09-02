@@ -1,0 +1,55 @@
+settings:
+  name: "Test: Severity"
+  example: satori run satori://test/severity.yml -d BLOCKER=True -d CRITICAL=True -d HIGH=True -d MEDIUM=True -d LOW=True -d INFO=True --report --output
+
+echo:
+  output:
+    - |
+      if [ "${{BLOCKER}}" = "True" ]; 
+        echo Blocker
+      fi
+      if [ "${{CRITICAL}}" = "True" ]; 
+        echo Critical
+      fi
+      if [ "${{HIGH}}" = "True" ]; 
+        echo High
+      fi
+      if [ "${{MEDIUM}}" = "True" ]; 
+        echo Medium
+      fi
+      if [ "${{LOW}}" = "True" ]; 
+        echo Low
+      fi
+      if [ "${{INFO}}" = "True" ]; 
+        echo Informational
+      fi
+  blocker:
+    setOutput: echo.output
+    setSeverity: 1
+    assertStdoutContains: Blocker
+    
+  critical:
+    setOutput: echo.output
+    setSeverity: 2
+    assertStdoutContains: Critical
+    
+  high:
+    setOutput: echo.output
+    setSeverity: 3
+    assertStdoutContains: High
+    
+  medium:
+    setOutput: echo.output
+    setSeverity: 4
+    assertStdoutContains: Medium
+    
+  low:
+    setOutput: echo.output
+    setSeverity: 5
+    assertStdoutContains: Low
+    
+  informational:
+    setOutput: echo.output
+    setSeverity: 0
+    assertStdoutContains: Info
+   
