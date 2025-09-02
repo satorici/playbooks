@@ -18,7 +18,7 @@ settings:
                - Software licenses
 
 install:
-  - export DEBIAN_FRONTEND=noninteractive; apt-get update >>/dev/null && apt-get install -qy curl >>/dev/null
+  - export DEBIAN_FRONTEND=noninteractive; apt-get update >>/dev/null 2>>/dev/null && apt-get install -qy curl >>/dev/null 2>>/dev/null 
   - curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
 
 trivy:
