@@ -29,7 +29,7 @@ trivy:
     
   critical:
     setOutput: trivy.run
-    setSeverity: 2
+    setSeverity: 1
     assertStdoutNotRegex: "CRITICAL: [1-9].*"
     
   high:
