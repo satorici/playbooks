@@ -46,3 +46,8 @@ trivy:
     setOutput: trivy.run
     setSeverity: 4
     assertStdoutNotRegex: "LOW: [1-9].*"
+
+  info:
+    setOutput: trivy.run
+    setSeverity: 5
+    assertStdoutNotRegex: "UNKNOWN: [1-9].*"
