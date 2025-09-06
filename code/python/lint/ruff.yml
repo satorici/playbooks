@@ -8,11 +8,10 @@ settings:
     - https://files.catbox.moe/fso4nn.gif
   example: satori run ./ --playbook satori://code/python/ruff.yml --report --output
 
-ruff:
-  install:
-    - pip3 install ruff -q --disable-pip-version-check --root-user-action=ignore
+install:
+  - pip3 install ruff -q --disable-pip-version-check --root-user-action=ignore
 
-  test:
-    assertStdoutContains: "All checks passed!"
-    run:
-      - ruff check ./
+ruff:
+  assertStdoutContains: "All checks passed!"
+  run:
+    - ruff check ./
