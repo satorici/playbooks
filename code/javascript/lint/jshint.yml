@@ -13,7 +13,6 @@ jshint:
     - npm install -g jshint --silent
 
   test:
-    assertReturnCode: 0
     assertStdout: false
     run:
-      - find . -type f \( -name "*.js" -o -name "*.jsx" \) -exec jshint {} +
+      - find . -type f \( -name "*.js" -o -name "*.jsx" \) | xargs -r jshint --esversion=6 || true

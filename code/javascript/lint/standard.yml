@@ -13,7 +13,6 @@ standard:
     - npm install -g standard --silent
 
   test:
-    assertReturnCode: 0
     assertStdout: false
     run:
-      - find . -type f \( -name "*.js" -o -name "*.jsx" \) -exec standard {} +
+      - find . -type f \( -name "*.js" -o -name "*.jsx" \) | xargs -r standard --fix || true

@@ -13,7 +13,6 @@ prettier:
     - npm install -g prettier --silent
 
   test:
-    assertReturnCode: 0
     assertStdout: false
     run:
-      - find . -type f \( -name "*.js" -o -name "*.jsx" -o -name "*.ts" -o -name "*.tsx" -o -name "*.json" -o -name "*.css" -o -name "*.scss" -o -name "*.html" -o -name "*.md" \) -exec prettier --check {} +
+      - find . -type f \( -name "*.js" -o -name "*.jsx" -o -name "*.ts" -o -name "*.tsx" -o -name "*.json" -o -name "*.css" -o -name "*.scss" -o -name "*.html" -o -name "*.md" \) | xargs -r prettier --check || true

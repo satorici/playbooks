@@ -17,4 +17,4 @@ eslint-security:
     assertStdout: false
     run:
       - echo "import js from '@eslint/js'; import security from 'eslint-plugin-security'; export default [js.configs.recommended, security.configs.recommended];" > /tmp/eslint-security.config.mjs
-      - find . -type f \( -name "*.js" -o -name "*.jsx" -o -name "*.ts" -o -name "*.tsx" \) -exec eslint --config /tmp/eslint-security.config.mjs {} + 2>/dev/null || true
+      - find . -type f \( -name "*.js" -o -name "*.jsx" -o -name "*.ts" -o -name "*.tsx" \) | xargs -r eslint --config /tmp/eslint-security.config.mjs 2>/dev/null || true

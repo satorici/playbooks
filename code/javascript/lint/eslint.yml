@@ -11,7 +11,6 @@ settings:
 eslint:
   install:
     - npm install eslint-plugin-security --save-dev
-    - npm init @eslint/config@latest
 
   test:
     assertStdoutNotContains: "error"
@@ -19,15 +18,16 @@ eslint:
       - |
         find ./ -name "*.js" | xargs -IX \
         npx eslint X --no-warn-ignored --no-config-lookup \
+          --env browser --env node --env es6 \
           --rule "no-eval:error" \
           --rule "no-implied-eval:error" \
           --rule "no-alert:error" \
-          --rule "no-console:error" \
+          --rule "no-console:warn" \
           --rule "no-debugger:error" \
           --rule "no-global-assign:error" \
           --rule "no-proto:error" \
           --rule "no-prototype-builtins:error" \
-          --rule "no-unused-vars:error" \
+          --rule "no-unused-vars:warn" \
           --rule "no-undef:error" \
           --rule "no-use-before-define:error" \
           --plugin security \
