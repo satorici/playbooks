@@ -10,10 +10,9 @@ settings:
 
 autopep8:
   install:
-    - pip install autopep8 -q --disable-pip-version-check
+    - pip install autopep8 -q --disable-pip-version-check --root-user-action=ignore
 
   test:
     assertReturnCode: 0
-    assertStdout: False
     run:
       - find . -type f -name "*.py" -exec autopep8 -i -a -v {} +
