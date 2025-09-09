@@ -1,5 +1,5 @@
 settings:
-  name: "Biome: Fast formatter and linter for JavaScript, TypeScript, JSX, and JSON"
+  name: "Biome: Formatter and linter for JS, TS, JSX, and JSON"
   description: "Biome is a fast formatter and linter for JavaScript, TypeScript, JSX, and JSON that scores 97% compatibility with Prettier. It features fast, native performance and requires zero configuration to get started."
   image: node
   author:
@@ -10,9 +10,9 @@ settings:
 
 biome:
   install:
-    - npm install -g @biomejs/biome --silent
+    - command -v biome >/dev/null || npm install -g @biomejs/biome --silent
 
   test:
-    assertStdout: false
+    assertReturnCode: 0
     run:
-      - find . -type f \( -name "*.js" -o -name "*.jsx" -o -name "*.ts" -o -name "*.tsx" -o -name "*.json" \) | xargs -r biome check --max-diagnostics=50 || true
+      - biome check .
