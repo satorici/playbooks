@@ -10,7 +10,7 @@ settings:
 
 isort:
   install:
-    - pip install isort -q --disable-pip-version-check
+    - pip install isort -q --disable-pip-version-check --root-user-action=ignore
 
   test:
     assertReturnCode: 0
