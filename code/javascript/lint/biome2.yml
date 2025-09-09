@@ -10,7 +10,7 @@ settings:
 
 biome:
   install:
-    - npm install -g @biomejs/biome --silent
+    - command -v biome >/dev/null || npm install -g @biomejs/biome --silent
 
   test:
     assertReturnCode: 0
