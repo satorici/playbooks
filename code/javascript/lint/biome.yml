@@ -15,4 +15,4 @@ biome:
   test:
     assertReturnCode: 0
     run:
-      - biome check . --max-diagnostics=none
+      - biome check . --max-diagnostics=1000000
