@@ -1,15 +1,21 @@
 settings:
   name: "Test: Severity"
-  example: satori local satori://test/severity.yml -d CRITICAL=True -d HIGH=True -d MEDIUM=True -d LOW=True -d INFO=True --report --output
+  example: satori local satori://test/severity.yml -d BLOCKER=True -d CRITICAL=True -d HIGH=True -d MEDIUM=True -d LOW=True -d INFO=True --report --output
 
 echo:
   output:
     - |
+      [ "${{BLOCKER}}"  = "True" ] && echo "Blocker"
       [ "${{CRITICAL}}" = "True" ] && echo "Critical"
       [ "${{HIGH}}"     = "True" ] && echo "High"
       [ "${{MEDIUM}}"   = "True" ] && echo "Medium"
       [ "${{LOW}}"      = "True" ] && echo "Low"
       [ "${{INFO}}"     = "True" ] && echo "Info"
+        
+  blocker:
+    setOutput: echo.output
+    setSeverity: 0
+    assertStdoutNotContains: Blocker
     
   critical:
     setOutput: echo.output
