@@ -1,5 +1,5 @@
 settings:
-  name: "JSCPD: Copy/paste detector for programming source code"
+  name: "JSCPD: Copy/paste detector"
   description: "JSCPD is a copy/paste detector for programming source code, supporting many languages including JavaScript, TypeScript, and more. It helps identify duplicated code that should be refactored."
   image: node
   author:
