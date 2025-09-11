@@ -10,10 +10,9 @@ settings:
 
 jscpd:
   install:
-    - npm install -g jscpd --silent
+    - command -v jscpd >/dev/null || npm install -g jscpd --silent
 
   test:
     assertReturnCode: 0
-    assertStdout: false
     run:
-      - jscpd . --min-lines 10 --min-tokens 100 --pattern "**/*.js,**/*.jsx,**/*.ts,**/*.tsx" --reporters json --silent 2>/dev/null || true
+      - jscpd . --min-lines 10 --min-tokens 100 --pattern "**/*.js,**/*.jsx,**/*.ts,**/*.tsx" --reporters json --silent
