@@ -15,4 +15,4 @@ jscpd:
   test:
     assertReturnCode: 0
     run:
-      - jscpd . --min-lines 10 --min-tokens 100 --pattern "**/*.js,**/*.jsx,**/*.ts,**/*.tsx" --reporters json --silent
+      - jscpd .
