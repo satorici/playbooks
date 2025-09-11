@@ -5,7 +5,7 @@ settings:
   files: true
   author: 
     - https://github.com/15r10nk
-  example: satori run sastori://code/python/pysource-codegen.yml --output
+  example: satori run satori://code/python/pysource-codegen.yml --output
 
 install:
   - command -v pysource-codegen >/dev/null || pip install pysource-codegen -q --disable-pip-version-check --root-user-action=ignore
