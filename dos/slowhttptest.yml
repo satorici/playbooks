@@ -29,7 +29,7 @@ slowhttptest:
 
   test:
     assertStdoutNotContains: "service available:   NO"
-    setSeverity: 4
+    setSeverity: 1
     run:
       - slowhttptest -c 1000 -g -o slowloris_get -i 110 -r 200 -s 8192 -t GET -x 10 -p 3 -u ${{URL}}
       - slowhttptest -c 1000 -g -o slowloris_get_h -i 110 -r 200 -s 8192 -t GET -x 10 -p 3 -u ${{URL}} -H

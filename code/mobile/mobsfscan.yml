@@ -25,7 +25,7 @@ mobsfscan:
       - mobsfscan ./ --sarif > mobsfscan-output.log
 
     error:
-      setSeverity: 1
+      setSeverity: 2
       run:
         - cat mobsfscan-output.log | jq '.runs[].results[] | select(.level == "error")' | tee error.log
 
@@ -35,6 +35,6 @@ mobsfscan:
         - cat mobsfscan-output.log | jq '.runs[].results[] | select(.level == "warning")' | tee warning.log
 
     note:
-      setSeverity: 5
+      setSeverity: 4
       run:
         - cat mobsfscan-output.log | jq '.runs[].results[] | select(.level == "note")' | tee note.log
