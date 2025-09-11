@@ -1,0 +1,17 @@
+settings:
+  name: "pysource-codegen: Generate random Python code"
+  description: "Generate random python code to test linter/formatter/and other tools. pysource-codegen is able to generate random python code which can be compiled"
+  image: python
+  author: 
+    - https://github.com/15r10nk
+
+install:
+  - command -v pysource-codegen >/dev/null || pip install pysource-codegen -q --disable-pip-version-check --root-user-action=ignore
+
+pysource-codegen:
+  assertReturnCode: 0
+  test:
+    - |
+      OUT="$(mktemp -t pysrc.XXXXXX.py)"
+      pysource-codegen | tee "$OUT"
+      python $OUT
