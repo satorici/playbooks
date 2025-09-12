@@ -15,4 +15,4 @@ jshint:
   test:
     assertStdout: false
     run:
-      - find . -type f \( -name "*.js" -o -name "*.jsx" \) | xargs -r jshint --esversion=6 || true
+      - find . -type f \( -name "*.js" -o -name "*.jsx" \) | xargs -r jshint || true

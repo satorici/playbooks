@@ -18,7 +18,7 @@ eslint:
       - |
         find ./ -name "*.js" | xargs -IX \
         npx eslint X --no-warn-ignored --no-config-lookup \
-          --env browser --env node --env es6 \
+          --ext .js,.ts \
           --rule "no-eval:error" \
           --rule "no-implied-eval:error" \
           --rule "no-alert:error" \
