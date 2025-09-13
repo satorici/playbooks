@@ -10,10 +10,9 @@ settings:
 
 vulture:
   install:
-    - pip install vulture -q --disable-pip-version-check
+    - command -v vulture >/dev/null || pip install vulture -q --disable-pip-version-check --root-user-action=ignore
 
   test:
     assertReturnCode: 0
-    assertStdout: false
     run:
-      - find . -type f -name "*.py" -exec vulture {} +
+      - vulture .
