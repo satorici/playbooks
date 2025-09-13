@@ -10,7 +10,7 @@ settings:
 
 pylama:
   install:
-    - command -v jscpd >/dev/null || pip install setuptools pylama -q --disable-pip-version-check
+    - command -v jscpd >/dev/null || pip install setuptools pylama -q --disable-pip-version-check --root-user-action=ignore
 
   test:
     assertReturnCode: 0
