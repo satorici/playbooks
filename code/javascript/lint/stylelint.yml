@@ -10,10 +10,10 @@ settings:
 
 stylelint:
   install:
-    - npm install -g stylelint stylelint-config-standard --silent
+    - command -v stylelint >/dev/null || npm install -g stylelint stylelint-config-standard --silent
 
   test:
     assertReturnCode: 0
     assertStdout: false
     run:
-      - find . -type f \( -name "*.css" -o -name "*.scss" -o -name "*.sass" -o -name "*.less" \) -exec stylelint --config-basedir=. {} +
+      - stylelint "**/*.{css,scss,sass,less}" --config-basedir=.
