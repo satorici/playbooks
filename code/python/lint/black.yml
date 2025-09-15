@@ -10,7 +10,7 @@ settings:
 
 black:
   install:
-    - pip install black -q --disable-pip-version-check --root-user-action=ignore
+    - command -v black >/dev/null || pip install black -q --disable-pip-version-check --root-user-action=ignore
 
   test:
     assertReturnCode: 0
