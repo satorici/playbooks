@@ -10,10 +10,10 @@ settings:
 
 tsc:
   install:
-    - npm install -g typescript --silent
+    - command -v tsc >/dev/null || npm install -g typescript --silent
 
   test:
     assertReturnCode: 0
     assertStdout: false
     run:
-      - find . -name "tsconfig.json" -execdir tsc --noEmit --skipLibCheck \;
+      - tsc --noEmit --skipLibCheck --pretty
