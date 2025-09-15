@@ -10,7 +10,7 @@ settings:
 
 flake8:
   install:
-    - pip install flake8 -q --disable-pip-version-check --root-user-action=ignore
+    - command -v flake8 >/dev/null || pip install flake8 -q --disable-pip-version-check --root-user-action=ignore
 
   test:
     assertReturnCode: 0
