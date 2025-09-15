@@ -16,4 +16,4 @@ stylelint:
     assertReturnCode: 0
     assertStdout: false
     run:
-      - stylelint "**/*.{css,scss,sass,less}" --config-basedir=.
+      - stylelint "**/*.{css,scss,sass,less}" --config stylelint-config-standard
