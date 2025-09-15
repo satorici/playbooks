@@ -10,9 +10,9 @@ settings:
 
 darglint:
   install:
-    - pip install darglint -q --disable-pip-version-check --root-user-action=ignore
+    - command -v darglint >/dev/null || pip install darglint -q --disable-pip-version-check --root-user-action=ignore
 
   test:
     assertReturnCode: 0
     run:
-      - find . -type f -name "*.py" -exec darglint -v 2 {} +
+      - darglint -v 2 -r .
