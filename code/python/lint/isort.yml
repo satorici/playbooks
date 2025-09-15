@@ -10,9 +10,9 @@ settings:
 
 isort:
   install:
-    - pip install isort -q --disable-pip-version-check --root-user-action=ignore
+    - command -v isort >/dev/null || pip install isort -q --disable-pip-version-check --root-user-action=ignore
 
   test:
     assertReturnCode: 0
     run:
-      - find . -type f -name "*.py" -exec isort {} \;
+      - isort .
