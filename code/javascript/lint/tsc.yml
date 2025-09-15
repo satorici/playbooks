@@ -16,4 +16,4 @@ tsc:
     assertReturnCode: 0
     assertStdout: false
     run:
-      - tsc --noEmit --skipLibCheck --pretty
+      - find . -name "tsconfig.json" -execdir tsc --noEmit --skipLibCheck --pretty \;
