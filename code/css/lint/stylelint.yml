@@ -1,5 +1,5 @@
 settings:
-  name: "Stylelint: A mighty, modern linter for CSS and SCSS"
+  name: "Stylelint: Linter for CSS and SCSS"
   description: "Stylelint is a mighty, modern linter that helps you avoid errors and enforce conventions in your styles. It understands the latest CSS syntax including custom properties and level 4 selectors."
   image: node
   author:
