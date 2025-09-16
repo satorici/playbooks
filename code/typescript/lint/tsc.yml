@@ -1,0 +1,18 @@
+settings:
+  name: "TypeScript Compiler: Type checking for JavaScript"
+  description: "The TypeScript compiler (tsc) performs static type checking on TypeScript and JavaScript files. It can catch type errors at build time and provides excellent IDE support for large codebases."
+  image: node
+  author:
+    - https://github.com/microsoft/TypeScript
+  gallery:
+    - https://files.catbox.moe/n7q4f8.png
+  example: satori run ./ --playbook satori://code/typescript/lint/tsc.yml --report --output
+
+tsc:
+  install:
+    - command -v tsc >/dev/null || npm install -g typescript --silent
+
+  test:
+    assertReturnCode: 0
+    run:
+      - tsc --noEmit --skipLibCheck --pretty
