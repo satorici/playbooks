@@ -15,7 +15,7 @@ shuffledns:
     - cd /tmp; git clone https://github.com/blechschmidt/massdns.git; cd massdns; make
     - mkdir -p /tmp/wordlists
     - curl -s https://raw.githubusercontent.com/danielmiessler/SecLists/master/Discovery/DNS/subdomains-top1million-5000.txt -o /tmp/wordlists/subdomains.txt
-    - printf "${{DOMAIN}}" > /tmp/domains.txt
+    - echo "${{DOMAIN}}" | tr '\\n' '\n' > /tmp/domains.txt
 
   help:
     - shuffledns -h

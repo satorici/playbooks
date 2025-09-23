@@ -19,4 +19,4 @@ knockpy:
   test:
     assertReturnCode: 0
     run:
-      - knockpy -f /tmp/domain.txt --recon --silent #2>>/dev/null
+      - knockpy -f /tmp/domains.txt --recon --silent #2>>/dev/null
