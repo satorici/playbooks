@@ -11,7 +11,7 @@ settings:
 knockpy:
   install:
     - command -v knockpy >/dev/null || pip install git+https://github.com/guelfoweb/knock.git -q --disable-pip-version-check --root-user-action=ignore
-    - echo "${{DOMAIN}}" | tr '\\n' '\n' > /tmp/domains.txt
+    #- echo "${{DOMAIN}}" | tr '\\n' '\n' > /tmp/domains.txt
 
   help:
     - knockpy -h
@@ -19,4 +19,5 @@ knockpy:
   test:
     assertReturnCode: 0
     run:
-      - while read domain; do echo "=== Scanning $domain ==="; knockpy -d "$domain" --recon --silent 2>>/dev/null | grep -v 'None, None, None'; done < /tmp/domains.txt
+      - #while read domain; do echo "=== Scanning $domain ==="; knockpy -d "$domain" --recon --silent 2>>/dev/null | grep -v 'None, None, None'; done < /tmp/domains.txt
+      - knockpy -d ${{DOMAIN}} --recon --silent 2>>/dev/null
