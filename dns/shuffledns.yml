@@ -24,4 +24,4 @@ shuffledns:
     assertReturnCode: 0
     assertStderrNotContains: ERR
     run:
-      - shuffledns -l /tmp/domains.txt -w /tmp/wordlists/subdomains.txt -m /tmp/massdns/bin/massdns -r /tmp/massdns/lists/resolvers.txt -mode bruteforce
+      - while read domain; do echo "=== Scanning $domain ==="; shuffledns -d "$domain" -w /tmp/wordlists/subdomains.txt -m /tmp/massdns/bin/massdns -r /tmp/massdns/lists/resolvers.txt -mode bruteforce; done < /tmp/domains.txt

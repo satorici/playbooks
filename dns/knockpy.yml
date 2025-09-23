@@ -10,7 +10,8 @@ settings:
 
 knockpy:
   install:
-    - pip install git+https://github.com/guelfoweb/knock.git -q --disable-pip-version-check --root-user-action=ignore
+    - command -v knockpy >/dev/null || pip install git+https://github.com/guelfoweb/knock.git -q --disable-pip-version-check --root-user-action=ignore
+    - printf "${{DOMAIN}}" > /tmp/domains.txt
 
   help:
     - knockpy -h
@@ -18,4 +19,4 @@ knockpy:
   test:
     assertReturnCode: 0
     run:
-      - knockpy -d ${{DOMAIN}} --recon --silent 2>>/dev/null
+      - knockpy -f /tmp/domain.txt --recon --silent 2>>/dev/null
