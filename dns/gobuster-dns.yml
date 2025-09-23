@@ -20,4 +20,4 @@ gobuster-dns:
   test:
     assertReturnCode: 0
     run:
-      - gobuster dns -d ${{DOMAIN}} -w /tmp/wordlists/subdomains.txt --wildcard 2>>/dev/null
+      - gobuster dns --domain ${{DOMAIN}} -w /tmp/wordlists/subdomains.txt --wildcard 2>>/dev/null
