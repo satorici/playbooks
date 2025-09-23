@@ -19,4 +19,4 @@ knockpy:
   test:
     assertReturnCode: 0
     run:
-      - while read domain; do echo "=== Scanning $domain ==="; knockpy -d "$domain" --recon --silent 2>>/dev/null; done < /tmp/domains.txt
+      - while read domain; do echo "=== Scanning $domain ==="; knockpy -d "$domain" --recon --silent 2>>/dev/null | grep -v 'None, None, None'; done < /tmp/domains.txt
