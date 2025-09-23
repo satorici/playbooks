@@ -12,7 +12,7 @@ dnscan:
   install:
     - command -v git >/dev/null || (apt-get update >>/dev/null; apt-get install -qy git >>/dev/null)
     - test -d /tmp/dnscan || (cd /tmp; git clone --depth 1 https://github.com/rbsec/dnscan.git; pip install -r dnscan/requirements.txt -q --disable-pip-version-check)
-    - echo "${{DOMAIN}}" > /tmp/domains.txt
+    - printf "${{DOMAIN}}" > /tmp/domains.txt
 
   help:
     - python3 /tmp/dnscan/dnscan.py -h
