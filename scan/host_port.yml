@@ -1,0 +1,27 @@
+settings:
+  name: "Scan bug bounty hosts with a playbook"
+  image: python
+  cpu: 2048
+  memory: 7168
+  files: true
+  redacted:
+    - SATORI_TOKEN
+  example: satori run playbook.yml -d SATORI_TOKEN=$SATORI_TOKEN -d PLAYBOOK=satori://cve/CVE-2025-10035.yml -d PORT="443 80 8009 8443 8001 8000 8010 8080 10443 4443 9443 8080" --output
+
+install:
+  - export DEBIAN_FRONTEND=noninteractive; apt-get update >>/dev/null && apt-get install -qy python3 python3-pip jq git parallel curl wget unzip >>/dev/null
+  - pip install satori-ci --disable-pip-version-check --root-user-action=ignore --break-system-packages > /dev/null; satori config token ${{SATORI_TOKEN}}
+  - satori local ${{PLAYBOOK}} --run install
+
+hosts:
+  - curl -s https://raw.githubusercontent.com/arkadiyt/bounty-targets-data/refs/heads/main/data/domains.txt > hosts.txt
+
+run:
+  - |
+    export SATORI_NO_UPDATE_CHECK=1
+    HOSTS="$(pwd)/hosts.txt"
+    JOBS="${JOBS:-8}"
+
+    echo "# Playbook: ${{PLAYBOOK}} - Port - ${{PORT}} - Hosts: $(wc -l < $HOSTS) - Jobs: $JOBS"
+
+    parallel --tmpdir . -j $JOBS --delay 1 "satori local ${{PLAYBOOK}} -d HOST={} -d PORT=\"${{PORT}}\" --redacted HOST --report --timeout 360 --visibility public" :::: "$HOSTS"
