@@ -1,17 +1,18 @@
 settings:
-  name: "Scan bug bounty hosts with a playbook"
+  name: Scan bug bounty hosts with a playbook
   image: python
   cpu: 2048
   memory: 7168
   files: true
   redacted:
     - SATORI_TOKEN
+  timeout: 259200
   example: satori run playbook.yml -d SATORI_TOKEN=$SATORI_TOKEN -d PLAYBOOK=satori://cve/CVE-2025-10035.yml -d PORT="443 80 8009 8443 8001 8000 8010 8080 10443 4443 9443 8080" --output
 
 install:
   - export DEBIAN_FRONTEND=noninteractive; apt-get update >>/dev/null && apt-get install -qy python3 python3-pip jq git parallel curl wget unzip >>/dev/null
   - pip install satori-ci --disable-pip-version-check --root-user-action=ignore --break-system-packages > /dev/null; satori config token ${{SATORI_TOKEN}}
-  - satori local ${{PLAYBOOK}} --run install
+  - cd /tmp; git clone --depth 1 https://github.com/Onapsis/Onapsis_CVE-2025-31324_Scanner_Tools.git CVE-2025-31324 && cd CVE-2025-31324 && pip install -r requirements.txt --disable-pip-version-check --root-user-action=ignore --break-system-packages -q
 
 hosts:
   - curl -s https://raw.githubusercontent.com/arkadiyt/bounty-targets-data/refs/heads/main/data/domains.txt > hosts.txt
