@@ -1,0 +1,14 @@
+settings:
+  name: "PySpector Security Analysis"
+  description: "SAST security testing of PySpector Python framework"
+  image: "satori"
+
+pyspector:
+  install:
+    - pip install -q --root-user-action=ignore --disable-pip-version-check pyspector
+    - ls -la
+
+  test:
+    assertStdoutContains: "No issues found."
+    run:
+      - pyspector scan . --ai
