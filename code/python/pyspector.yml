@@ -2,12 +2,32 @@ settings:
   name: "PySpector Security Analysis"
   description: "SAST security testing of PySpector Python framework"
   image: "satori"
+  example: satori run --playbook satori://code/python/pyspector.yml -d REPO=satorici/satori-cli --output
 
 pyspector:
   install:
     - command -v pyspector >/dev/null || pip install -q --root-user-action=ignore --disable-pip-version-check pyspector
 
   test:
-    assertStdoutContains: "No issues found."
     run:
       - pyspector scan . --ai
+
+    CRITICAL:
+      setOutput: pyspector.run
+      setSeverity: 1
+      assertStdoutNotContains: "CRITICAL"
+
+    HIGH:
+      setOutput: pyspector.run
+      setSeverity: 2
+      assertStdoutNotContains: "HIGH"
+
+    MEDIUM:
+      setOutput: pyspector.run
+      setSeverity: 3
+      assertStdoutNotContains: "MEDIUM"
+
+    LOW:
+      setOutput: pyspector.run
+      setSeverity: 4
+      assertStdoutNotContains: "LOW"
