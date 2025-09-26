@@ -5,8 +5,7 @@ settings:
 
 pyspector:
   install:
-    - pip install -q --root-user-action=ignore --disable-pip-version-check pyspector
-    - ls -la
+    - command -v pyspector >/dev/null || pip install -q --root-user-action=ignore --disable-pip-version-check pyspector
 
   test:
     assertStdoutContains: "No issues found."
