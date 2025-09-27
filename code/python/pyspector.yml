@@ -13,21 +13,21 @@ pyspector:
       - pyspector scan . --ai
 
     CRITICAL:
-      setOutput: pyspector.run
+      setOutput: pyspector.test.run
       setSeverity: 1
       assertStdoutNotContains: "CRITICAL"
 
     HIGH:
-      setOutput: pyspector.run
+      setOutput: pyspector.test.run
       setSeverity: 2
       assertStdoutNotContains: "HIGH"
 
     MEDIUM:
-      setOutput: pyspector.run
+      setOutput: pyspector.test.run
       setSeverity: 3
       assertStdoutNotContains: "MEDIUM"
 
     LOW:
-      setOutput: pyspector.run
+      setOutput: pyspector.test.run
       setSeverity: 4
       assertStdoutNotContains: "LOW"
