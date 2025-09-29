@@ -1,0 +1,13 @@
+settings:
+  name: hounddog
+
+install:
+  - command -v curl 2>/dev/null || apt-get update >/devnull && apt-get install -qy curl >/dev/nul
+  - command -v hounddog 2>/dev/null || curl -fsSL https://raw.githubusercontent.com/hounddogai/hounddog/main/install.sh | sh
+
+hounddog:
+  assertReturnCode: 0
+  help:
+    - hounddog scan --help
+  run:
+    - hounddog scan
