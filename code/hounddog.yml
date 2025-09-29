@@ -1,5 +1,7 @@
 settings:
-  name: hounddog
+  name: "Hounddog: detect and prevent exposure of sensitive data"
+  description: "HoundDog.ai's Privacy by Design Code Scanner helps organizations proactively detect and prevent the overexposure of sensitive data in high risk mediums, which could lead to privacy violations. The scanner embeds privacy into every stage of development, from IDE to CI. It discovers third party and AI integrations, including shadow AI, detects exposures of Personally Identifiable Information (PII), Protected Health Information (PHI), and authentication tokens in LLM prompts and other often overlooked surfaces such as logs, files, and third party SDKs, blocks unapproved data types before any code reaches production, and generates audit ready Privacy Impact Assessments prefilled with detected data flows and privacy risks."
+  image: debian
 
 install:
   - command -v curl 2>/dev/null || apt-get update >/devnull && apt-get install -qy curl >/dev/nul
