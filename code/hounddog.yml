@@ -4,8 +4,8 @@ settings:
   image: debian
 
 install:
-  - command -v curl 2>/dev/null || (export DEBIAN_FRONTEND=noninteractive; apt-get update >/devnull; apt-get install -qy curl >/dev/null)
-  - command -v hounddog 2>/dev/null || curl -fsSL https://raw.githubusercontent.com/hounddogai/hounddog/main/install.sh | sh
+  - command -v curl >/dev/null || (export DEBIAN_FRONTEND=noninteractive; apt-get update >/devnull; apt-get install -qy curl >/dev/null)
+  - command -v hounddog >/dev/null || curl -fsSL https://raw.githubusercontent.com/hounddogai/hounddog/main/install.sh | sh
 
 run:
   - hounddog scan
