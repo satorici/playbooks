@@ -7,5 +7,26 @@ install:
   - command -v curl >/dev/null || (export DEBIAN_FRONTEND=noninteractive; apt-get update >/devnull; apt-get install -qy curl >/dev/null)
   - command -v hounddog >/dev/null || curl -fsSL https://raw.githubusercontent.com/hounddogai/hounddog/main/install.sh | sh
 
-run:
-  - hounddog scan
+hounddog:
+  run:
+    - hounddog scan
+
+  CRITICAL:
+    setOutput: hounddog.run
+    setSeverity: 1
+    assertStdoutNotContains: "CRITICAL: "
+
+  HIGH:
+    setOutput: hounddog.run
+    setSeverity: 2
+    assertStdoutNotContains: "HIGH: "
+
+  MEDIUM:
+    setOutput: hounddog.run
+    setSeverity: 3
+    assertStdoutNotContains: "MEDIUM: "
+
+  LOW:
+    setOutput: hounddog.run
+    setSeverity: 4
+    assertStdoutNotContains: "LOW: "
