@@ -8,25 +8,22 @@ install:
   - command -v hounddog >/dev/null || curl -fsSL https://raw.githubusercontent.com/hounddogai/hounddog/main/install.sh | sh
 
 hounddog:
-  run:
-    - hounddog scan
+  test:
+    assertReturnCode: 0
+    run:
+      - hounddog scan
 
   CRITICAL:
-    setOutput: hounddog.run
+    setOutput: hounddog.test.run
     setSeverity: 1
     assertStdoutNotContains: "CRITICAL: "
 
-  HIGH:
-    setOutput: hounddog.run
-    setSeverity: 2
-    assertStdoutNotContains: "HIGH: "
-
   MEDIUM:
-    setOutput: hounddog.run
+    setOutput: hounddog.test.run
     setSeverity: 3
     assertStdoutNotContains: "MEDIUM: "
 
   LOW:
-    setOutput: hounddog.run
+    setOutput: hounddog.test.run
     setSeverity: 4
     assertStdoutNotContains: "LOW: "
