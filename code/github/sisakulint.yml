@@ -12,4 +12,4 @@ install:
 sisakulint:
   assertReturnCode: 0
   run:
-    - sisakulint -debug
+    - sisakulint
