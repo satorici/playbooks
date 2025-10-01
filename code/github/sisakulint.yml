@@ -8,6 +8,7 @@ settings:
 
 install:
   - command -v sisakulint >/dev/null || go install github.com/ultra-supara/sisakulint/cmd/sisakulint@latest 2>/dev/null
+  - ls -la
 
 sisakulint:
   assertReturnCode: 0
