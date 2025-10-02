@@ -9,7 +9,7 @@ settings:
   example: satori run ./ --playbook satori://code/python/ruff.yml --report --output
 
 install:
-  - pip3 install ruff -q --disable-pip-version-check --root-user-action=ignore
+  - command -v ruff >/dev/null || pip3 install ruff -q --disable-pip-version-check --root-user-action=ignore
 
 ruff:
   assertStdoutContains: "All checks passed!"
