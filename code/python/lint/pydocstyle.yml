@@ -10,7 +10,7 @@ settings:
 
 pydocstyle:
   install:
-    - pip install pydocstyle -q --disable-pip-version-check
+    - pip install pydocstyle -q --disable-pip-version-check --root-user-action=ignore
 
   test:
     assertReturnCode: 0

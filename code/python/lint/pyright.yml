@@ -10,7 +10,7 @@ settings:
 
 pyright:
   install:
-    - pip install pyright -q --disable-pip-version-check
+    - command -v pyright >/dev/null || pip install pyright -q --disable-pip-version-check --root-user-action=ignore
 
   test:
     assertReturnCode: 0

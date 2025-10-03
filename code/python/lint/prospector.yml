@@ -10,7 +10,7 @@ settings:
 
 prospector:
   install:
-    - pip install prospector -q --disable-pip-version-check
+    - command -v prospector >/dev/null || pip install prospector -q --disable-pip-version-check --root-user-action=ignore
 
   test:
     assertReturnCode: 0

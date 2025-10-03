@@ -1,19 +1,21 @@
 settings:
-  name: "Pyrefly: Python Static Analyzer"
-  description: "Pyrefly is a static analysis tool for Python that helps identify potential issues in code."
+  name: "Pyrefly: Python static analyzer"
+  description: "Pyrefly is a static analysis tool for Python that helps identify potential issues in code made by Facebook."
   image: python
   author:
     - https://github.com/facebook
   gallery:
     - https://files.catbox.moe/kni0iu.png
-  example: satori run ./ --playbook satori://code/python/lint/pyrefly.yml --report --output
+  example: satori run --playbook satori://code/python/lint/pyrefly.yml -d REPO=satorici/satori-cli --output --report
 
 pyrefly:
-  install:
-    - pip install pyrefly -q --disable-pip-version-check
-
-  test:
-    assertReturnCode: 0
-    assertStdout: false
-    run:
-      - find . -type f -name "*.py" -exec pyrefly check {} +
+  assertStdoutNotContains: "ERROR"
+  run:
+    - |
+      VENV_DIR=".venv_$$_$(date +%N)"
+      python -m venv "$VENV_DIR"
+      . "$VENV_DIR/bin/activate"
+      pip install pyrefly -q --disable-pip-version-check --root-user-action=ignore
+      [ -f "setup.py" ] || [ -f "pyproject.toml" ] && pip install -e . -q --disable-pip-version-check --root-user-action=ignore
+      find . -type f -name "*.py" ! -path "./.venv*" -exec pyrefly check {} +
+      rm -rf "$VENV_DIR"

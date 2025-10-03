@@ -6,7 +6,7 @@ settings:
     - https://github.com/astral-sh
   gallery:
     - https://files.catbox.moe/fso4nn.gif
-  example: satori run ./ --playbook satori://code/python/ruff.yml --report --output
+  example: satori run --playbook satori://code/python/ruff.yml -d REPO=satorici/satori-cli --output --test ruff.run --report
 
 install:
   - command -v ruff >/dev/null || pip3 install ruff -q --disable-pip-version-check --root-user-action=ignore

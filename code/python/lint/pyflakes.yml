@@ -10,7 +10,7 @@ settings:
 
 pyflakes:
   install:
-    - pip install pyflakes
+    - command -v pyflakes >/dev/null || pip install pyflakes -q --disable-pip-version-check --root-user-action=ignore
 
   test:
     assertReturnCode: 0

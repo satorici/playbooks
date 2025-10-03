@@ -10,7 +10,7 @@ settings:
 
 radon:
   install:
-    - pip install radon -q --disable-pip-version-check
+    - command -v radon >/dev/null || pip install radon -q --disable-pip-version-check --root-user-action=ignore
 
   test:
     assertReturnCode: 0
