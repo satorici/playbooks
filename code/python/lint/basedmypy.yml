@@ -4,6 +4,8 @@ settings:
   image: python
   author:
     - https://github.com/KotlinIsland
+  gallery:
+    - https://files.catbox.moe/6wqx07.png
   example: satori run ./ --playbook satori://code/python/lint/basedmypy.yml --report --output
 
 basedmypy:
