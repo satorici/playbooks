@@ -1,0 +1,17 @@
+settings:
+  name: "BasedMypy: Enhanced Python Static Type Checker"
+  description: "BasedMypy is an enhanced Python static type checker built on mypy with improved type system features including intersection types, better type inference, and gradual adoption through baseline functionality. Note: Project deprecated July 2025, consider BasedPyright as alternative."
+  image: python
+  author:
+    - https://github.com/KotlinIsland
+  example: satori run ./ --playbook satori://code/python/lint/basedmypy.yml --report --output
+
+basedmypy:
+  install:
+    - pip install basedmypy -q --disable-pip-version-check --root-user-action=ignore
+
+  test:
+    assertReturnCode: 0
+    assertStdout: false
+    run:
+      - find . -type f -name "*.py" -exec mypy {} +
