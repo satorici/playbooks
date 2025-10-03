@@ -4,6 +4,8 @@ settings:
   image: python
   author:
     - https://github.com/DetachHead
+  gallery:
+    - https://files.catbox.moe/w79mp2.png
   example: satori run ./ --playbook satori://code/python/lint/basedpyright.yml --report --output
 
 basedpyright:
