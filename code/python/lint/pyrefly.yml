@@ -17,5 +17,5 @@ pyrefly:
       . "$VENV_DIR/bin/activate"
       pip install pyrefly -q --disable-pip-version-check --root-user-action=ignore
       [ -f "setup.py" ] || [ -f "pyproject.toml" ] && pip install -e . -q --disable-pip-version-check --root-user-action=ignore
-      find . -type f -name "*.py" ! -path "./.venv*" -exec pyrefly check {} +
+      pyrefly check
       rm -rf "$VENV_DIR"
