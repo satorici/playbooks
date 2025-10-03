@@ -1,0 +1,19 @@
+settings:
+  name: "BasedPyright: Enhanced Python Type Checker"
+  description: "BasedPyright is a fork of Microsoft's Pyright with enhanced type checking improvements, integrated Pylance features, and better VSCode support. Provides advanced Python type analysis with additional features beyond the original pyright implementation."
+  image: python
+  author:
+    - https://github.com/DetachHead
+  gallery:
+    - https://files.catbox.moe/w79mp2.png
+  example: satori run ./ --playbook satori://code/python/lint/basedpyright.yml --report --output
+
+basedpyright:
+  install:
+    - pip install basedpyright -q --disable-pip-version-check --root-user-action=ignore
+
+  test:
+    assertReturnCode: 0
+    assertStdout: false
+    run:
+      - find . -type f -name "*.py" -exec basedpyright {} +
