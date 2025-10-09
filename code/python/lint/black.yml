@@ -15,4 +15,4 @@ black:
   test:
     assertReturnCode: 0
     run:
-      - find . -type f -name "*.py" -exec black {} -v \;
+      - black . -v

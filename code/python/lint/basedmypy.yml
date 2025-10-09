@@ -16,4 +16,4 @@ basedmypy:
     assertReturnCode: 0
     assertStdout: false
     run:
-      - find . -type f -name "*.py" -exec mypy {} +
+      - mypy .
