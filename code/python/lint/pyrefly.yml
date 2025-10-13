@@ -9,13 +9,11 @@ settings:
   example: satori run --playbook satori://code/python/lint/pyrefly.yml -d REPO=satorici/satori-cli --output --report
 
 pyrefly:
-  assertStdoutNotContains: "ERROR"
-  run:
-    - |
-      VENV_DIR=".venv_$$_$(date +%N)"
-      python -m venv "$VENV_DIR"
-      . "$VENV_DIR/bin/activate"
-      pip install pyrefly -q --disable-pip-version-check --root-user-action=ignore
-      [ -f "setup.py" ] || [ -f "pyproject.toml" ] && pip install -e . -q --disable-pip-version-check --root-user-action=ignore
-      pyrefly check
-      rm -rf "$VENV_DIR"
+  install:
+    - pip install pyrefly -q --disable-pip-version-check --root-user-action=ignore
+
+  test:
+    assertReturnCode: 0
+    assertStdout: false
+    run:
+      - pyrefly check .

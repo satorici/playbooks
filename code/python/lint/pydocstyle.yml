@@ -16,4 +16,4 @@ pydocstyle:
     assertReturnCode: 0
     assertStdout: false
     run:
-      - find . -type f -name "*.py" -exec pydocstyle {} +
+      - pydocstyle .
