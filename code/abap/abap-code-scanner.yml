@@ -4,8 +4,9 @@ settings:
   image: python
 
 install:
-  - test -e /tmp/ABAP-Code-Scanner || cd /tmp; git clone https://github.com/redrays-io/ABAP-Code-Scanner; cd ABAP-Code-Scanner; pip install -r requirements.txt -q --disable-pip-version-check --root-user-action=ignore
+  - test -e /tmp/ABAP-Code-Scanner || cd /tmp; git clone https://github.com/redrays-io/ABAP-Code-Scanner; cd ABAP-Code-Scanner; pip install chardet -r requirements.txt -q --disable-pip-version-check --root-user-action=ignore
 
 run:
+  - ls -la
   - cd /tmp/ABAP-Code-Scanner; python main.py /data
 

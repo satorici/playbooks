@@ -1,0 +1,13 @@
+settings:
+  name: "ThreatTracer: identify CVE by name & version"
+  example: satori run satori://cve/search.yml -df CVE=cves.txt --output
+
+install:
+  - test -e /tmp/ThreatTracer >/dev/null || cd /tmp; git clone --depth 1 https://github.com/anmolksachan/ThreatTracer.git; cd ThreatTracer; pip3 install -r requirements.txt -q --disable-pip-version-check --root-user-action=ignore
+
+ThreatTracer:
+  - |
+    cd /tmp/ThreatTracer
+    for CVE in ${{CVE}}; do
+      python3 threattracer.py --cve $CVE
+    done
