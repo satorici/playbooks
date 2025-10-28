@@ -2,11 +2,11 @@ settings:
   name: "RedRays ABAP Code Analyzer: Open-Source Security Scanner for SAP ABAP"
   description: "Analyze ABAP (Advanced Business Application Programming) code for potential security vulnerabilities, code quality issues, and best practice violations"
   image: python
+  files: true
+  #image: public.ecr.aws/docker/library/python:3.13
 
 install:
   - test -e /tmp/ABAP-Code-Scanner || cd /tmp; git clone https://github.com/redrays-io/ABAP-Code-Scanner; cd ABAP-Code-Scanner; pip install chardet -r requirements.txt -q --disable-pip-version-check --root-user-action=ignore
 
 run:
-  - ls -la
   - cd /tmp/ABAP-Code-Scanner; python main.py /data
-

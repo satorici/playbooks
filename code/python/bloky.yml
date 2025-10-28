@@ -1,0 +1,12 @@
+settings:
+  name: bloky
+  image: python
+  example: satori run bloky.yml --repo satorici/satori-cli --output
+
+install:
+  - command -v bloky >/dev/null || pip install bloky -q --disable-pip-version-check --root-user-action=ignore
+
+bloky:
+  assertStdoutNotContains: BLOCKING OPERATIONS DETECTED
+  run:
+    - bloky .
