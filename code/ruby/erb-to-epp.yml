@@ -1,0 +1,11 @@
+settings:
+  name: ERB to EPP
+  descrtion: "Embedded Ruby (.erb) into Embedded Puppet (.epp)"
+  image: 
+  example: 
+
+install:
+  - test -e /tmp/erb-to-epp >/dev/null || cd /tmp; git clone --depth 1 https://github.com/artonix101/erb-to-epp.git; cd erb-to-epp; cargo build --release
+
+erb_to_epp:
+  - /tmp/erb-to-epp/target/release/erb-to-epp
