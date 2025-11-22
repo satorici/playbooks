@@ -1,8 +1,10 @@
 settings:
   name: "PySpector Security Analysis"
-  description: "SAST security testing of PySpector Python framework"
+  description: "PySpector is a static analysis security testing (SAST) Framework engineered for modern Python development workflows. It leverages a powerful Rust core to deliver high-speed, accurate vulnerability scanning, wrapped in a developer-friendly Python CLI."
   image: "satori"
-  example: satori run --playbook satori://code/python/pyspector.yml -d REPO=satorici/satori-cli --output
+  author:
+    - https://github.com/ParzivalHack
+  example: satori run --playbook satori://code/python/pyspector.yml --repo satorici/satori-cli --output
 
 pyspector:
   install:
