@@ -1,13 +1,10 @@
 settings:
   name: "sisakulint: SAST for Github Actions"
   description: "CI-Friendly static linter with autofix, SAST, semantic analysis for GitHub Actions"
-  image: golang
+  image: juanimedina7/sisakulint:latest
   author:
     - https://github.com/ultra-supara/
   example: satori run --playbook satori://code/github/sisakulint2.yml --repo satorici/satori-cli --output
-
-install:
-  - command -v sisakulint >/dev/null || go install github.com/ultra-supara/sisakulint/cmd/sisakulint@latest 2>/dev/null
 
 sisakulint:
   assertReturnCode: 0
