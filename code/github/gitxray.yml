@@ -8,7 +8,7 @@ settings:
     - https://files.catbox.moe/i1k5bz.gif
   redacted:
     - GITHUB_PAT
-  example: satori run satori://code/github/gitxray.yml -d REPO="satorici/playbooks" --report --output
+  example: satori run satori://code/github/gitxray.yml -d REPO=satorici/playbooks --report --output
 
 gitxray:
   install:

@@ -8,4 +8,5 @@ install:
   - test -e /tmp/erb-to-epp >/dev/null || cd /tmp; git clone --depth 1 https://github.com/artonix101/erb-to-epp.git; cd erb-to-epp; cargo build --release
 
 erb_to_epp:
-  - /tmp/erb-to-epp/target/release/erb-to-epp
+  - ls -lR
+  - find . -type f -name '*.erb' -exec /tmp/erb-to-epp/target/release/erb-to-epp {} \;

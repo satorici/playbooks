@@ -6,7 +6,7 @@ settings:
     - https://github.com/facebook
   gallery:
     - https://files.catbox.moe/kni0iu.png
-  example: satori run --playbook satori://code/python/lint/pyrefly.yml -d REPO=satorici/satori-cli --output --report
+  example: satori run --playbook satori://code/python/lint/pyrefly.yml --repo satorici/satori-cli --output --report
 
 pyrefly:
   install:

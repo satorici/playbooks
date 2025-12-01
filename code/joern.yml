@@ -1,0 +1,11 @@
+settings:
+  name: Joern
+  image: satori
+
+install:
+  - curl -sL "https://github.com/joernio/joern/releases/latest/download/joern-install.sh" -o joern-install.sh
+  - bash joern-install.sh
+
+joern:
+  - /opt/joern/joern-cli/joern-scan .
+  - cat /tmp/joern-scan-log.txt
