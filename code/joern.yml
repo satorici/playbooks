@@ -1,6 +1,10 @@
 settings:
   name: Joern
+  description: Open-source code analysis platform for C/C++/Java/Binary/Javascript/Python/Kotlin based on code property graphs.
   image: satori
+  author:
+    - https://github.com/joernio
+  example: satori run satori://code/joern.yml --repo satorici/satori-cli --output
 
 install:
   - curl -sL "https://github.com/joernio/joern/releases/latest/download/joern-install.sh" -o joern-install.sh
