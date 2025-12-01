@@ -1,0 +1,14 @@
+settings:
+  name: SwiftAstGen
+  description: Creates Abstract Syntax Tree (AST) of all .swift files in JSON format. The AST is created by using SwiftSyntax.
+  image: satori
+
+install:
+  - command -v swiftly >/dev/null || (apt-get update >/dev/null; apt-get install -qy gnupg2 libcurl4-openssl-dev libxml2-dev libncurses-dev libz3-dev >/dev/null; curl -sO https://download.swift.org/swiftly/linux/swiftly-$(uname -m).tar.gz; tar zxf swiftly-$(uname -m).tar.gz; ./swiftly init --quiet-shell-followup)
+  - command -v SwiftAstGen >/dev/null || (cd /tmp; git clone --depth 1 https://github.com/joernio/SwiftAstGen.git; cd SwiftAstGen; "${SWIFTLY_HOME_DIR:-$HOME/.local/share/swiftly}/bin/swift" build; mv /tmp/SwiftAstGen/.build/x86_64-unknown-linux-gnu/debug/SwiftAstGen /usr/local/bin)
+
+SwiftAstGen:
+  help:
+    - SwiftAstGen -h
+  run:
+    - SwiftAstGen -i .
