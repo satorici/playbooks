@@ -1,0 +1,35 @@
+settings:
+  name: "COBOL minimal SAST"
+  description: "Lightweight COBOL scanner can provide meaningful security coverage"
+  image: python
+  author:
+    - https://github.com/jone0709
+  example: satori run satori://code/cobol.yml --repo meyfa/CobolCraft --output
+
+cobol:
+  install:
+    - test -e /tmp/cobol-minimal-sast >/dev/null || (cd /tmp; git clone --depth 1 https://github.com/jone0709/cobol-minimal-sast.git; pip install legacylens_cobol_parser -q --disable-pip-version-check --root-user-action=ignore)
+
+  test:
+    run:
+      - python /tmp/cobol-minimal-sast/scanner.py scan .
+
+    CRITICAL:
+      setOutput: cobol.test.run
+      setSeverity: 1
+      assertStdoutNotContains: "CRITICAL"
+
+    HIGH:
+      setOutput: cobol.test.run
+      setSeverity: 2
+      assertStdoutNotContains: "HIGH"
+
+    MEDIUM:
+      setOutput: cobol.test.run
+      setSeverity: 3
+      assertStdoutNotContains: "MEDIUM"
+
+    LOW:
+      setOutput: cobol.test.run
+      setSeverity: 4
+      assertStdoutNotContains: "LOW"

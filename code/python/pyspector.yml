@@ -4,7 +4,7 @@ settings:
   image: juanimedina7/pyspector
   author:
     - https://github.com/ParzivalHack
-  example: satori run --playbook satori://code/python/pyspector.yml --repo satorici/satori-cli --output
+  example: satori run satori://code/python/pyspector.yml --repo satorici/satori-cli --output
 
 pyspector:
   install:
