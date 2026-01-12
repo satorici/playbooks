@@ -1,0 +1,15 @@
+settings:
+  name: APIFuzzer
+  image: python:3.11
+
+install:
+  - command -v APIFuzzer >/dev/null || (export DEBIAN_FRONTEND=noninteractive; apt-get update >/dev/null; apt-get install -qy screen >/dev/null; pip3 install git+https://github.com/KissPeter/APIFuzzer.git flask -q --disable-pip-version-check --root-user-action=ignore)
+
+APIFuzzer:
+  #help:
+  #  - APIFuzzer --help
+
+  test:
+    - git clone --depth 1 https://github.com/KissPeter/APIFuzzer.git
+    - screen -dm python3 APIFuzzer/test/test_application.py
+    - timeout 60s APIFuzzer -s APIFuzzer/test/test_api/openapi_v2.json -u http://127.0.0.1:5000/ --basic_output True || true
