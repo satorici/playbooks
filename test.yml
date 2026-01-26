@@ -11,7 +11,5 @@ settings:
 
 test:
   assertStdoutContains: Hello World
-  hello:
-    - echo Hello World
   whatever:
     - echo ${{INPUT}}
