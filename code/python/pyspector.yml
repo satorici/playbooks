@@ -11,6 +11,9 @@ pyspector:
   install:
     - command -v pyspector >/dev/null || pip install -q --root-user-action=ignore --disable-pip-version-check pyspector
 
+  help:
+    - pyspector scan --help
+    
   test:
     run:
       - pyspector scan . --ai --supply-chain
