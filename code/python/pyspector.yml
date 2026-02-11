@@ -13,7 +13,7 @@ pyspector:
 
   test:
     run:
-      - pyspector scan . --ai
+      - pyspector scan . --ai --supply-chain
 
     CRITICAL:
       setOutput: pyspector.test.run
