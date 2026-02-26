@@ -1,7 +1,7 @@
 settings:
   name: "Puredns: domain resolver and subdomain bruteforcing"
   description: "puredns performs recursive DNS resolution and wildcard filtering to validate subdomains. It filters out wildcard subdomains and poisoned entries to  reduce false positives in security assessments."
-  image: golang
+  image: debian
   author:
     - https://github.com/blechschmidt
   gallery:
@@ -10,9 +10,9 @@ settings:
 
 puredns:
   install:
-    - apt-get update >>/dev/null; apt-get install -y git make gcc >>/dev/null
+    - apt-get update -qq && apt-get install -qy curl ca-certificates git make gcc >>/dev/null
     - cd /tmp; git clone https://github.com/blechschmidt/massdns.git; cd massdns; make
-    - go install github.com/d3mondev/puredns/v2@latest 2>>/dev/null
+    - curl -sL https://api.github.com/repos/d3mondev/puredns/releases/latest | grep browser_download_url | grep -E 'Linux.*amd64.*tgz"' | head -1 | cut -d'"' -f4 | xargs curl -sL | tar xz -C /usr/local/bin/
     - echo "${{DOMAIN}}" > puredns_domain_file.txt
 
   help:

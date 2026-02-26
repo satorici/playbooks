@@ -1,7 +1,7 @@
 settings:
   name: "Socialhunter: crawls the given URL and finds broken social media links that can be hijacked"
   description: "socialhunter crawls a given website to identify broken social media links that could be hijacked, potentially allowing attackers to conduct phishing attacks or damage a company’s reputation. It supports platforms like Twitter, Facebook, Instagram, and TikTok without requiring API keys."
-  image: golang
+  image: debian
   author:
     - https://github.com/utkusen
   gallery:
@@ -10,7 +10,8 @@ settings:
 
 socialhunter:
   install:
-    - go install github.com/utkusen/socialhunter@latest 2>>/dev/null
+    - apt-get update -qq && apt-get install -qy curl ca-certificates >>/dev/null
+    - curl -sL https://api.github.com/repos/utkusen/socialhunter/releases/latest | grep browser_download_url | grep 'Linux_amd64\.tar\.gz"' | head -1 | cut -d'"' -f4 | xargs curl -sL | tar xz -C /usr/local/bin/
     - echo "${{URL}}" > url.txt
 
   help:

@@ -1,28 +1,29 @@
 settings:
   name: "Nuclei: Web vulnerability scanner"
   description: "A feature-rich vulnerability scanner that uses templates to detect security issues including CVEs, misconfigurations, and exposed sensitive data."
-  image: golang
-  timeout: 1800
+  image: debian
+  timeout: 600
   author:
     - https://github.com/projectdiscovery
   gallery:
     - https://files.catbox.moe/m4sg44.png
-  example: satori run satori://web/nuclei.yml -d URL="http://testphp.vulnweb.com/" --report --output
+  example: satori run satori://web/nuclei.yml -d URL="http://testphp.vulnweb.com/artists.php?artist=1" --report --output
 
 nuclei:
   install:
-    - go install github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest 2>>/dev/null
+    - apt-get update >>/dev/null; apt-get install -qy curl unzip >>/dev/null
+    - curl -sSL https://github.com/projectdiscovery/nuclei/releases/latest/download/nuclei_$(curl -sSL https://api.github.com/repos/projectdiscovery/nuclei/releases/latest | grep tag_name | cut -d '"' -f4 | sed 's/v//')_linux_amd64.zip -o /tmp/nuclei.zip && unzip -q /tmp/nuclei.zip -d /usr/local/bin
     - nuclei -update-templates 2>>/dev/null
 
   run:
-    - nuclei -u ${{URL}} -rate-limit 10 -bulk-size 25 -c 10 -timeout 5 -silent -as
+    - nuclei -u ${{URL}} -dast -rate-limit 50 -c 25 -timeout 10 -silent
 
   critical:
     setOutput: nuclei.run
     setSeverity: 1
-    assertStdoutNotContains: "CRITICAL"
+    assertStdoutNotContains: "critical"
 
   high:
     setOutput: nuclei.run
     setSeverity: 2
-    assertStdoutNotContains: "HIGH"
+    assertStdoutNotContains: "high"

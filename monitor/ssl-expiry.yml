@@ -1,0 +1,39 @@
+settings:
+  name: "SSL Expiry: Check SSL certificate expiration"
+  description: "Checks the SSL certificate of a host and asserts that it is not expiring within 30 days. Reports the certificate issuer, validity dates, and days until expiration."
+  image: debian
+  author:
+    - https://github.com/satorici
+  example: satori run satori://monitor/ssl-expiry.yml -d HOST="expired.badssl.com" --report --output
+
+ssl_expiry:
+  install:
+    - apt-get update >>/dev/null; apt-get install -qy openssl coreutils >>/dev/null
+
+  test:
+    assertStdoutNotContains:
+      - "EXPIRED"
+      - "EXPIRING_SOON"
+    run:
+      - |
+        CERT_INFO=$(echo | openssl s_client -servername ${{HOST}} -connect ${{HOST}}:443 2>/dev/null | openssl x509 -noout -dates -issuer 2>/dev/null)
+        if [ $? -ne 0 ]; then
+          echo "EXPIRED: Could not retrieve certificate for ${{HOST}}"
+          exit 1
+        fi
+        NOT_AFTER=$(echo "$CERT_INFO" | grep notAfter | cut -d= -f2)
+        ISSUER=$(echo "$CERT_INFO" | grep issuer | cut -d= -f2-)
+        EXPIRY_EPOCH=$(date -d "$NOT_AFTER" +%s 2>/dev/null)
+        NOW_EPOCH=$(date +%s)
+        DAYS_LEFT=$(( (EXPIRY_EPOCH - NOW_EPOCH) / 86400 ))
+        echo "Host: ${{HOST}}"
+        echo "Issuer: $ISSUER"
+        echo "Expires: $NOT_AFTER"
+        echo "Days until expiration: $DAYS_LEFT"
+        if [ "$DAYS_LEFT" -lt 0 ]; then
+          echo "EXPIRED"
+        elif [ "$DAYS_LEFT" -lt 30 ]; then
+          echo "EXPIRING_SOON: $DAYS_LEFT days left"
+        else
+          echo "OK: $DAYS_LEFT days left"
+        fi

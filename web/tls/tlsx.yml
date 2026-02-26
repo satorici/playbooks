@@ -1,7 +1,7 @@
 settings:
   name: "TLSX: TLS grabber"
   description: "TLSX is a command-line tool designed for comprehensive TLS data collection and analysis. It supports multiple connection modes, customizable cipher suites, and SNI configurations. TLSX can enumerate supported TLS versions and ciphers, detect misconfigurations such as expired or self-signed certificates, and generate JARM and JA3 fingerprints. It accepts various input formats, including IP addresses, domain names, and CIDR ranges, and outputs results in text or JSON formats. TLSX is suitable for security assessments and network diagnostics."
-  image: golang
+  image: debian
   author:
     - https://github.com/projectdiscovery
   gallery:
@@ -10,7 +10,9 @@ settings:
 
 tlsx:
   install:
-    - go install github.com/projectdiscovery/tlsx/cmd/tlsx@latest 2>>/dev/null
+    - apt-get update -qq && apt-get install -qy curl unzip ca-certificates >>/dev/null
+    - curl -sL https://api.github.com/repos/projectdiscovery/tlsx/releases/latest | grep browser_download_url | grep 'linux_amd64\.zip"' | head -1 | cut -d'"' -f4 | xargs curl -sL -o /tmp/tlsx.zip
+    - unzip -o /tmp/tlsx.zip -d /usr/local/bin/
 
   help:
     - tlsx -h

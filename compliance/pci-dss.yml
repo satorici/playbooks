@@ -1,0 +1,42 @@
+settings:
+  name: "PCI-DSS: Payment Card Industry compliance check"
+  description: "Runs a PCI-DSS compliance assessment against a web endpoint checking for TLS configuration, security headers, and common vulnerabilities required by PCI-DSS. Combines TLS checks with Nuclei compliance templates."
+  image: debian
+  timeout: 900
+  author:
+    - https://github.com/satorici
+  example: satori run satori://compliance/pci-dss.yml -d HOST="satori.ci" --report --output
+
+install:
+  - apt-get update >>/dev/null; apt-get install -qy openssl curl testssl.sh >>/dev/null
+
+tls_compliance:
+  test:
+    assertStdoutNotContains:
+      - "TLSv1.0"
+      - "TLSv1.1"
+      - "SSLv3"
+      - "SSLv2"
+    run:
+      - echo | openssl s_client -connect ${{HOST}}:443 2>/dev/null | grep -E "Protocol|Cipher"
+
+security_headers:
+  test:
+    assertStdoutContains:
+      - "Strict-Transport-Security"
+    run:
+      - curl -sI https://${{HOST}} | grep -iE "Strict-Transport-Security|X-Content-Type-Options|X-Frame-Options|Content-Security-Policy"
+
+testssl_check:
+  test:
+    run:
+      - testssl -p -s -f --csvfile=pci_log ${{HOST}}:443
+    log:
+      assertReturnCode: 0
+      assertStdoutNotContains:
+        - LOW
+        - MEDIUM
+        - HIGH
+        - CRITICAL
+      check:
+        - cat pci_log

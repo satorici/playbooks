@@ -1,7 +1,7 @@
 settings:
   name: "Katana: Crawl and spider a website"
   description: "Katana is a web crawling and spidering tool that supports headless browsing, JavaScript execution, automatic form filling, and regex-based scope control. It processes input from standard input, URLs, or file lists and outputs to standard output, files, or JSON. Passive crawling from external sources has been moved to a separate tool called URLFinder."
-  image: golang
+  image: debian
   author:
     - https://github.com/projectdiscovery
   gallery:
@@ -10,8 +10,9 @@ settings:
 
 katana:
   install:
-    - apt-get install -qy wget git gcc >>/dev/null
-    - go install github.com/projectdiscovery/katana/cmd/katana@latest 2>>/dev/null
+    - apt-get update -qq && apt-get install -qy curl unzip ca-certificates >>/dev/null
+    - curl -sL https://api.github.com/repos/projectdiscovery/katana/releases/latest | grep browser_download_url | grep 'linux_amd64\.zip"' | head -1 | cut -d'"' -f4 | xargs curl -sL -o /tmp/katana.zip
+    - unzip -o /tmp/katana.zip -d /usr/local/bin/
 
   help:
     - katana --help

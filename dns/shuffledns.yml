@@ -1,7 +1,7 @@
 settings:
   name: "shuffleDNS: enumerate valid subdomains using active bruteforce and resolving subdomains"
   description: "shuffledns resolves and filters subdomains by combining wordlist-based brute forcing with mass DNS resolution using multiple resolvers. It helps identify active subdomains efficiently during reconnaissance and security assessments."
-  image: golang
+  image: debian
   author:
     - https://github.com/projectdiscovery
   gallery:
@@ -10,8 +10,9 @@ settings:
 
 shuffledns:
   install:
-    - go install github.com/projectdiscovery/shuffledns/cmd/shuffledns@latest 2>>/dev/null
-    - apt-get update >>/dev/null; apt-get install git make gcc -qy >>/dev/null
+    - apt-get update -qq && apt-get install -qy curl unzip ca-certificates git make gcc >>/dev/null
+    - curl -sL https://api.github.com/repos/projectdiscovery/shuffledns/releases/latest | grep browser_download_url | grep 'linux_amd64\.zip"' | head -1 | cut -d'"' -f4 | xargs curl -sL -o /tmp/shuffledns.zip
+    - unzip -o /tmp/shuffledns.zip -d /usr/local/bin/
     - cd /tmp; git clone https://github.com/blechschmidt/massdns.git; cd massdns; make
     - mkdir -p /tmp/wordlists
     - curl -s https://raw.githubusercontent.com/danielmiessler/SecLists/master/Discovery/DNS/subdomains-top1million-5000.txt -o /tmp/wordlists/subdomains.txt

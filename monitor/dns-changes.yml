@@ -1,0 +1,34 @@
+settings:
+  name: "DNS Changes: Monitor DNS records for unexpected changes"
+  description: "Queries DNS records (A, AAAA, MX, NS, TXT, CNAME) for a domain and asserts that expected records are present. Useful for detecting DNS hijacking, unauthorized changes, or misconfigurations."
+  image: debian
+  author:
+    - https://github.com/satorici
+  example: satori run satori://monitor/dns-changes.yml -d HOST="satori.ci" -d EXPECTED_IP="1.2.3.4" --report --output
+
+dns_changes:
+  install:
+    - apt-get update >>/dev/null; apt-get install -qy dnsutils >>/dev/null
+
+  test:
+    assertStdoutNotContains: "EXPECTED_IP_MISSING"
+    run:
+      - |
+        echo "=== A Records ==="
+        dig +short A ${{HOST}}
+        echo "=== AAAA Records ==="
+        dig +short AAAA ${{HOST}}
+        echo "=== MX Records ==="
+        dig +short MX ${{HOST}}
+        echo "=== NS Records ==="
+        dig +short NS ${{HOST}}
+        echo "=== TXT Records ==="
+        dig +short TXT ${{HOST}}
+        echo "=== CNAME Records ==="
+        dig +short CNAME ${{HOST}}
+        echo "=== Validation ==="
+        if dig +short A ${{HOST}} | grep -q "${{EXPECTED_IP}}"; then
+          echo "EXPECTED_IP_FOUND: ${{EXPECTED_IP}}"
+        else
+          echo "EXPECTED_IP_MISSING: ${{EXPECTED_IP}} not found in A records"
+        fi

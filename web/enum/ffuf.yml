@@ -1,7 +1,7 @@
 settings:
   name: "FFuf: Web fuzzer to discover hidden files and directories"
   description: "Fast web fuzzer for discovering hidden endpoints and parameters"
-  image: golang
+  image: debian
   author:
     - https://github.com/ffuf
   gallery:
@@ -10,9 +10,10 @@ settings:
 
 ffuf:
   install:
-    - go install github.com/ffuf/ffuf@latest 2>>/dev/null
+    - apt-get update -qq && apt-get install -qy curl ca-certificates >>/dev/null
+    - curl -sL https://api.github.com/repos/ffuf/ffuf/releases/latest | grep browser_download_url | grep 'linux_amd64\.tar\.gz"' | head -1 | cut -d'"' -f4 | xargs curl -sL | tar xz -C /usr/local/bin/
     - mkdir -p /wordlists
-    - wget -q https://raw.githubusercontent.com/danielmiessler/SecLists/master/Discovery/Web-Content/common.txt -O /wordlists/common.txt
+    - curl -s https://raw.githubusercontent.com/danielmiessler/SecLists/master/Discovery/Web-Content/common.txt -o /wordlists/common.txt
 
   help:
     - ffuf -h

@@ -1,0 +1,35 @@
+settings:
+  name: "SpotBugs: Find bugs in Java code"
+  description: "SpotBugs is a static analysis tool that looks for bugs in Java code. It uses the Find Security Bugs plugin to detect security vulnerabilities including SQL injection, XSS, cryptographic weaknesses, and other OWASP Top 10 issues."
+  image: maven:3.9-eclipse-temurin-21
+  timeout: 600
+  author:
+    - https://github.com/spotbugs/spotbugs
+  example: satori run satori://code/java/spotbugs.yml --repo OWASP-Benchmark/BenchmarkJava --report --output
+
+spotbugs:
+  install:
+    - apt-get update >>/dev/null; apt-get install -qy curl unzip >>/dev/null
+    - curl -sSL https://github.com/spotbugs/spotbugs/releases/download/4.8.6/spotbugs-4.8.6.zip -o /tmp/spotbugs.zip && unzip -q /tmp/spotbugs.zip -d /opt
+    - curl -sSL https://repo1.maven.org/maven2/com/h3xstream/findsecbugs/findsecbugs-plugin/1.13.0/findsecbugs-plugin-1.13.0.jar -o /opt/spotbugs-4.8.6/plugin/findsecbugs.jar
+
+  run:
+    - |
+      mvn compile -q 2>>/dev/null
+      /opt/spotbugs-4.8.6/bin/spotbugs -textui -effort:max -low -pluginList /opt/spotbugs-4.8.6/plugin/findsecbugs.jar target/classes 2>/dev/null | tee /tmp/spotbugs.out
+      HIGH_COUNT=$(grep -c "^H " /tmp/spotbugs.out 2>/dev/null || echo 0)
+      MEDIUM_COUNT=$(grep -c "^M " /tmp/spotbugs.out 2>/dev/null || echo 0)
+      echo "HIGH_BUGS: $HIGH_COUNT"
+      echo "MEDIUM_BUGS: $MEDIUM_COUNT"
+      if [ "$HIGH_COUNT" -gt 0 ]; then echo "FOUND_HIGH"; fi
+      if [ "$MEDIUM_COUNT" -gt 0 ]; then echo "FOUND_MEDIUM"; fi
+
+  high:
+    setOutput: spotbugs.run
+    setSeverity: 2
+    assertStdoutNotContains: "FOUND_HIGH"
+
+  medium:
+    setOutput: spotbugs.run
+    setSeverity: 3
+    assertStdoutNotContains: "FOUND_MEDIUM"

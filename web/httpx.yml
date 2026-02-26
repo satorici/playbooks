@@ -1,7 +1,7 @@
 settings:
   name: "httpx: performs multiple web probes"
   description: "Identify and analyze web server configurations, verify HTTP responses, and diagnose potential vulnerabilities or misconfigurations"
-  image: golang
+  image: debian
   author:
     - https://github.com/projectdiscovery
   gallery:
@@ -10,7 +10,9 @@ settings:
 
 httpx:
   install:
-    - go install github.com/projectdiscovery/httpx/cmd/httpx@latest 2>>/dev/null
+    - apt-get update -qq && apt-get install -qy curl unzip ca-certificates >>/dev/null
+    - curl -sL https://api.github.com/repos/projectdiscovery/httpx/releases/latest | grep browser_download_url | grep 'linux_amd64\.zip"' | head -1 | cut -d'"' -f4 | xargs curl -sL -o /tmp/httpx.zip
+    - unzip -o /tmp/httpx.zip -d /usr/local/bin/
 
   help:
     - httpx -h

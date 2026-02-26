@@ -1,0 +1,22 @@
+settings:
+  name: "Gosec: Go security checker"
+  description: "Gosec inspects Go source code for security problems by scanning the Go AST. It detects hardcoded credentials, SQL injection, command injection, path traversal, weak cryptography, and other common security issues in Go code."
+  image: debian
+  author:
+    - https://github.com/securego/gosec
+  example: satori run satori://code/go/gosec.yml --repo securego/gosec --report --output
+
+gosec:
+  install:
+    - apt-get update -qq && apt-get install -qy curl ca-certificates >>/dev/null
+    - curl -sL https://api.github.com/repos/securego/gosec/releases/latest | grep browser_download_url | grep 'linux_amd64\.tar\.gz"' | head -1 | cut -d'"' -f4 | xargs curl -sL | tar xz -C /usr/local/bin/
+
+  help:
+    - gosec --help
+
+  test:
+    assertStdoutNotContains:
+      - "HIGH"
+      - "MEDIUM"
+    run:
+      - gosec -fmt text ./...

@@ -1,0 +1,17 @@
+settings:
+  name: "OpenAPI Validator: Validate OpenAPI specifications"
+  description: "Uses IBM's OpenAPI Validator to check OpenAPI 3.x and Swagger 2.0 specifications for correctness, best practices, and security issues. Detects missing authentication schemes, insecure endpoints, and spec violations."
+  image: node:20-slim
+  author:
+    - https://github.com/IBM/openapi-validator
+  example: satori run satori://api/openapi-validator.yml -d SPEC_URL="https://petstore3.swagger.io/api/v3/openapi.json" --report --output
+
+openapi_validator:
+  install:
+    - apt-get update >>/dev/null; apt-get install -qy curl >>/dev/null
+    - npm install -g ibm-openapi-validator >>/dev/null 2>&1
+
+  test:
+    assertReturnCode: 0
+    run:
+      - curl -sSL ${{SPEC_URL}} -o /tmp/openapi-spec.json && lint-openapi /tmp/openapi-spec.json

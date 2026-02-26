@@ -1,13 +1,14 @@
 settings:
   name: "sisakulint: SAST for Github Actions"
   description: "CI-Friendly static linter with autofix, SAST, semantic analysis for GitHub Actions"
-  image: juanimedina7/sisakulint:latest
+  image: debian
   author:
     - https://github.com/ultra-supara/
   example: satori run --playbook satori://code/github/sisakulint2.yml --repo satorici/satori-cli --output
 
 install:
-  - command -v sisakulint >/dev/null || go install github.com/ultra-supara/sisakulint/cmd/sisakulint@latest 2>/dev/null
+  - apt-get update -qq && apt-get install -qy curl ca-certificates >>/dev/null
+  - curl -sL https://api.github.com/repos/ultra-supara/sisakulint/releases/latest | grep browser_download_url | grep 'linux_amd64\.tar\.gz"' | head -1 | cut -d'"' -f4 | xargs curl -sL | tar xz -C /usr/local/bin/
 
 sisakulint:
   assertReturnCode: 0

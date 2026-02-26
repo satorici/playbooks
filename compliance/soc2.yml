@@ -1,0 +1,45 @@
+settings:
+  name: "SOC2: Basic security controls assessment"
+  description: "Performs basic SOC2-relevant security checks on a web endpoint including TLS configuration, security headers, open ports, and DNS configuration. Covers Trust Services Criteria for security availability and confidentiality."
+  image: debian
+  timeout: 900
+  author:
+    - https://github.com/satorici
+  example: satori run satori://compliance/soc2.yml -d HOST="satori.ci" --report --output
+
+install:
+  - apt-get update >>/dev/null; apt-get install -qy openssl curl nmap dnsutils >>/dev/null
+
+tls_check:
+  setSeverity: 1
+  assertStdoutNotContains:
+    - "SSLv2"
+    - "SSLv3"
+    - "TLSv1.0"
+    - "TLSv1.1"
+  run:
+    - echo | openssl s_client -connect ${{HOST}}:443 2>/dev/null | grep -E "Protocol|Cipher"
+
+security_headers:
+  setSeverity: 2
+  assertStdoutContains:
+    - "Strict-Transport-Security"
+  run:
+    - curl -sI https://${{HOST}} | grep -iE "Strict-Transport-Security|X-Content-Type-Options|X-Frame-Options|Content-Security-Policy|X-XSS-Protection"
+
+open_ports:
+  setSeverity: 2
+  assertStdoutNotContains:
+    - "3306/tcp"
+    - "5432/tcp"
+    - "27017/tcp"
+    - "6379/tcp"
+    - "11211/tcp"
+  run:
+    - nmap --top-ports 100 -sT ${{HOST}} | grep "open"
+
+dnssec:
+  setSeverity: 3
+  assertReturnCode: 0
+  run:
+    - dig +dnssec ${{HOST}} | grep -E "RRSIG|flags"

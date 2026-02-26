@@ -1,7 +1,7 @@
 settings:
   name: "tfsec: Security scanner for Terraform code"
   description: "tfsec uses static analysis of your terraform code to spot potential security issues. Along with basic rule checking, tfsec also checks for sensitive information in terraform state files. Scans HCL2 and json formatted terraform configuration files."
-  image: golang
+  image: debian
   author:
     - https://github.com/aquasecurity/tfsec
   gallery:
@@ -10,7 +10,8 @@ settings:
 
 tfsec:
   install:
-    - go install github.com/aquasecurity/tfsec/cmd/tfsec@latest 2>>/dev/null
+    - apt-get update -qq && apt-get install -qy curl ca-certificates >>/dev/null
+    - curl -sL https://api.github.com/repos/aquasecurity/tfsec/releases/latest | grep browser_download_url | grep 'linux_amd64\.tar\.gz"' | head -1 | cut -d'"' -f4 | xargs curl -sL | tar xz -C /usr/local/bin/
 
   help:
     - tfsec --help

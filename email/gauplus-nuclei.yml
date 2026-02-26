@@ -11,9 +11,10 @@ settings:
 
 email_gauplus-nuclei:
   install:
-    - apt-get update >>/dev/null; apt-get install -qy git >>/dev/null
+    - apt-get update >>/dev/null; apt-get install -qy git curl unzip ca-certificates >>/dev/null
     - go install github.com/bp0lr/gauplus@latest 2>>/dev/null
-    - go install github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest 2>>/dev/null
+    - curl -sL https://api.github.com/repos/projectdiscovery/nuclei/releases/latest | grep browser_download_url | grep 'linux_amd64\.zip"' | head -1 | cut -d'"' -f4 | xargs curl -sL -o /tmp/nuclei.zip
+    - unzip -o /tmp/nuclei.zip -d /usr/local/bin/
     - cd /tmp; git clone --depth 1 https://github.com/panch0r3d/nuclei-templates.git
 
   test:

@@ -1,7 +1,7 @@
 settings:
   name: "cdncheck: Identify the technology associated with a host (CDN, CLOUD or WAF)"
   description: "cdncheck identifies whether IP addresses belong to known Content Delivery Networks (CDNs) or cloud providers. It helps distinguish between origin servers and CDN-protected assets during reconnaissance and security assessments."
-  image: golang
+  image: debian
   author:
     - https://github.com/projectdiscovery
   gallery:
@@ -10,7 +10,9 @@ settings:
 
 cdncheck:
   install:
-    - go install github.com/projectdiscovery/cdncheck/cmd/cdncheck@latest 2>>/dev/null
+    - apt-get update -qq && apt-get install -qy curl unzip ca-certificates >>/dev/null
+    - curl -sL https://api.github.com/repos/projectdiscovery/cdncheck/releases/latest | grep browser_download_url | grep 'linux_amd64\.zip"' | head -1 | cut -d'"' -f4 | xargs curl -sL -o /tmp/cdncheck.zip
+    - unzip -o /tmp/cdncheck.zip -d /usr/local/bin/
 
   help:
     - cdncheck -duc -h

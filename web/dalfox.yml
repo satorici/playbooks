@@ -1,7 +1,7 @@
 settings:
   name: "Dalfox: XSS scanner"
   description: "Dalfox detects and exploits XSS (Cross-Site Scripting) vulnerabilities by analyzing parameters, injecting payloads, and automating security testing. It supports reflection-based detection, DOM analysis, and blind XSS payload delivery for comprehensive web application security assessments."
-  image: golang
+  image: debian
   author:
     - https://github.com/hahwul
   gallery:
@@ -11,7 +11,8 @@ settings:
 
 dalfox:
   install:
-    - go install github.com/hahwul/dalfox/v2@latest 2>>/dev/null
+    - apt-get update -qq && apt-get install -qy curl ca-certificates >>/dev/null
+    - curl -sL https://api.github.com/repos/hahwul/dalfox/releases/latest | grep browser_download_url | grep -E 'linux.*amd64.*tar\.gz"' | head -1 | cut -d'"' -f4 | xargs curl -sL | tar xz -C /usr/local/bin/
 
   help:
     - dalfox --help
