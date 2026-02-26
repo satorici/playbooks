@@ -17,6 +17,52 @@ Browse the full catalog at [satori.ci/playbooks](https://satori.ci/playbooks).
 
 ---
 
+## Directory Structure
+
+```
+playbooks/
+|-- api/              API testing
+|-- cloud/            AWS and multi-cloud security
+|-- code/             Static analysis and linting
+|   |-- abap/
+|   |-- css/lint/
+|   |-- github/       GitHub Actions security
+|   |-- go/
+|   |-- java/
+|   |-- javascript/lint/
+|   |-- mobile/
+|   |-- python/lint/ test/
+|   |-- ruby/
+|   |-- rust/
+|   |-- swift/
+|   `-- typescript/lint/
+|-- compliance/       OWASP, PCI-DSS, SOC2
+|-- container/        Container and IaC scanning
+|   `-- iac/          Terraform, Kubernetes
+|-- crack/            Password cracking
+|-- cve/              Specific CVE tests
+|-- dns/              DNS enumeration and recon
+|   `-- passive/      Passive subdomain discovery
+|-- dos/              Load and DoS testing
+|-- email/            Email harvesting and OSINT
+|   `-- auth/         Authenticated variants
+|-- llm/              LLM querying and testing
+|   `-- tools/        LLM-powered repo analysis
+|-- malware/          Malware detection
+|-- monitor/          Uptime, SSL, DNS monitoring
+|-- ms/               Microsoft-specific CVEs
+|-- sap/              SAP security
+|-- scan/             Port scanning and network recon
+|-- secrets/          Secret detection
+`-- web/              Web application testing
+    |-- enum/         Directory and file fuzzing
+    |-- passive/      Passive URL discovery
+    |-- tls/          TLS/SSL testing
+    `-- tools/        URL utilities and screenshots
+```
+
+---
+
 ## Playbook Catalog
 
 ### Code Analysis (72 playbooks)
@@ -34,16 +80,138 @@ Static analysis, linting, and dependency auditing across multiple languages.
 | `code/trivy.yml` | Trivy — vulnerability scanner for code |
 | `code/yamllint.yml` | YAML Lint |
 
-**Python** (20):
-`bandit.yml` `audit.yml` `safety.yml` `bloky.yml` `pyspector.yml` `pysource-codegen.yml` `pytest.yml` `unittest.yml` — Linters: `ruff.yml` `pylint.yml` `flake8.yml` `mypy.yml` `pyright.yml` `basedmypy.yml` `basedpyright.yml` `pyrefly.yml` `ty.yml` `black.yml` `vulture.yml` `radon.yml` `autopep8.yml` `isort.yml` `pycodestyle.yml` `pydocstyle.yml` `pyflakes.yml` `pylama.yml` `prospector.yml` `pytype.yml`
+**Python**
 
-**JavaScript / TypeScript** (12):
-`npmaudit.yml` `retirejs.yml` `semgrep.yml` `dependencycheck.yml` — Linters: `eslint.yml` `biome.yml` `prettier.yml` `standard.yml` `jshint.yml` `jscpd.yml` `jsdoc.yml` `tsc.yml`
+| Playbook | Tool |
+|----------|------|
+| `code/python/bandit.yml` | Bandit — find security issues in Python |
+| `code/python/audit.yml` | Pip Audit — known vulnerabilities in dependencies |
+| `code/python/safety.yml` | Safety — check dependencies for vulnerabilities |
+| `code/python/bloky.yml` | Bloky |
+| `code/python/pyspector.yml` | PySpector |
+| `code/python/pysource-codegen.yml` | pysource-codegen — generate random Python code |
+| `code/python/test/pytest.yml` | pytest — enhanced unit testing |
+| `code/python/test/unittest.yml` | unittest |
+| `code/python/lint/ruff.yml` | Ruff — fast Python linter |
+| `code/python/lint/pylint.yml` | Pylint — Python linter |
+| `code/python/lint/flake8.yml` | Flake8 — style and quality checker |
+| `code/python/lint/mypy.yml` | Mypy — type checking |
+| `code/python/lint/pyright.yml` | Pyright — fast static type checker |
+| `code/python/lint/basedmypy.yml` | BasedMypy — enhanced type checker |
+| `code/python/lint/basedpyright.yml` | BasedPyright — enhanced type checker |
+| `code/python/lint/pyrefly.yml` | Pyrefly — static analyzer |
+| `code/python/lint/ty.yml` | Ty — type checker |
+| `code/python/lint/black.yml` | Black — code formatter |
+| `code/python/lint/vulture.yml` | Vulture — dead code detection |
+| `code/python/lint/radon.yml` | Radon — code metrics |
+| `code/python/lint/autopep8.yml` | Autopep8 — PEP 8 formatter |
+| `code/python/lint/isort.yml` | Isort — import sorting |
+| `code/python/lint/pycodestyle.yml` | Pycodestyle — PEP 8 style checker |
+| `code/python/lint/pydocstyle.yml` | Pydocstyle — docstring checker |
+| `code/python/lint/pyflakes.yml` | Pyflakes — fast linter |
+| `code/python/lint/pylama.yml` | Pylama — code audit wrapper |
+| `code/python/lint/prospector.yml` | Prospector — meta-linter |
+| `code/python/lint/pytype.yml` | Pytype — static type checker |
 
-**Go**: `gosec.yml` — **Java**: `spotbugs.yml` — **Ruby**: `brakeman.yml` `rubocop.yml` — **Rust**: `audit.yml` `geiger.yml` — **Swift**: `swiftlint.yml` `swiftasgen.yml` — **C/C++**: `cppcheck.yml` — **CSS**: `stylelint.yml` — **COBOL**: `cobol.yml` — **ABAP**: `abap-code-scanner.yml` — **Mobile**: `apkleaks.yml` `mobsfscan.yml` — **ERB**: `erb-to-epp.yml`
+**JavaScript / TypeScript**
 
-**GitHub Actions Security** (7):
-`octoscan.yml` `sisakulint.yml` `sisakulint2.yml` `semgrep.yml` `gato-x.yml` `ghwfauditor.yml` `gitverify.yml` `gitxray.yml`
+| Playbook | Tool |
+|----------|------|
+| `code/javascript/npmaudit.yml` | NPM Audit — dependency vulnerabilities |
+| `code/javascript/retirejs.yml` | Retire.js — detect vulnerable JS libraries |
+| `code/javascript/semgrep.yml` | Semgrep — JavaScript analysis |
+| `code/javascript/dependencycheck.yml` | OWASP DependencyCheck — dependency vulnerabilities |
+| `code/javascript/lint/eslint.yml` | ESLint — code analysis |
+| `code/javascript/lint/biome.yml` | Biome — formatter and linter |
+| `code/javascript/lint/prettier.yml` | Prettier — code formatter |
+| `code/javascript/lint/standard.yml` | StandardJS — style guide and linter |
+| `code/javascript/lint/jshint.yml` | JSHint — static analysis |
+| `code/javascript/lint/jscpd.yml` | JSCPD — copy/paste detector |
+| `code/javascript/lint/jsdoc.yml` | JSDoc — documentation generator |
+| `code/typescript/lint/tsc.yml` | TypeScript Compiler — type checking |
+
+**Go**
+
+| Playbook | Tool |
+|----------|------|
+| `code/go/gosec.yml` | Gosec — Go security checker |
+
+**Java**
+
+| Playbook | Tool |
+|----------|------|
+| `code/java/spotbugs.yml` | SpotBugs — find bugs in Java code |
+
+**Ruby**
+
+| Playbook | Tool |
+|----------|------|
+| `code/brakeman.yml` | Brakeman — SAST for Ruby on Rails |
+| `code/rubocop.yml` | RuboCop — static analyzer and formatter |
+
+**Rust**
+
+| Playbook | Tool |
+|----------|------|
+| `code/rust/audit.yml` | Rust Audit — crate vulnerability audit |
+| `code/rust/geiger.yml` | Rust Geiger — crate vulnerability detection |
+
+**Swift**
+
+| Playbook | Tool |
+|----------|------|
+| `code/swift/swiftlint.yml` | SwiftLint — style and conventions |
+| `code/swift/swiftasgen.yml` | SwiftAstGen |
+
+**C/C++**
+
+| Playbook | Tool |
+|----------|------|
+| `code/cppcheck.yml` | Cppcheck — static analysis |
+
+**CSS**
+
+| Playbook | Tool |
+|----------|------|
+| `code/css/lint/stylelint.yml` | Stylelint — CSS and SCSS linter |
+
+**COBOL**
+
+| Playbook | Tool |
+|----------|------|
+| `code/cobol.yml` | COBOL minimal SAST |
+
+**ABAP**
+
+| Playbook | Tool |
+|----------|------|
+| `code/abap/abap-code-scanner.yml` | RedRays — ABAP security scanner |
+
+**Mobile**
+
+| Playbook | Tool |
+|----------|------|
+| `code/mobile/apkleaks.yml` | APKLeaks — scan APKs for URIs and secrets |
+| `code/mobile/mobsfscan.yml` | MobSFScan — mobile code SAST |
+
+**ERB**
+
+| Playbook | Tool |
+|----------|------|
+| `code/ruby/erb-to-epp.yml` | ERB to EPP converter |
+
+**GitHub Actions Security**
+
+| Playbook | Tool |
+|----------|------|
+| `code/github/octoscan.yml` | Octoscan — GitHub Actions workflow scanner |
+| `code/github/sisakulint.yml` | sisakulint — SAST for GitHub Actions |
+| `code/github/sisakulint2.yml` | sisakulint — SAST for GitHub Actions |
+| `code/github/semgrep.yml` | Semgrep — GitHub Workflows analysis |
+| `code/github/gato-x.yml` | Gato-X — GitHub Attack Toolkit |
+| `code/github/ghwfauditor.yml` | ghwfauditor — GitHub Workflow vulnerability detection |
+| `code/github/gitverify.yml` | Gitverify — repository trustworthiness |
+| `code/github/gitxray.yml` | Gitxray — GitHub repository OSSINT |
 
 ### Web Security (34 playbooks)
 
