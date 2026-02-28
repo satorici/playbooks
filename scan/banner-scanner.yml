@@ -1,7 +1,11 @@
 settings:
   name: Banner scanner
+  description: "Grabs banners from a list of IP addresses on a specified port using concurrent connections."
   files: true
   image: python
+  author:
+    - https://github.com/satorici
+  example: satori run satori://scan/banner-scanner.yml -i input.txt -d CONCURRENCY=100 -d TIMEOUT=5 -d PORT=80 --report --output
 
 install:
   - pip install git+https://github.com/satorici/banner-scanner

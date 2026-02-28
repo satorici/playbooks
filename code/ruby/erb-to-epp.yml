@@ -1,8 +1,10 @@
 settings:
   name: ERB to EPP
-  descrtion: "Embedded Ruby (.erb) into Embedded Puppet (.epp)"
-  image: 
-  example: 
+  description: "Embedded Ruby (.erb) into Embedded Puppet (.epp)"
+  image: satori
+  author:
+    - https://github.com/artonix101
+  example: satori run ./ --playbook satori://code/ruby/erb-to-epp.yml --report --output
 
 install:
   - test -e /tmp/erb-to-epp >/dev/null || cd /tmp; git clone --depth 1 https://github.com/artonix101/erb-to-epp.git; cd erb-to-epp; cargo build --release

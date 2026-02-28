@@ -1,7 +1,11 @@
 settings:
   name: Gemini CLI
+  description: "Uses Google Gemini CLI to query a cloned repository with an AI prompt."
   image: node
   timeout: 900
+  author:
+    - https://github.com/google-gemini
+  example: satori run satori://llm/gemini.yml -d REPO="owner/repo" -d PROMPT="Analyze this code" -d GEMINI_API_KEY=$GEMINI_API_KEY --report --output
   redacted:
     - GEMINI_API_KEY
 

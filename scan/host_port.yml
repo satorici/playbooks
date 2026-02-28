@@ -1,7 +1,10 @@
 settings:
   name: Scan bug bounty hosts with a playbook
+  description: "Scans bug bounty target hosts from public domain lists using a specified playbook and port list in parallel."
   image: python
   cpu: 2048
+  author:
+    - https://github.com/satorici
   memory: 7168
   files: true
   redacted:

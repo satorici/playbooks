@@ -1,6 +1,10 @@
 settings:
   name: APIFuzzer
+  description: "APIFuzzer is a fuzzing tool that tests API endpoints defined in OpenAPI/Swagger specifications to find potential vulnerabilities."
   image: python:3.11
+  author:
+    - https://github.com/KissPeter
+  example: satori run satori://web/apifuzzer.yml --report --output
 
 install:
   - command -v APIFuzzer >/dev/null || (export DEBIAN_FRONTEND=noninteractive; apt-get update >/dev/null; apt-get install -qy screen >/dev/null; pip3 install git+https://github.com/KissPeter/APIFuzzer.git flask -q --disable-pip-version-check --root-user-action=ignore)

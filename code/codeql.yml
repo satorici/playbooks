@@ -1,6 +1,10 @@
 settings:
   name: CodeQL Javascript Python Ruby
+  description: "CodeQL is a semantic code analysis engine that finds security vulnerabilities in JavaScript, Python, and Ruby codebases using database queries."
   image: python
+  author:
+    - https://github.com/github
+  example: satori run ./ --playbook satori://code/codeql.yml --report --output
 
 codeql:
   install:

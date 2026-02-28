@@ -4,7 +4,7 @@ settings:
   image: satori
   author:
     - https://github.com/joernio
-  example: satori run satori://code/joern.yml --repo satorici/satori-cli --output
+  example: satori run satori://code/joern.yml --repo satorici/satori-cli --report --output
 
 install:
   - curl -sL "https://github.com/joernio/joern/releases/latest/download/joern-install.sh" -o joern-install.sh

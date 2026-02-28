@@ -4,7 +4,7 @@ settings:
   image: debian
   author:
     - https://github.com/ultra-supara/
-  example: satori run --playbook satori://code/github/sisakulint.yml --repo satorici/satori-cli --output
+  example: satori run --playbook satori://code/github/sisakulint.yml --repo satorici/satori-cli --report --output
 
 install:
   - apt-get update -qq && apt-get install -qy curl ca-certificates >>/dev/null

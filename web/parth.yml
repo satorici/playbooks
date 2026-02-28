@@ -10,7 +10,7 @@ settings:
 
 parth:
   install:
-    - command -v parth >/dev/null || pip3 install requests parth -q --disable-pip-version-check --root-user-action=ignore 
+    - command -v parth >/dev/null || pip3 install requests parth -q --disable-pip-version-check --root-user-action=ignore
 
   help:
     - parth -h

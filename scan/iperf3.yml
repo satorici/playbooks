@@ -1,10 +1,12 @@
 settings:
   name: "IPerf3: Measures performance"
+  description: "IPerf3 is a network performance measurement tool that tests bandwidth, jitter, and packet loss between hosts."
+  image: debian
   author:
     - https://github.com/esnet
   gallery:
     - https://files.catbox.moe/99cy9f.png
-  example: satori run satori://scan/iperf3.yml --output --test iperf3.run.client.stdout --cpu 2048 --memory 4096
+  example: satori run satori://scan/iperf3.yml --report --output --test iperf3.run.client.stdout --cpu 2048 --memory 4096
 
 install:
   - apt-get update -q >>/dev/null; apt-get install iperf3 -qy >>/dev/null
@@ -13,7 +15,7 @@ iperf3:
   #help:
   #  - iperf3 --help
 
-  run: 
+  run:
     assertStderrNotContains: "error"
     client:
       - iperf3 -c iperf.he.net -t 15 -P 2 -J --reverse

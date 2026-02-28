@@ -1,7 +1,10 @@
 settings:
   name: "Port scan on a range"
+  description: "Scans an IP range for open ports using ZMap and ZGrab2 with sharding support, then aggregates banner results."
   image: python
   files: true
+  author:
+    - https://github.com/satorici
   redacted:
     - SATORI_TOKEN
   example: satori run satori://scan.yml -d RANGE=52.0.0.0/8 -d PORT=80 -d SATORI_TOKEN=$SATORI_TOKEN -d SHARDS=500 --output --visibility public

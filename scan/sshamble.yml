@@ -1,9 +1,11 @@
 settings:
   name: "SSHamble: Unexpected Exposures in SSH"
+  description: "SSHamble is an SSH security testing tool that identifies misconfigurations, weak credentials, and unexpected exposures in SSH services."
   image: threatpatrols/sshamble
   timeout: 10000
   author:
     - https://github.com/runZeroInc
+  example: satori run satori://scan/sshamble.yml -d IPS="192.168.1.1" --report --output
 
 passwords:
   # https://github.com/danielmiessler/SecLists/blob/master/Passwords/Common-Credentials/top-20-common-SSH-passwords.txt
@@ -11,7 +13,7 @@ passwords:
 ips:
   - echo "${{IPS}}" | tr "," "\n" >> ips
   - cat ips
-  
+
 sshamble:
   assertReturnCode: 0
   scan:

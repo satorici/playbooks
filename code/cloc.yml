@@ -1,5 +1,6 @@
 settings:
   name: "CLOC: Count Lines of Code"
+  description: "CLOC counts blank lines, comment lines, and physical lines of source code in many programming languages."
   image: aldanial/cloc
   author:
     - https://github.com/AlDanial

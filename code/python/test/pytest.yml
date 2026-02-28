@@ -1,9 +1,13 @@
 settings:
   name: "pytest - enhanced unit test for Python"
+  description: "Runs pytest to discover and execute unit tests in Python projects with automatic dependency installation."
   image: python
+  author:
+    - https://github.com/pytest-dev
+  example: satori run ./ --playbook satori://code/python/test/pytest.yml --report --output
 
 install:
-  - python -m venv venv >>/dev/null 
+  - python -m venv venv >>/dev/null
   - venv/bin/pip install --upgrade pip setuptools wheel -q --disable-pip-version-check --root-user-action=ignore
   - venv/bin/pip install pytest -q --disable-pip-version-check --root-user-action=ignore
   - |

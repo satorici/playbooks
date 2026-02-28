@@ -1,7 +1,10 @@
 settings:
   name: bloky
+  description: "Bloky detects blocking operations in Python async code that could cause performance issues."
   image: python
-  example: satori run bloky.yml --repo satorici/satori-cli --output
+  author:
+    - https://github.com/satorici
+  example: satori run satori://code/python/bloky.yml --repo satorici/satori-cli --report --output
 
 install:
   - command -v bloky >/dev/null || pip install bloky -q --disable-pip-version-check --root-user-action=ignore

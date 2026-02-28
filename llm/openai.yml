@@ -1,12 +1,13 @@
 settings:
   name: "OpenAI gpt-oss:20b"
+  description: "Runs the OpenAI gpt-oss:20b model locally using Ollama to query with custom input."
   image: ollama/ollama
   cpu: 16384
   memory: 122880
   timeout: 400
   author:
     - https://github.com/ollama
-  example: satori run openai.yml -d INPUT="Hello World" --output
+  example: satori run satori://llm/openai.yml -d INPUT="Hello World" --report --output
 
 MODEL:
   - - "gpt-oss:20b"

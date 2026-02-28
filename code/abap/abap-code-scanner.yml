@@ -3,6 +3,9 @@ settings:
   description: "Analyze ABAP (Advanced Business Application Programming) code for potential security vulnerabilities, code quality issues, and best practice violations"
   image: python
   files: true
+  author:
+    - https://github.com/redrays-io
+  example: satori run ./ --playbook satori://code/abap/abap-code-scanner.yml --report --output
   #image: public.ecr.aws/docker/library/python:3.13
 
 install:

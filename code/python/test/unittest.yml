@@ -1,6 +1,10 @@
 settings:
   name: unittest
+  description: "Runs Python's built-in unittest framework to discover and execute unit tests."
   image: python
+  author:
+    - https://github.com/python
+  example: satori run ./ --playbook satori://code/python/test/unittest.yml --report --output
 
 unittest:
   assertReturnCode: 0

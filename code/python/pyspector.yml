@@ -4,12 +4,12 @@ settings:
   image: satori
   author:
     - https://github.com/ParzivalHack
-  example: satori run satori://code/python/pyspector.yml --repo satorici/satori-cli --output
+  example: satori run satori://code/python/pyspector.yml --repo satorici/satori-cli --report --output
 
 pyspector:
   install:
     - command -v pyspector >/dev/null || pip install -q --root-user-action=ignore --disable-pip-version-check pyspector
-    
+
   test:
     run:
       - pyspector scan . --ai --supply-chain

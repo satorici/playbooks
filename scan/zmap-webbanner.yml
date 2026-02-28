@@ -1,7 +1,11 @@
 #V2
 settings:
+  name: "ZMap Web Banner Scanner"
+  description: "Scans IP ranges using ZMap to discover hosts with open ports."
   image: fedora
   files: true
+  author:
+    - https://github.com/satorici
   example: satori run satori://scan/zmap-webbanner.yml --output --count 3 -d PORT=80 -d RANGE=1.1.1.0/29
 
 setShell: true

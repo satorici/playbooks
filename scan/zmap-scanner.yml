@@ -1,7 +1,10 @@
 settings:
   name: ZMap Scanner
+  description: "Orchestrates ZMap scans across IP ranges using sharding, collects results, and uploads them to a repository."
   image: python
   files: true
+  author:
+    - https://github.com/satorici
   redacted:
     - SATORI_TOKEN
     - GITHUB_TOKEN

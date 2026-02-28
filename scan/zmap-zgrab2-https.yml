@@ -1,10 +1,14 @@
 #V2
 settings:
   name: ZMap + ZGrab2
+  description: "Combines ZMap for fast port scanning with ZGrab2 for HTTPS banner grabbing across IP ranges."
   image: fedora
   files: true
   cpu: 2048
   memory: 4096
+  author:
+    - https://github.com/satorici
+  example: satori run satori://scan/zmap-zgrab2-https.yml --count 60000 -d PORT=443 -d RANGE=0.0.0.0/0 --report --output --files
 
 setShell: true
 

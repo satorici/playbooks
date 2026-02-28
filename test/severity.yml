@@ -1,5 +1,9 @@
 settings:
   name: "Test: Severity"
+  description: "Test playbook that validates severity level assertions from Blocker (0) to Informational (5)."
+  image: satori
+  author:
+    - https://github.com/satorici
   example: satori local satori://test/severity.yml -d BLOCKER=True -d CRITICAL=True -d HIGH=True -d MEDIUM=True -d LOW=True -d INFO=True --report --output
 
 echo:
@@ -11,34 +15,33 @@ echo:
       [ "${{MEDIUM}}"   = "True" ] && echo "Medium"
       [ "${{LOW}}"      = "True" ] && echo "Low"
       [ "${{INFO}}"     = "True" ] && echo "Info"
-        
+
   blocker:
     setOutput: echo.output
     setSeverity: 0
     assertStdoutNotContains: Blocker
-    
+
   critical:
     setOutput: echo.output
     setSeverity: 1
     assertStdoutNotContains: Critical
-    
+
   high:
     setOutput: echo.output
     setSeverity: 2
     assertStdoutNotContains: High
-    
+
   medium:
     setOutput: echo.output
     setSeverity: 3
     assertStdoutNotContains: Medium
-    
+
   low:
     setOutput: echo.output
     setSeverity: 4
     assertStdoutNotContains: Low
-    
+
   informational:
     setOutput: echo.output
     setSeverity: 5
     assertStdoutNotContains: Info
-   

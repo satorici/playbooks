@@ -1,5 +1,9 @@
 settings:
   name: Trivy
+  image: debian
+  author:
+    - https://github.com/aquasecurity
+  example: satori run ./ --playbook satori://code/trivy.yml --report --output
   description: |
                Trivy has scanners that look for security issues, and targets where it can find those issues.
 
@@ -24,12 +28,12 @@ install:
 trivy:
   run:
     - trivy fs .
-    
+
   critical:
     setOutput: trivy.run
     setSeverity: 1
     assertStdoutNotRegex: "CRITICAL: [1-9].*"
-    
+
   high:
     setOutput: trivy.run
     setSeverity: 2
@@ -39,7 +43,7 @@ trivy:
     setOutput: trivy.run
     setSeverity: 3
     assertStdoutNotRegex: "MEDIUM: [1-9].*"
-    
+
   low:
     setOutput: trivy.run
     setSeverity: 4

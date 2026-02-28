@@ -1,10 +1,12 @@
 settings:
   name: "ThreatTracer: identify CVE by name & version"
+  description: "ThreatTracer identifies CVE details by querying vulnerability databases with CVE identifiers."
+  image: python
   author:
     - https://github.com/anmolksachan
   gallery:
     - https://files.catbox.moe/ar9ttb.png
-  example: satori run satori://cve/search.yml -df CVE=cves.txt --output
+  example: satori run satori://cve/search.yml -df CVE=cves.txt --report --output
 
 install:
   - test -e /tmp/ThreatTracer >/dev/null || cd /tmp; git clone --depth 1 https://github.com/anmolksachan/ThreatTracer.git; cd ThreatTracer; pip3 install -r requirements.txt -q --disable-pip-version-check --root-user-action=ignore

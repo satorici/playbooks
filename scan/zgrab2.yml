@@ -1,5 +1,6 @@
 settings:
   name: "ZGrab2: grab port banners"
+  description: "ZGrab2 is a modular application-layer network scanner that grabs banners and metadata from services on specified ports."
   image: golang
   files: true
   author:

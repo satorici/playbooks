@@ -1,6 +1,9 @@
 settings:
   name: JavaScript linters
+  description: "Runs multiple JavaScript linters and formatters including ESLint, Prettier, JSHint, StandardJS, Biome, and more."
   image: satori
+  author:
+    - https://github.com/satorici
   example: satori run ./ --playbook satori://code/javascript/lint/all.yml --report --output
 
 import:
