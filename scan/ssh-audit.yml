@@ -1,0 +1,19 @@
+settings:
+  name: "ssh-audit: SSH server configuration auditor"
+  description: "ssh-audit analyzes SSH server configurations to identify weak algorithms, outdated protocols, and security misconfigurations. It checks key exchanges, ciphers, MACs, and host key algorithms against known vulnerabilities and best practices."
+  image: python
+  author:
+    - https://github.com/jtesta
+  example: satori run satori://scan/ssh-audit.yml -d HOST="satori.ci" --report --output
+
+ssh-audit:
+  install:
+    - command -v ssh-audit >/dev/null || pip install ssh-audit -q --disable-pip-version-check --root-user-action=ignore
+
+  help:
+    - ssh-audit --help
+
+  test:
+    assertStdoutNotContains: "[fail]"
+    run:
+      - ssh-audit ${{HOST}}

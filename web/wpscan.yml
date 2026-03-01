@@ -1,0 +1,20 @@
+settings:
+  name: "WPScan: WordPress security scanner"
+  description: "WPScan scans WordPress installations for known vulnerabilities, outdated plugins and themes, weak passwords, and security misconfigurations. It enumerates users, plugins, themes, and checks against the WPScan Vulnerability Database."
+  image: ruby
+  timeout: 300
+  author:
+    - https://github.com/wpscanteam
+  example: satori run satori://web/wpscan.yml -d URL="https://example.com" --report --output
+
+wpscan:
+  install:
+    - gem install wpscan --no-document 2>>/dev/null
+
+  help:
+    - wpscan --help
+
+  test:
+    assertStdoutNotContains: "vulnerabilities identified"
+    run:
+      - wpscan --url ${{URL}} -e vp,vt --no-banner 2>&1 || true

@@ -1,0 +1,22 @@
+settings:
+  name: "Dockle: Container image security linter"
+  description: "Dockle audits Docker container images against CIS Benchmarks and best practices. Unlike Hadolint which checks Dockerfiles, Dockle analyzes the built image to find security issues like running as root, missing HEALTHCHECK, and exposed credentials."
+  image: debian
+  author:
+    - https://github.com/goodwithtech
+  example: satori run satori://container/dockle.yml -d IMAGE="python:3.4-alpine" --report --output
+
+dockle:
+  install:
+    - apt-get update >>/dev/null; apt-get install -qy curl >>/dev/null
+    - curl -sL https://api.github.com/repos/goodwithtech/dockle/releases/latest | grep browser_download_url | grep 'Linux-64bit\.tar\.gz"' | head -1 | cut -d'"' -f4 | xargs curl -sL | tar xz -C /usr/local/bin/
+
+  help:
+    - dockle --help
+
+  test:
+    assertStdoutNotContains:
+      - "FATAL"
+      - "WARN"
+    run:
+      - dockle ${{IMAGE}}

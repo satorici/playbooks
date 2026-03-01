@@ -65,7 +65,7 @@ playbooks/
 
 ## Playbook Catalog
 
-### Code Analysis (72 playbooks)
+### Code Analysis (73 playbooks)
 
 Static analysis, linting, and dependency auditing across multiple languages.
 
@@ -78,6 +78,8 @@ Static analysis, linting, and dependency auditing across multiple languages.
 | `code/hounddog.yml` | Hounddog — detect sensitive data exposure |
 | `code/cloc.yml` | CLOC — count lines of code |
 | `code/trivy.yml` | Trivy — vulnerability scanner for code |
+| `code/osv-scanner.yml` | OSV-Scanner — vulnerability scanner for dependencies |
+| `code/syft.yml` | Syft — Software Bill of Materials (SBOM) generator |
 | `code/yamllint.yml` | YAML Lint |
 
 **Python**
@@ -206,14 +208,13 @@ Static analysis, linting, and dependency auditing across multiple languages.
 |----------|------|
 | `code/github/octoscan.yml` | Octoscan — GitHub Actions workflow scanner |
 | `code/github/sisakulint.yml` | sisakulint — SAST for GitHub Actions |
-| `code/github/sisakulint2.yml` | sisakulint — SAST for GitHub Actions |
 | `code/github/semgrep.yml` | Semgrep — GitHub Workflows analysis |
 | `code/github/gato-x.yml` | Gato-X — GitHub Attack Toolkit |
 | `code/github/ghwfauditor.yml` | ghwfauditor — GitHub Workflow vulnerability detection |
 | `code/github/gitverify.yml` | Gitverify — repository trustworthiness |
 | `code/github/gitxray.yml` | Gitxray — GitHub repository OSSINT |
 
-### Web Security (34 playbooks)
+### Web Security (36 playbooks)
 
 Dynamic testing, crawling, fuzzing, and reconnaissance for web applications.
 
@@ -252,6 +253,8 @@ Dynamic testing, crawling, fuzzing, and reconnaissance for web applications.
 | `web/passive/urlhunter.yml` | Urlhunter — URLs from shortener services |
 | `web/tools/urldedupe.yml` | Urldedupe — deduplicate URLs |
 | `web/tools/webscreenshot.yml` | Webscreenshot — screenshot websites |
+| `web/zap.yml` | OWASP ZAP — dynamic application security testing |
+| `web/wpscan.yml` | WPScan — WordPress security scanner |
 | `web/zgrab2.yml` | ZGrab2 — network scanner |
 
 ### DNS Enumeration (17 playbooks)
@@ -278,7 +281,7 @@ Subdomain discovery, DNS records, and domain reconnaissance.
 | `dns/subzy.yml` | Subzy — subdomain takeover detection |
 | `dns/tko-subs.yml` | tko-subs — subdomain takeover detection |
 
-### Network Scanning (17 playbooks)
+### Network Scanning (18 playbooks)
 
 Port scanning, banner grabbing, and network reconnaissance.
 
@@ -291,6 +294,7 @@ Port scanning, banner grabbing, and network reconnaissance.
 | `scan/smap.yml` | Smap — port scanner via Shodan API |
 | `scan/zmap.yml` | Zmap — single packet scanner |
 | `scan/zgrab2.yml` | ZGrab2 — banner grabbing |
+| `scan/ssh-audit.yml` | ssh-audit — SSH server configuration auditor |
 | `scan/sshamble.yml` | SSHamble — SSH security testing |
 | `scan/iperf3.yml` | IPerf3 — network performance |
 | `scan/banner-scanner.yml` | Banner scanner |
@@ -314,7 +318,7 @@ Find hardcoded secrets, API keys, and credentials in code.
 | `secrets/semgrep.yml` | Semgrep — find secrets |
 | `secrets/detect-secrets.yml` | detect-secrets — secret detection |
 
-### Container & IaC (8 playbooks)
+### Container & IaC (9 playbooks)
 
 Container image scanning and Infrastructure as Code security.
 
@@ -322,6 +326,7 @@ Container image scanning and Infrastructure as Code security.
 |----------|------|
 | `container/grype.yml` | Grype — container vulnerability scanner |
 | `container/trivy.yml` | Trivy — container vulnerability scanner |
+| `container/dockle.yml` | Dockle — container image security linter |
 | `container/hadolint.yml` | Hadolint — Dockerfile linter |
 | `container/iac/checkov.yml` | Checkov — IaC static analysis |
 | `container/iac/kics.yml` | KICS — IaC security |
@@ -427,12 +432,11 @@ Query and test large language models.
 |----------|------|
 | `crack/john.yml` | John the Ripper |
 
-### SAP Security (2 playbooks)
+### SAP Security (1 playbook)
 
 | Playbook | Tool |
 |----------|------|
 | `sap/Onapsis_CVE-2025-31324.yml` | SAP NetWeaver CVE scanner |
-| `sap/Onapsis_CVE-2025-31324_vSatori.yml` | SAP NetWeaver CVE scanner (Satori version) |
 
 ---
 

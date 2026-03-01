@@ -1,0 +1,20 @@
+settings:
+  name: "OWASP ZAP: Dynamic Application Security Testing"
+  description: "OWASP ZAP (Zed Attack Proxy) is the world's most widely used DAST scanner. It automatically finds security vulnerabilities in web applications by crawling and actively testing for issues like XSS, SQL injection, CSRF, and misconfigurations."
+  image: ghcr.io/zaproxy/zaproxy:stable
+  timeout: 600
+  author:
+    - https://github.com/zaproxy
+  example: satori run satori://web/zap.yml -d URL="https://example.com" --report --output
+
+zap:
+  install:
+    - mkdir -p /zap/wrk
+
+  help:
+    - zap-baseline.py -h
+
+  test:
+    assertReturnCode: 0
+    run:
+      - zap-baseline.py -t ${{URL}} -I 2>&1

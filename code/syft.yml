@@ -1,0 +1,21 @@
+settings:
+  name: "Syft: Software Bill of Materials (SBOM) generator"
+  description: "Syft by Anchore generates Software Bills of Materials (SBOMs) from container images and filesystems. It identifies packages and dependencies across dozens of ecosystems and outputs in standard formats like CycloneDX and SPDX."
+  image: debian
+  files: true
+  author:
+    - https://github.com/anchore
+  example: satori run ./ --playbook satori://code/syft.yml --report --output --files
+
+syft:
+  install:
+    - command -v curl >/dev/null || (apt-get update >>/dev/null; apt-get install -qy curl >>/dev/null)
+    - curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
+
+  help:
+    - syft --help
+
+  test:
+    assertReturnCode: 0
+    run:
+      - syft dir:. -o syft-table

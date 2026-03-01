@@ -1,0 +1,21 @@
+settings:
+  name: "OSV-Scanner: Vulnerability scanner for project dependencies"
+  description: "OSV-Scanner by Google scans project dependencies for known vulnerabilities using the OSV.dev database. It supports 11+ language ecosystems including Go, Python, JavaScript, Java, Rust, Ruby, and more."
+  image: golang
+  author:
+    - https://github.com/google
+  example: satori run ./ --playbook satori://code/osv-scanner.yml --report --output
+
+osv-scanner:
+  install:
+    - go install github.com/google/osv-scanner/v2/cmd/osv-scanner@latest 2>>/dev/null
+
+  help:
+    - osv-scanner --help
+
+  test:
+    assertStdoutNotContains:
+      - "Critical"
+      - "High"
+    run:
+      - osv-scanner scan -r .
