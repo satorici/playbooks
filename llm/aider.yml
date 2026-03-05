@@ -1,0 +1,19 @@
+settings:
+  name: "Aider: Query a remote Ollama"
+  description: "Queries a remote Ollama server at a specified IP:PORT with a given model using Aider. Verifies the server is reachable and executes the query."
+  image: python:3.12-slim
+  cpu: 16384
+  memory: 122880
+  timeout: 400
+  author:
+    - https://github.com/satorici
+  example: satori run satori://llm/aider.yml -d HOST="103.48.43.25:11434" -d MODEL="ollama/qwen2.5-coder:32b" -d INPUT="Hello World" --report --output
+
+aider:
+  install:
+    - pip install setuptools aider-chat >> /dev/null 2>&1
+
+  test:
+    assertReturnCode: 0
+    query:
+      - export OLLAMA_API_BASE=http://${{HOST}} && aider --model ${{MODEL}} --message "${{INPUT}}" --no-git --yes --no-pretty --no-show-model-warnings

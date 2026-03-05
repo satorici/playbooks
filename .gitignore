@@ -140,3 +140,4 @@ dmypy.json
 *.tar.gz
 *.zip
 .satori_credentials.yml
+CLAUDE.md

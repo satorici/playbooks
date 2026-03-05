@@ -1,0 +1,12 @@
+settings:
+  name: llmfit
+  image: python
+  example: satori run satori://llm/llmfit.yml --output --cpu 16384 --memory 122880
+
+llmfit:
+  install:
+    - apt-get update >/dev/null 2>/dev/null; apt-get install curl >/dev/null 2>/dev/null
+    - curl -fsSL https://llmfit.axjns.dev/install.sh | sh
+
+  run:
+    - llmfit --cli
