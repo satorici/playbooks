@@ -1,12 +1,16 @@
 settings:
   name: "CLOC: Count Lines of Code"
   description: "CLOC counts blank lines, comment lines, and physical lines of source code in many programming languages."
-  image: aldanial/cloc
+  image: satori
   author:
     - https://github.com/AlDanial
   example: satori local ./ --playbook satori://code/cloc.yml --report --output
 
+install:
+  cloc:
+    - apt-get update -qq && apt-get install -qy cloc >>/dev/null
+
 cloc:
   assertStdoutContains: SUM
   run:
-    - export PATH="/usr/src:$PATH"; cloc .
+    - cloc .

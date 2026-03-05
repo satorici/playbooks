@@ -1,6 +1,6 @@
 settings:
   name: "OWASP DependencyCheck: verifies publicly disclosed vulnerabilities in project's dependencies"
-  description: "OWASP DependencyCheck is a multi-language “Software Composition Analysis” (SCA) tool. While it is commonly used in Java projects (and was originally designed with Java in mind), it also supports scanning dependencies for other ecosystems, including .NET, Node.js, Python, Ruby, PHP, and more."
+  description: "OWASP DependencyCheck is a multi-language Software Composition Analysis (SCA) tool. While it is commonly used in Java projects, it also supports scanning dependencies for other ecosystems, including .NET, Node.js, Python, Ruby, PHP, and more."
   image: satori
   author:
     - https://github.com/jeremylong
@@ -10,13 +10,13 @@ settings:
 
 dependency-check:
   install:
-    - cd /tmp; wget -q https://github.com/jeremylong/DependencyCheck/releases/download/v7.3.0/dependency-check-7.3.0-release.zip ; unzip dependency-check-7.3.0-release.zip >>/dev/null
+    - cd /tmp; wget -q https://github.com/jeremylong/DependencyCheck/releases/download/v12.1.0/dependency-check-12.1.0-release.zip; unzip dependency-check-12.1.0-release.zip >>/dev/null
 
   help:
     - /tmp/dependency-check/bin/dependency-check.sh --help
 
   scan:
-    - /tmp/dependency-check/bin/dependency-check.sh --scan "./" -f CSV
+    - /tmp/dependency-check/bin/dependency-check.sh --scan "./" -f CSV --nvdApiKey ${{NVD_API_KEY}}
     - cat /data/dependency-check-report.csv
 
   test:
