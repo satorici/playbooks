@@ -1,0 +1,56 @@
+settings:
+  name: "Solhint: Solidity linter and security rules"
+  description: |
+    Solhint is an open-source Solidity linter providing both security and style
+    guide validations. It checks for security vulnerabilities such as use of
+    tx.origin, low-level calls, and missing visibility modifiers, as well as
+    code quality and naming conventions.
+  image: node:20-slim
+  author:
+    - https://github.com/protofire
+  example: satori run ./ --playbook satori://code/solidity/solhint.yml --report --output
+
+solhint:
+  install:
+    - npm install -g solhint --silent 2>/dev/null
+    - |
+      if [ ! -f .solhint.json ]; then
+        echo '{"extends": "solhint:recommended", "rules": {"compiler-version": ["error", "^0.8.0"], "func-visibility": ["warn", {"ignoreConstructors": true}], "not-rely-on-time": "warn", "avoid-low-level-calls": "warn", "avoid-tx-origin": "error", "no-inline-assembly": "warn", "reason-string": ["warn", {"maxLength": 64}]}}' > .solhint.json
+      fi
+
+  run:
+    - solhint '**/*.sol' --ignore-path node_modules --max-warnings 0 2>&1 || true
+
+  critical:
+    setOutput: solhint.run
+    setSeverity: 1
+    assertStdoutNotContains:
+      - "avoid-tx-origin"
+      - "avoid-suicide"
+
+  high:
+    setOutput: solhint.run
+    setSeverity: 2
+    assertStdoutNotContains:
+      - "avoid-low-level-calls"
+      - "avoid-sha3"
+      - "check-send-result"
+      - "func-visibility"
+      - "state-visibility"
+      - "compiler-version"
+
+  medium:
+    setOutput: solhint.run
+    setSeverity: 3
+    assertStdoutNotContains:
+      - "not-rely-on-time"
+      - "no-inline-assembly"
+      - "reentrancy"
+      - "mark-callable-contracts"
+
+  info:
+    setOutput: solhint.run
+    setSeverity: 5
+    assertStdoutNotContains:
+      - "reason-string"
+      - "max-line-length"

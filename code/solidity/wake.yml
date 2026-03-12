@@ -1,0 +1,49 @@
+settings:
+  name: "Wake: Solidity development & vulnerability detection"
+  description: |
+    Wake is a Python-based Solidity development and testing framework with
+    built-in vulnerability detectors and printers. It performs cross-contract
+    analysis detecting reentrancy, unsafe delegatecall, selfdestruct, tx.origin
+    usage, and other vulnerability classes across the entire project dependency
+    graph.
+  image: python:3.10-slim
+  author:
+    - https://github.com/Ackee-Blockchain
+  example: satori run ./ --playbook satori://code/solidity/wake.yml --report --output
+
+wake:
+  install:
+    - pip install eth-wake -q --disable-pip-version-check --root-user-action=ignore
+    - apt-get update -qq >/dev/null 2>&1 && apt-get install -qy git >/dev/null 2>&1 || true
+
+  run:
+    - wake detect all 2>&1 || true
+
+  critical:
+    setOutput: wake.run
+    setSeverity: 1
+    assertStdoutNotContains:
+      - "Impact: High"
+      - "reentrancy"
+      - "unsafe-delegatecall"
+      - "selfdestruct"
+
+  high:
+    setOutput: wake.run
+    setSeverity: 2
+    assertStdoutNotContains:
+      - "Impact: Medium"
+      - "tx-origin"
+      - "unchecked-return-value"
+
+  medium:
+    setOutput: wake.run
+    setSeverity: 3
+    assertStdoutNotContains:
+      - "Impact: Low"
+
+  info:
+    setOutput: wake.run
+    setSeverity: 5
+    assertStdoutNotContains:
+      - "Impact: Info"

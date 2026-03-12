@@ -1,0 +1,28 @@
+settings:
+  name: "Semgrep: Solidity security rules"
+  description: |
+    Semgrep with Solidity-specific security rulesets for detecting common smart
+    contract vulnerabilities including reentrancy, unchecked calls, price oracle
+    manipulation, flash loan attacks, access control issues, and DeFi-specific
+    anti-patterns.
+  image: python:3.10-slim
+  author:
+    - https://github.com/semgrep
+  example: satori run ./ --playbook satori://code/solidity/semgrep-solidity.yml --report --output
+
+semgrep:
+  install:
+    - pip install semgrep -q --disable-pip-version-check --root-user-action=ignore
+
+  run:
+    - semgrep --config "p/solidity" --config "p/smart-contracts" --max-chars-per-line 1024 -q 2>&1 || true
+
+  high:
+    setOutput: semgrep.run
+    setSeverity: 2
+    assertStdoutNotContains: " ❯❯❱ "
+
+  medium:
+    setOutput: semgrep.run
+    setSeverity: 3
+    assertStdoutNotContains: " ❯❱ "

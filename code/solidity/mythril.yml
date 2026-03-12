@@ -1,0 +1,51 @@
+settings:
+  name: "Mythril: EVM bytecode security analysis"
+  description: |
+    Mythril is a security analysis tool for EVM bytecode. It detects security
+    vulnerabilities in smart contracts built for Ethereum, Hedera, Quorum,
+    Vechain, Rootstock, Tron, and other EVM-compatible blockchains using symbolic
+    execution, SMT solving, and taint analysis.
+  image: python:3.10-slim
+  cpu: 2048
+  memory: 8192
+  timeout: 1800
+  author:
+    - https://github.com/Consensys
+  example: satori run ./ --playbook satori://code/solidity/mythril.yml --report --output
+
+mythril:
+  install:
+    - apt-get update -qq >/dev/null 2>&1 && apt-get install -qy git >/dev/null 2>&1 || true
+    - pip install mythril -q --disable-pip-version-check --root-user-action=ignore
+
+  run:
+    - for sol in $(find . -name "*.sol" -not -path "*/node_modules/*" -not -path "*/lib/*" | head -20); do echo "=== Analyzing $sol ==="; myth analyze "$sol" --solv 0.8.28 --execution-timeout 300 2>&1 || true; done
+
+  critical:
+    setOutput: mythril.run
+    setSeverity: 1
+    assertStdoutNotContains:
+      - "SWC ID: 107"
+      - "SWC ID: 106"
+      - "SWC ID: 112"
+      - "SWC ID: 114"
+
+  high:
+    setOutput: mythril.run
+    setSeverity: 2
+    assertStdoutNotContains:
+      - "SWC ID: 101"
+      - "SWC ID: 104"
+      - "SWC ID: 105"
+      - "SWC ID: 113"
+      - "SWC ID: 115"
+      - "SWC ID: 124"
+
+  medium:
+    setOutput: mythril.run
+    setSeverity: 3
+    assertStdoutNotContains:
+      - "SWC ID: 110"
+      - "SWC ID: 116"
+      - "SWC ID: 120"
+      - "SWC ID: 132"

@@ -1,0 +1,67 @@
+settings:
+  name: "Slither: Solidity & DeFi static analysis"
+  description: |
+    Slither is a Solidity & Vyper static analysis framework that runs a suite of
+    vulnerability detectors, prints visual information about contract details, and
+    provides an API to easily write custom analyses. It is the industry standard
+    for smart contract SAST, detecting reentrancy, unprotected upgrades, unchecked
+    low-level calls, and 90+ other vulnerability patterns.
+  image: python:3.10-slim
+  author:
+    - https://github.com/crytic
+  example: satori run ./ --playbook satori://code/solidity/slither.yml --report --output
+
+slither:
+  install:
+    - pip install slither-analyzer solc-select -q --disable-pip-version-check --root-user-action=ignore
+    - solc-select install 0.8.28 && solc-select use 0.8.28
+    - apt-get update -qq >/dev/null 2>&1 && apt-get install -qy git >/dev/null 2>&1 || true
+
+  run:
+    - slither . --json slither-output.json 2>&1 || true
+    - slither . 2>&1 || true
+
+  critical:
+    setOutput: slither.run
+    setSeverity: 1
+    assertStdoutNotContains:
+      - "Reentrancy"
+      - "Unprotected upgrade"
+      - "Arbitrary send"
+      - "Suicidal"
+      - "Delegatecall to a user-supplied address"
+
+  high:
+    setOutput: slither.run
+    setSeverity: 2
+    assertStdoutNotContains:
+      - "Controlled delegatecall"
+      - "Unchecked transfer"
+      - "Unchecked low-level call"
+      - "Uninitialized state variable"
+      - "Uninitialized storage variable"
+      - "State variable shadowing"
+      - "Tautological comparison"
+      - "Missing zero address validation"
+
+  medium:
+    setOutput: slither.run
+    setSeverity: 3
+    assertStdoutNotContains:
+      - "Dangerous strict equality"
+      - "Block timestamp"
+      - "Unused return"
+      - "Incorrect modifier"
+      - "Locked ether"
+      - "Divide before multiply"
+
+  low:
+    setOutput: slither.run
+    setSeverity: 4
+    assertStdoutNotContains:
+      - "Calls inside a loop"
+      - "Missing events"
+      - "Reentrancy with events"
+      - "Incorrect versions of Solidity"
+      - "Low-level calls"
+      - "Boolean equality"

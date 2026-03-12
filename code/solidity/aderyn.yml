@@ -1,0 +1,39 @@
+settings:
+  name: "Aderyn: Rust-based Solidity static analyzer"
+  description: |
+    Aderyn is a Rust-based Solidity AST analyzer built by Cyfrin. It walks the
+    Abstract Syntax Tree to detect vulnerability patterns with high speed and
+    accuracy. It supports Foundry and Hardhat projects and detects reentrancy,
+    centralization risks, unchecked returns, and other smart contract issues.
+  image: debian
+  author:
+    - https://github.com/Cyfrin
+  example: satori run ./ --playbook satori://code/solidity/aderyn.yml --report --output
+
+aderyn:
+  install:
+    - apt-get update -qq >/dev/null 2>&1 && apt-get install -qy curl git >/dev/null 2>&1
+    - curl -L https://raw.githubusercontent.com/Cyfrin/aderyn/dev/cyfrinup/install | bash 2>/dev/null
+    - export PATH="$HOME/.cyfrin/bin:$PATH" && cyfrinup 2>&1 || true
+
+  run:
+    - export PATH="$HOME/.cyfrin/bin:$PATH" && aderyn . --output aderyn-report.md 2>&1 || true
+    - export PATH="$HOME/.cyfrin/bin:$PATH" && aderyn . 2>&1 || true
+
+  critical:
+    setOutput: aderyn.run
+    setSeverity: 1
+    assertStdoutNotContains:
+      - "High Issues"
+
+  medium:
+    setOutput: aderyn.run
+    setSeverity: 3
+    assertStdoutNotContains:
+      - "Medium Issues"
+
+  low:
+    setOutput: aderyn.run
+    setSeverity: 4
+    assertStdoutNotContains:
+      - "Low Issues"

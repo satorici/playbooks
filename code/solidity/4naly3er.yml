@@ -1,0 +1,40 @@
+settings:
+  name: "4naly3er: Solidity audit issue detector"
+  description: |
+    4naly3er is a Solidity static analyzer built for competitive audits and bug
+    bounties. It scans for gas optimizations, quality assurance issues, and
+    low-severity findings commonly reported in Code4rena, Sherlock, and other
+    audit contest platforms. Ideal for pre-audit preparation of DeFi protocols.
+  image: node:20-slim
+  author:
+    - https://github.com/Picodes
+  example: satori run ./ --playbook satori://code/solidity/4naly3er.yml --report --output
+
+analyzer:
+  install:
+    - apt-get update -qq >/dev/null 2>&1 && apt-get install -qy git >/dev/null 2>&1
+    - git clone --depth 1 -q https://github.com/Picodes/4naly3er.git /tmp/4naly3er
+    - cd /tmp/4naly3er && npm install --silent 2>/dev/null
+
+  run:
+    - cd /tmp/4naly3er && node analyze.js $OLDPWD 2>&1 || true
+
+  high:
+    setOutput: analyzer.run
+    setSeverity: 2
+    assertStdoutNotContains: "[H-"
+
+  medium:
+    setOutput: analyzer.run
+    setSeverity: 3
+    assertStdoutNotContains: "[M-"
+
+  low:
+    setOutput: analyzer.run
+    setSeverity: 4
+    assertStdoutNotContains: "[L-"
+
+  gas:
+    setOutput: analyzer.run
+    setSeverity: 5
+    assertStdoutNotContains: "[GAS-"

@@ -1,0 +1,19 @@
+settings:
+  name: "DeFi SAST: Comprehensive smart contract security suite"
+  description: |
+    Full DeFi static analysis security testing suite combining Slither, Semgrep
+    with Solidity rules, and Solhint. Covers vulnerability detection, code
+    quality, and DeFi-specific security patterns including reentrancy, flash loan
+    attacks, oracle manipulation, access control, and token standard compliance.
+  image: python:3.10-slim
+  cpu: 2048
+  memory: 8192
+  timeout: 1800
+  author:
+    - https://github.com/satorici
+  example: satori run ./ --playbook satori://code/solidity/defi-sast.yml --report --output
+
+import:
+  - satori://code/solidity/slither.yml
+  - satori://code/solidity/semgrep-solidity.yml
+  - satori://code/solidity/solhint.yml
