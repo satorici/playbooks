@@ -9,7 +9,7 @@ settings:
   image: python:3.10-slim
   author:
     - https://github.com/Ackee-Blockchain
-  example: satori run ./ --playbook satori://code/solidity/wake.yml --report --output
+  example: satori run satori://code/solidity/wake.yml --repo crytic/not-so-smart-contracts --report --output
 
 wake:
   install:

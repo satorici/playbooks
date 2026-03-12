@@ -8,16 +8,16 @@ settings:
   image: node:20-slim
   author:
     - https://github.com/Picodes
-  example: satori run ./ --playbook satori://code/solidity/4naly3er.yml --report --output
+  example: satori run satori://code/solidity/4naly3er.yml --repo SunWeb3Sec/DeFiVulnLabs --report --output
 
 analyzer:
   install:
     - apt-get update -qq >/dev/null 2>&1 && apt-get install -qy git >/dev/null 2>&1
     - git clone --depth 1 -q https://github.com/Picodes/4naly3er.git /tmp/4naly3er
-    - cd /tmp/4naly3er && yarn install --silent 2>/dev/null
+    - cd /tmp/4naly3er && npm install --silent 2>/dev/null || yarn install --silent 2>/dev/null || true
 
   run:
-    - cd /tmp/4naly3er && yarn analyze $OLDPWD 2>&1 || true
+    - ENTRY=$(find /tmp/4naly3er -maxdepth 2 -name "*.js" | xargs grep -l "analyze\|main\|module.exports" 2>/dev/null | head -1); cd /tmp/4naly3er && node ${ENTRY:-src/index.js} $OLDPWD 2>&1 || node src/analyze.js $OLDPWD 2>&1 || npx ts-node src/index.ts $OLDPWD 2>&1 || true
     - cat /tmp/4naly3er/report.md 2>/dev/null || true
 
   high:

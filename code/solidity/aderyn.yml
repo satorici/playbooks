@@ -12,7 +12,7 @@ settings:
 
 aderyn:
   install:
-    - npm install -g @cyfrin/aderyn --silent 2>/dev/null
+    - npm install -g @cyfrin/aderyn --silent 2>/dev/null || true
 
   run:
     - aderyn . 2>&1 || true

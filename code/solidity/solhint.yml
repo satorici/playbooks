@@ -8,7 +8,7 @@ settings:
   image: node:20-slim
   author:
     - https://github.com/protofire
-  example: satori run ./ --playbook satori://code/solidity/solhint.yml --report --output
+  example: satori run satori://code/solidity/solhint.yml --repo SunWeb3Sec/DeFiVulnLabs --report --output
 
 solhint:
   install:

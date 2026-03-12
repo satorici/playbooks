@@ -8,14 +8,16 @@ settings:
   image: python:3.10-slim
   author:
     - https://github.com/semgrep
-  example: satori run ./ --playbook satori://code/solidity/semgrep-solidity.yml --report --output
+  example: satori run satori://code/solidity/semgrep-solidity.yml --repo SunWeb3Sec/DeFiVulnLabs --report --output
 
 semgrep:
   install:
     - pip install semgrep -q --disable-pip-version-check --root-user-action=ignore
+    - apt-get update -qq >/dev/null 2>&1 && apt-get install -qy git >/dev/null 2>&1 || true
+    - git clone --depth 1 -q https://github.com/Decurity/semgrep-smart-contracts.git /tmp/semgrep-rules 2>/dev/null || true
 
   run:
-    - semgrep --config "p/solidity" --max-chars-per-line 1024 -q 2>&1 || semgrep --config "r/solidity" --max-chars-per-line 1024 -q 2>&1 || semgrep --config auto --include "*.sol" --max-chars-per-line 1024 -q 2>&1 || true
+    - semgrep --config /tmp/semgrep-rules/solidity/ --config auto --include "*.sol" --max-chars-per-line 1024 -q 2>&1 || true
 
   high:
     setOutput: semgrep.run
