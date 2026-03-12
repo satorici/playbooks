@@ -12,9 +12,10 @@ settings:
 
 analyzer:
   install:
-    - apt-get update -qq >/dev/null 2>&1 && apt-get install -qy git >/dev/null 2>&1
+    - apt-get update -qq >/dev/null 2>&1 && apt-get install -qy git curl >/dev/null 2>&1
     - git clone --depth 1 -q https://github.com/Picodes/4naly3er.git /tmp/4naly3er
     - cd /tmp/4naly3er && yarn install 2>/dev/null || npm install 2>/dev/null || true
+    - if [ -f foundry.toml ]; then curl -sL https://foundry.paradigm.xyz | bash 2>/dev/null; export PATH="$HOME/.foundry/bin:$PATH"; foundryup 2>/dev/null; forge install 2>&1; fi || true
 
   run:
     - cd /tmp/4naly3er && npx ts-node src/index.ts $OLDPWD/src 2>&1 || npx ts-node src/index.ts $OLDPWD 2>&1 || true

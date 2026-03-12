@@ -12,11 +12,13 @@ settings:
 
 aderyn:
   install:
-    - apt-get update -qq >/dev/null 2>&1 && apt-get install -qy curl xz-utils >/dev/null 2>&1
+    - apt-get update -qq >/dev/null 2>&1 && apt-get install -qy curl xz-utils git >/dev/null 2>&1
     - curl --proto '=https' --tlsv1.2 -LsSf https://github.com/cyfrin/aderyn/releases/latest/download/aderyn-installer.sh | bash 2>&1 || true
+    - if [ -f foundry.toml ]; then curl -sL https://foundry.paradigm.xyz | bash 2>/dev/null; export PATH="$HOME/.foundry/bin:$PATH"; foundryup 2>/dev/null; forge install 2>&1; fi || true
 
   run:
-    - export PATH="$HOME/.cargo/bin:$PATH" && aderyn . 2>&1 || true
+    - export PATH="$HOME/.cargo/bin:$HOME/.foundry/bin:$PATH" && aderyn . 2>&1 || true
+    - cat report.md 2>/dev/null || true
 
   critical:
     setOutput: aderyn.run

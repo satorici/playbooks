@@ -9,13 +9,13 @@ settings:
   image: python:3.10-slim
   author:
     - https://github.com/crytic
-  example: satori run satori://code/solidity/slither.yml --repo SunWeb3Sec/DeFiVulnLabs --report --output
+  example: satori run satori://code/solidity/slither.yml --repo crytic/not-so-smart-contracts --report --output
 
 slither:
   install:
     - apt-get update -qq >/dev/null 2>&1 && apt-get install -qy git curl >/dev/null 2>&1 || true
     - pip install slither-analyzer solc-select -q --disable-pip-version-check --root-user-action=ignore
-    - if [ -f foundry.toml ]; then curl -sL https://foundry.paradigm.xyz | bash 2>/dev/null; $HOME/.foundry/bin/foundryup -q 2>/dev/null; export PATH="$HOME/.foundry/bin:$PATH"; forge install --no-commit 2>/dev/null || true; fi
+    - if [ -f foundry.toml ]; then curl -sL https://foundry.paradigm.xyz | bash 2>/dev/null; export PATH="$HOME/.foundry/bin:$PATH"; foundryup 2>/dev/null; forge install 2>&1; fi || true
     - for ver in $(grep -roh 'pragma solidity.*[0-9]\+\.[0-9]\+\.[0-9]\+' --include='*.sol' . 2>/dev/null | grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+' | sort -uV); do solc-select install $ver 2>/dev/null || true; done
     - LATEST=$(grep -roh 'pragma solidity.*[0-9]\+\.[0-9]\+\.[0-9]\+' --include='*.sol' . 2>/dev/null | grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+' | sort -uV | tail -1); solc-select use ${LATEST:-0.8.28}
 

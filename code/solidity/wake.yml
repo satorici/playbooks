@@ -14,10 +14,11 @@ settings:
 wake:
   install:
     - pip install eth-wake -q --disable-pip-version-check --root-user-action=ignore
-    - apt-get update -qq >/dev/null 2>&1 && apt-get install -qy git >/dev/null 2>&1 || true
+    - apt-get update -qq >/dev/null 2>&1 && apt-get install -qy git curl >/dev/null 2>&1 || true
+    - if [ -f foundry.toml ]; then curl -sL https://foundry.paradigm.xyz | bash 2>/dev/null; export PATH="$HOME/.foundry/bin:$PATH"; foundryup 2>/dev/null; forge install 2>&1; fi || true
 
   run:
-    - wake detect all 2>&1 || true
+    - export PATH="$HOME/.foundry/bin:$PATH"; wake detect all 2>&1 || true
 
   critical:
     setOutput: wake.run
