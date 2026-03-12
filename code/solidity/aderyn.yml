@@ -12,7 +12,7 @@ settings:
 
 aderyn:
   install:
-    - apt-get update -qq >/dev/null 2>&1 && apt-get install -qy curl >/dev/null 2>&1
+    - apt-get update -qq >/dev/null 2>&1 && apt-get install -qy curl xz-utils >/dev/null 2>&1
     - curl --proto '=https' --tlsv1.2 -LsSf https://github.com/cyfrin/aderyn/releases/latest/download/aderyn-installer.sh | bash 2>&1 || true
 
   run:
