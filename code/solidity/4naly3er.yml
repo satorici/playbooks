@@ -14,10 +14,10 @@ analyzer:
   install:
     - apt-get update -qq >/dev/null 2>&1 && apt-get install -qy git >/dev/null 2>&1
     - git clone --depth 1 -q https://github.com/Picodes/4naly3er.git /tmp/4naly3er
-    - cd /tmp/4naly3er && npm install --silent 2>/dev/null || yarn install --silent 2>/dev/null || true
+    - cd /tmp/4naly3er && yarn install 2>/dev/null || npm install 2>/dev/null || true
 
   run:
-    - ENTRY=$(find /tmp/4naly3er -maxdepth 2 -name "*.js" | xargs grep -l "analyze\|main\|module.exports" 2>/dev/null | head -1); cd /tmp/4naly3er && node ${ENTRY:-src/index.js} $OLDPWD 2>&1 || node src/analyze.js $OLDPWD 2>&1 || npx ts-node src/index.ts $OLDPWD 2>&1 || true
+    - cd /tmp/4naly3er && npx ts-node src/index.ts $OLDPWD/src 2>&1 || npx ts-node src/index.ts $OLDPWD 2>&1 || true
     - cat /tmp/4naly3er/report.md 2>/dev/null || true
 
   high:

@@ -5,17 +5,18 @@ settings:
     Abstract Syntax Tree to detect vulnerability patterns with high speed and
     accuracy. It supports Foundry and Hardhat projects and detects reentrancy,
     centralization risks, unchecked returns, and other smart contract issues.
-  image: node:20-slim
+  image: debian
   author:
     - https://github.com/Cyfrin
-  example: satori run satori://code/solidity/aderyn.yml --repo SunWeb3Sec/DeFiVulnLabs --report --output
+  example: satori run satori://code/solidity/aderyn.yml --repo crytic/not-so-smart-contracts --report --output
 
 aderyn:
   install:
-    - npm install -g @cyfrin/aderyn --silent 2>/dev/null || true
+    - apt-get update -qq >/dev/null 2>&1 && apt-get install -qy curl >/dev/null 2>&1
+    - curl --proto '=https' --tlsv1.2 -LsSf https://github.com/cyfrin/aderyn/releases/latest/download/aderyn-installer.sh | bash 2>&1 || true
 
   run:
-    - aderyn . 2>&1 || true
+    - export PATH="$HOME/.cargo/bin:$PATH" && aderyn . 2>&1 || true
 
   critical:
     setOutput: aderyn.run
