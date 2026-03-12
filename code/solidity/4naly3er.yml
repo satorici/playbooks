@@ -8,7 +8,7 @@ settings:
   image: node:20-slim
   author:
     - https://github.com/Picodes
-  example: satori run satori://code/solidity/4naly3er.yml --repo SunWeb3Sec/DeFiVulnLabs --report --output
+  example: satori run satori://code/solidity/4naly3er.yml --repo smartbugs/smartbugs-curated --report --output
 
 analyzer:
   install:
