@@ -19,7 +19,7 @@ solhint:
       fi
 
   run:
-    - solhint '**/*.sol' --ignore-path node_modules --max-warnings 0 2>&1 || true
+    - solhint '**/*.sol' --max-warnings 0 2>&1 || true
 
   critical:
     setOutput: solhint.run

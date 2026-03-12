@@ -15,11 +15,11 @@ settings:
 
 mythril:
   install:
-    - apt-get update -qq >/dev/null 2>&1 && apt-get install -qy git >/dev/null 2>&1 || true
+    - apt-get update -qq >/dev/null 2>&1 && apt-get install -qy git build-essential >/dev/null 2>&1 || true
     - pip install mythril -q --disable-pip-version-check --root-user-action=ignore
 
   run:
-    - for sol in $(find . -name "*.sol" -not -path "*/node_modules/*" -not -path "*/lib/*" | head -20); do echo "=== Analyzing $sol ==="; myth analyze "$sol" --solv 0.8.28 --execution-timeout 300 2>&1 || true; done
+    - for sol in $(find . -name "*.sol" -not -path "*/node_modules/*" -not -path "*/lib/*" | head -20); do VER=$(grep -oP '(?<=pragma solidity [\^>=]*)[0-9]+\.[0-9]+\.[0-9]+' "$sol" 2>/dev/null | head -1); echo "=== Analyzing $sol (solc ${VER:-0.8.28}) ==="; myth analyze "$sol" --solv "${VER:-0.8.28}" --execution-timeout 300 2>&1 || true; done
 
   critical:
     setOutput: mythril.run

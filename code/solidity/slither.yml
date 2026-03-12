@@ -13,13 +13,13 @@ settings:
 
 slither:
   install:
-    - pip install slither-analyzer solc-select -q --disable-pip-version-check --root-user-action=ignore
-    - solc-select install 0.8.28 && solc-select use 0.8.28
     - apt-get update -qq >/dev/null 2>&1 && apt-get install -qy git >/dev/null 2>&1 || true
+    - pip install slither-analyzer solc-select -q --disable-pip-version-check --root-user-action=ignore
+    - for ver in $(grep -roh 'pragma solidity.*[0-9]\+\.[0-9]\+\.[0-9]\+' --include='*.sol' . 2>/dev/null | grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+' | sort -uV); do solc-select install $ver 2>/dev/null || true; done
+    - LATEST=$(grep -roh 'pragma solidity.*[0-9]\+\.[0-9]\+\.[0-9]\+' --include='*.sol' . 2>/dev/null | grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+' | sort -uV | tail -1); solc-select use ${LATEST:-0.8.28}
 
   run:
-    - slither . --json slither-output.json 2>&1 || true
-    - slither . 2>&1 || true
+    - slither . 2>&1 || for sol in $(find . -name "*.sol" -not -path "*/node_modules/*" -not -path "*/lib/*"); do slither "$sol" 2>&1 || true; done
 
   critical:
     setOutput: slither.run
