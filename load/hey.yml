@@ -1,0 +1,27 @@
+settings:
+  name: "Hey - HTTP load generator"
+  description: "Hey is a tiny program that sends load to a web application. It supports HTTP/2
+                and provides detailed latency distribution, status code breakdown, and throughput
+                metrics. Useful for quick benchmarks and smoke-testing endpoint performance
+                under concurrent load."
+  image: satori
+  timeout: 60
+  author:
+    - https://github.com/rakyll
+  example: satori run satori://load/hey.yml -d URL="https://satori.ci" --report --output
+
+hey:
+  install:
+    - command -v hey >/dev/null || (apt-get update >>/dev/null; apt-get install -qy hey >>/dev/null)
+
+  test:
+    assertReturnCode: 0
+    setSeverity: 1
+    before:
+      - curl -s ${{URL}} -m 3
+
+    run:
+      - hey -z 30s -c 50 ${{URL}}
+
+    after:
+      - curl -s ${{URL}} -m 3

@@ -1,0 +1,27 @@
+settings:
+  name: "wrk - Modern HTTP benchmarking tool"
+  description: "wrk is a modern HTTP benchmarking tool capable of generating significant load
+                when run on a single multi-core CPU. It uses multithreaded design and scalable
+                event notification systems like epoll and kqueue to produce detailed latency
+                statistics including average, stdev, max, and percentile distribution."
+  image: debian
+  timeout: 60
+  author:
+    - https://github.com/wg
+  example: satori run satori://load/wrk.yml -d URL="https://satori.ci" --report --output
+
+wrk:
+  install:
+    - apt-get update >>/dev/null; apt-get install -qy wrk curl >>/dev/null
+
+  test:
+    assertReturnCode: 0
+    setSeverity: 1
+    before:
+      - curl -s ${{URL}} -m 3
+
+    run:
+      - wrk -t4 -c50 -d30s ${{URL}}
+
+    after:
+      - curl -s ${{URL}} -m 3

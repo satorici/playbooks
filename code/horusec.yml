@@ -1,0 +1,37 @@
+settings:
+  name: "Horusec: multi-language SAST"
+  description: "Horusec is an open-source static application security testing tool that identifies vulnerabilities in source code across 18+ languages including Python, JavaScript, Java, Go, C#, Ruby, PHP, Kotlin, and Dart. It integrates 20+ security analysis engines."
+  image: ubuntu:22.04
+  author:
+    - https://github.com/ZupIT/horusec
+  gallery:
+    - https://files.catbox.moe/placeholder.png
+  example: satori run ./ --playbook satori://code/horusec.yml --report --output
+
+horusec:
+  install:
+    - apt-get update -qq && apt-get install -qy curl git
+    - curl -fsSL https://github.com/ZupIT/horusec/releases/download/v2.8.0/horusec_linux_amd64 -o /usr/local/bin/horusec && chmod +x /usr/local/bin/horusec
+
+  run:
+    - horusec start -p ./ -D -o text --disable-docker true -i="**/.horusec/**, **/.git/**"
+
+  critical:
+    setOutput: horusec.run
+    setSeverity: 1
+    assertStdoutNotContains: "CRITICAL"
+
+  high:
+    setOutput: horusec.run
+    setSeverity: 2
+    assertStdoutNotContains: "HIGH"
+
+  medium:
+    setOutput: horusec.run
+    setSeverity: 3
+    assertStdoutNotContains: "MEDIUM"
+
+  low:
+    setOutput: horusec.run
+    setSeverity: 4
+    assertStdoutNotContains: "LOW"

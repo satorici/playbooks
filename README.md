@@ -34,6 +34,7 @@ playbooks/
 |   |-- python/lint/ test/
 |   |-- ruby/
 |   |-- rust/
+|   |-- solidity/
 |   |-- swift/
 |   `-- typescript/lint/
 |-- compliance/       OWASP, PCI-DSS, SOC2
@@ -45,6 +46,7 @@ playbooks/
 |   `-- passive/      Passive subdomain discovery
 |-- dos/              Load and DoS testing
 |-- email/            Email harvesting and OSINT
+|-- load/             HTTP load testing and benchmarking
 |   `-- auth/         Authenticated variants
 |-- llm/              LLM querying and testing
 |   `-- tools/        LLM-powered repo analysis
@@ -80,6 +82,7 @@ Static analysis, linting, and dependency auditing across multiple languages.
 | `code/trivy.yml` | Trivy — vulnerability scanner for code |
 | `code/osv-scanner.yml` | OSV-Scanner — vulnerability scanner for dependencies |
 | `code/syft.yml` | Syft — Software Bill of Materials (SBOM) generator |
+| `code/horusec.yml` | Horusec — multi-language SAST (18+ languages) |
 | `code/yamllint.yml` | YAML Lint |
 
 **Python**
@@ -281,7 +284,7 @@ Subdomain discovery, DNS records, and domain reconnaissance.
 | `dns/subzy.yml` | Subzy — subdomain takeover detection |
 | `dns/tko-subs.yml` | tko-subs — subdomain takeover detection |
 
-### Network Scanning (18 playbooks)
+### Network Scanning (19 playbooks)
 
 Port scanning, banner grabbing, and network reconnaissance.
 
@@ -302,6 +305,7 @@ Port scanning, banner grabbing, and network reconnaissance.
 | `scan/https.yml` | HTTPS port scan |
 | `scan/host_port.yml` | Host port scan |
 | `scan/zmap-scanner.yml` | ZMap scanner |
+| `scan/zmap-webbanner.yml` | ZMap web banner scanner |
 | `scan/zmap-zgrab2.yml` | ZMap + ZGrab2 |
 | `scan/zmap-zgrab2-https.yml` | ZMap + ZGrab2 HTTPS |
 | `scan.yml` | Port scan on a range |
@@ -389,17 +393,20 @@ Specific vulnerability detection and exploitation testing.
 | `cve/CVE-2025-7775.yml` | Citrix NetScaler RCE |
 | `ms/CVE-2025-53770.yml` | SharePoint unauthenticated RCE |
 
-### LLM (8 playbooks)
+### LLM (11 playbooks)
 
 Query and test large language models.
 
 | Playbook | Tool |
 |----------|------|
 | `llm/all.yml` | Query all LLMs |
+| `llm/aider.yml` | Aider — AI pair programming |
+| `llm/deepseek-r1.yml` | DeepSeek R1 |
 | `llm/openai.yml` | OpenAI |
 | `llm/gemini.yml` | Gemini |
 | `llm/llama3.2.yml` | Llama 3.2 |
 | `llm/llama3.2-uncensored.yml` | Llama 3.2 uncensored |
+| `llm/llmfit.yml` | LLMfit — LLM fine-tuning |
 | `llm/qwen.yml` | Qwen |
 | `llm/tools/repo.yml` | Query a repo with Llama |
 | `llm/tools/repo-by-file.yml` | Query repo files with LLM |
@@ -431,6 +438,16 @@ Query and test large language models.
 | Playbook | Tool |
 |----------|------|
 | `crack/john.yml` | John the Ripper |
+
+### Load Testing (3 playbooks)
+
+HTTP load testing and benchmarking.
+
+| Playbook | Tool |
+|----------|------|
+| `load/ab.yml` | ApacheBench — HTTP server benchmarking |
+| `load/hey.yml` | Hey — HTTP load generator |
+| `load/wrk.yml` | wrk — modern HTTP benchmarking |
 
 ### SAP Security (1 playbook)
 

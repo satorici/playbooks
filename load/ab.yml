@@ -1,0 +1,28 @@
+settings:
+  name: "ab - Apache HTTP server benchmarking tool"
+  description: "ApacheBench (ab) is a tool for benchmarking HTTP servers. It shows how many
+                requests per second your server is capable of serving, along with detailed
+                connection times, transfer rates, and percentile latency breakdown. It is
+                included with the Apache HTTP server package and is one of the most widely
+                used load testing utilities."
+  image: debian
+  timeout: 60
+  author:
+    - https://github.com/apache
+  example: satori run satori://load/ab.yml -d URL="https://satori.ci/" --report --output
+
+ab:
+  install:
+    - apt-get update >>/dev/null; apt-get install -qy apache2-utils curl python3 screen >>/dev/null
+
+  test:
+    assertReturnCode: 0
+    setSeverity: 1
+    before:
+      - curl -s ${{URL}} -m 3
+
+    run:
+      - ab -n 1000 -c 50 -t 30 ${{URL}}
+
+    after:
+      - curl -s ${{URL}} -m 3
