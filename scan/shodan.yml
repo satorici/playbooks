@@ -8,7 +8,7 @@ settings:
 
 shodan:
   install:
-    - apt-get update -qq && apt-get install -qy curl jq python3 dnsutils ca-certificates >>/dev/null
+    - export DEBIAN_FRONTEND=noninteractive && apt-get update -qq && apt-get install -qy curl jq python3 dnsutils ca-certificates >>/dev/null
 
   resolve_domain:
     setSeverity: 5

@@ -8,7 +8,7 @@ settings:
 
 email-security:
   install:
-    - apt-get update -qq && apt-get install -qy dnsutils >>/dev/null
+    - export DEBIAN_FRONTEND=noninteractive && apt-get update -qq && apt-get install -qy dnsutils >>/dev/null
 
   spf_check:
     setSeverity: 3

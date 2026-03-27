@@ -8,7 +8,7 @@ settings:
 
 ssllabs:
   install:
-    - apt-get update -qq && apt-get install -qy curl jq python3 ca-certificates >>/dev/null
+    - export DEBIAN_FRONTEND=noninteractive && apt-get update -qq && apt-get install -qy curl jq python3 ca-certificates >>/dev/null
 
   start_scan:
     setSeverity: 3
