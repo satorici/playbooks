@@ -18,11 +18,11 @@ ico-registration:
         echo "Company: ${{COMPANY}}"
         ENCODED=$(echo "${{COMPANY}}" | sed 's/ /+/g')
         RESULT=$(curl -sL "https://ico.org.uk/ESDWebPages/Search?fieldcompanyname=${ENCODED}")
-        REG_NUM=$(echo "$RESULT" | grep -oP 'Z[A-Z0-9]{6,7}' | head -1 || true)
+        REG_NUM=$(echo "$RESULT" | grep -oE 'Z[A-Z0-9]{6,7}' | head -1 || true)
         if [ -n "$REG_NUM" ]; then
           echo "ICO Registration: $REG_NUM"
           DETAILS=$(curl -sL "https://ico.org.uk/ESDWebPages/Entry/$REG_NUM")
-          echo "$DETAILS" | grep -oP '<td[^>]*>[^<]+</td>' | sed 's/<[^>]*>//g' | head -20
+          echo "$DETAILS" | grep -oE '<td[^>]*>[^<]+</td>' | sed 's/<[^>]*>//g' | head -20
         else
           echo "No ICO registration found for ${{COMPANY}}"
         fi

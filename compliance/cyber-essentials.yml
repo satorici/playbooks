@@ -27,7 +27,19 @@ cyber-essentials:
 
         print(f"=== Cyber Essentials Certification Check: {company} ===")
 
-        # Step 1: Solve Turnstile via 2captcha
+        # Step 1: Establish session with full browser headers
+        s = requests.Session()
+        s.headers.update({
+            "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+            "Accept": "application/json, text/javascript, */*; q=0.01",
+            "Accept-Language": "en-US,en;q=0.9",
+            "Origin": "https://iasme.co.uk",
+            "Referer": page_url,
+            "X-Requested-With": "XMLHttpRequest"
+        })
+        s.get(page_url)
+
+        # Step 2: Solve Turnstile via 2captcha
         print("Solving Turnstile challenge...")
         r = requests.post("https://2captcha.com/in.php", data={
             "key": captcha_key,
@@ -59,11 +71,7 @@ cyber-essentials:
             print("NO_CERTIFICATION: Captcha solve timed out")
             exit(0)
 
-        # Step 2: Search IASME
-        s = requests.Session()
-        s.headers.update({"User-Agent": "Mozilla/5.0"})
-        s.get(page_url)
-
+        # Step 3: Search IASME with session cookies
         r = s.post("https://iasme.co.uk/wp-admin/admin-ajax.php", data={
             "action": "cert_search",
             "search_term": company,
@@ -71,6 +79,10 @@ cyber-essentials:
             "search_type": "search",
             "cfToken": token
         })
+
+        if r.status_code != 200 or not r.text.startswith("{"):
+            print(f"NO_CERTIFICATION: IASME search blocked (HTTP {r.status_code})")
+            exit(0)
 
         data = r.json()
         if data.get("success"):
