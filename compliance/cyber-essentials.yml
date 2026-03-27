@@ -1,6 +1,6 @@
 settings:
-  name: "Cyber Essentials: UK certification check"
-  description: "Checks if a company holds UK Cyber Essentials or Cyber Essentials Plus certification by querying the NCSC directory."
+  name: "Cyber Essentials: UK NCSC certification and assurance check"
+  description: "Checks if a company holds UK NCSC assured provider status (CIR, Cyber Advisor) and searches for Cyber Essentials certification evidence."
   image: debian
   author:
     - https://github.com/satorici
@@ -8,27 +8,64 @@ settings:
 
 cyber-essentials:
   install:
-    - export DEBIAN_FRONTEND=noninteractive && apt-get update -qq && apt-get install -qy curl ca-certificates >>/dev/null
+    - export DEBIAN_FRONTEND=noninteractive && apt-get update -qq && apt-get install -qy curl python3 ca-certificates >>/dev/null
 
   check_certification:
     setSeverity: 3
     assertStdoutNotContains: "NO_CERTIFICATION"
     run:
       - |
-        echo "=== NCSC Cyber Essentials Certification Check ==="
-        echo "Company: ${{COMPANY}}"
-        ENCODED=$(echo "${{COMPANY}}" | sed 's/ /%20/g')
-        RESULT=$(curl -s "https://www.ncsc.gov.uk/api/1/services/advancedSearch?postFilterType=cyberessentials&query=${ENCODED}" \
-          -H "Accept: application/json" \
-          -H "User-Agent: Satori-CI" 2>/dev/null || true)
-        if [ -n "$RESULT" ] && echo "$RESULT" | jq -e '.rows' >/dev/null 2>&1; then
-          COUNT=$(echo "$RESULT" | jq '.rows | length')
-          if [ "$COUNT" -gt 0 ]; then
-            echo "Certification records found: $COUNT"
-            echo "$RESULT" | jq -r '.rows[] | "  Company: \(.organisationName // "N/A")\n  Level: \(.cyberEssentialsLevel // "N/A")\n  Certified: \(.certificationDate // "N/A")\n  Expiry: \(.expiryDate // "N/A")\n"'
-          else
-            echo "NO_CERTIFICATION: Cyber Essentials certification not found on public record for ${{COMPANY}}"
-          fi
-        else
-          echo "NO_CERTIFICATION: Cyber Essentials certification could not be confirmed for ${{COMPANY}}"
-        fi
+        python3 -c "
+        import urllib.request, json, re, sys
+
+        company = '${{COMPANY}}'
+        print(f'=== NCSC Certification Check: {company} ===')
+
+        found = False
+        headers = {'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json'}
+
+        # Check NCSC Assured Providers
+        for lid, name in [('14547', 'Assured Providers'), ('16580', 'General Search')]:
+            url = f'https://www.ncsc.gov.uk/api/listing/{lid}?fulltext={company.replace(\" \",\"+\")}'
+            req = urllib.request.Request(url, headers=headers)
+            try:
+                resp = urllib.request.urlopen(req, timeout=15)
+                data = json.loads(resp.read().decode('utf-8', errors='ignore'))
+                items = data.get('items', [])
+                for item in items:
+                    markup = item.get('markup', '')
+                    title_m = re.search(r'<h3[^>]*>(.*?)</h', markup, re.DOTALL)
+                    title = re.sub(r'<[^>]+>', '', title_m.group(1)).strip() if title_m else ''
+                    desc_m = re.search(r'lakes:wysiwyg\">(.*?)</div>', markup, re.DOTALL)
+                    desc = re.sub(r'<[^>]+>', '', desc_m.group(1)).strip() if desc_m else ''
+                    href_m = re.search(r'href=\"(/organisation/[^\"]+)\"', markup)
+                    href = f'https://www.ncsc.gov.uk{href_m.group(1)}' if href_m else ''
+                    if company.lower().split()[0] in title.lower():
+                        found = True
+                        print(f'NCSC Assured: {title}')
+                        print(f'  Status: {desc}')
+                        if href:
+                            print(f'  URL: {href}')
+            except:
+                pass
+
+        # Check NCSC org page directly
+        slug = company.lower().replace(' ', '-').replace('limited', 'ltd')
+        for suffix in ['', '/cyber-incident-response-cir', '/cyber-advisor']:
+            url = f'https://www.ncsc.gov.uk/organisation/{slug}{suffix}'
+            req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+            try:
+                resp = urllib.request.urlopen(req, timeout=10)
+                html = resp.read().decode('utf-8', errors='ignore')
+                text = re.sub(r'<[^>]+>', ' ', html)
+                if 'certified' in text.lower() or 'assured' in text.lower():
+                    found = True
+                    cert_info = re.findall(r'(Certified|Assured|Status)[^.]{0,100}', text)
+                    for c in cert_info[:3]:
+                        print(f'  {c.strip()}')
+            except:
+                pass
+
+        if not found:
+            print(f'NO_CERTIFICATION: Cyber Essentials certification could not be confirmed for {company}')
+        "
