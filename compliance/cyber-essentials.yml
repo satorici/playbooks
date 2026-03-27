@@ -27,9 +27,8 @@ cyber-essentials:
             echo "Certification records found: $COUNT"
             echo "$RESULT" | jq -r '.rows[] | "  Company: \(.organisationName // "N/A")\n  Level: \(.cyberEssentialsLevel // "N/A")\n  Certified: \(.certificationDate // "N/A")\n  Expiry: \(.expiryDate // "N/A")\n"'
           else
-            echo "NO_CERTIFICATION: No Cyber Essentials certification found for ${{COMPANY}}"
+            echo "NO_CERTIFICATION: Cyber Essentials certification not found on public record for ${{COMPANY}}"
           fi
         else
-          echo "NO_CERTIFICATION: NCSC API unavailable, cannot confirm certification for ${{COMPANY}}"
-          echo "Manual verification: https://www.ncsc.gov.uk/cyberessentials/search"
+          echo "NO_CERTIFICATION: Cyber Essentials certification could not be confirmed for ${{COMPANY}}"
         fi
