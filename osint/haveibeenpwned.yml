@@ -1,0 +1,37 @@
+settings:
+  name: "HaveIBeenPwned: Breach exposure check"
+  description: "Checks if employee credentials from the target domain have appeared in known data breaches using the Have I Been Pwned API. Requires HIBP_API_KEY."
+  image: debian
+  author:
+    - https://github.com/satorici
+  example: satori run satori://osint/haveibeenpwned.yml -d DOMAIN="linkedin.com" -d HIBP_API_KEY="your_key" --report --output
+
+haveibeenpwned:
+  install:
+    - apt-get update -qq && apt-get install -qy curl jq ca-certificates >>/dev/null
+
+  domain_breaches:
+    setSeverity: 1
+    assertStdoutNotContains: "CRITICAL"
+    run:
+      - |
+        echo "=== HIBP Domain Breach Search: ${{DOMAIN}} ==="
+        RESULT=$(curl -s -H "hibp-api-key: ${{HIBP_API_KEY}}" \
+          -H "user-agent: Satori-CI" \
+          "https://haveibeenpwned.com/api/v3/breaches?domain=${{DOMAIN}}")
+        if [ "$RESULT" = "[]" ] || [ -z "$RESULT" ]; then
+          echo "No breaches found for domain ${{DOMAIN}}"
+          exit 0
+        fi
+        echo "=== Breaches Found ==="
+        echo "$RESULT" | jq -r '.[] | "Breach: \(.Name)\n  Date: \(.BreachDate)\n  Records: \(.PwnCount)\n  Data Types: \(.DataClasses | join(", "))\n  Description: \(.Description[:150])...\n"'
+        echo "=== Summary ==="
+        TOTAL=$(echo "$RESULT" | jq 'length')
+        TOTAL_RECORDS=$(echo "$RESULT" | jq '[.[].PwnCount] | add')
+        HAS_PASSWORDS=$(echo "$RESULT" | jq '[.[] | select(.DataClasses[] == "Passwords")] | length')
+        echo "Total breaches: $TOTAL"
+        echo "Total exposed records: $TOTAL_RECORDS"
+        echo "Breaches with passwords: $HAS_PASSWORDS"
+        if [ "$HAS_PASSWORDS" -gt 0 ]; then
+          echo "CRITICAL: Password data was exposed in $HAS_PASSWORDS breach(es)"
+        fi

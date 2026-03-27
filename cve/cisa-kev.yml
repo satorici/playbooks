@@ -1,0 +1,45 @@
+settings:
+  name: "CISA KEV: Check CVEs against actively exploited list"
+  description: "Cross-references CVE IDs against the CISA Known Exploited Vulnerabilities (KEV) catalog to identify critical-priority vulnerabilities that are actively exploited in the wild."
+  image: debian
+  author:
+    - https://github.com/satorici
+  example: satori run satori://cve/cisa-kev.yml -d CVES="CVE-2021-44228,CVE-2023-0669,CVE-2024-3400" --report --output
+
+cisa-kev:
+  install:
+    - apt-get update -qq && apt-get install -qy curl jq ca-certificates >>/dev/null
+
+  check_kev:
+    setSeverity: 1
+    assertStdoutNotContains: "ACTIVELY EXPLOITED"
+    run:
+      - |
+        echo "=== CISA Known Exploited Vulnerabilities Check ==="
+        curl -sL -o /tmp/kev.json \
+          "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json"
+        if ! jq empty /tmp/kev.json 2>/dev/null; then
+          echo "Primary URL failed, trying GitHub mirror..."
+          curl -sL -o /tmp/kev.json "https://raw.githubusercontent.com/cisagov/kev-data/refs/heads/master/json/kev.json"
+        fi
+        KEV_COUNT=$(jq '.vulnerabilities | length' /tmp/kev.json)
+        echo "KEV catalog contains $KEV_COUNT vulnerabilities"
+        FOUND=0
+        NOT_FOUND=0
+        CVE_LIST=$(echo "${{CVES}}" | tr ',' ' ')
+        for CVE in $CVE_LIST; do
+          CVE=$(echo "$CVE" | tr -d ' ')
+          MATCH=$(jq -r --arg cve "$CVE" '.vulnerabilities[] | select(.cveID == $cve)' /tmp/kev.json)
+          if [ -n "$MATCH" ]; then
+            FOUND=$((FOUND+1))
+            echo "ACTIVELY EXPLOITED: $CVE"
+            echo "$MATCH" | jq -r '"  Vulnerability: \(.vulnerabilityName)\n  Vendor: \(.vendorProject)\n  Product: \(.product)\n  Date Added: \(.dateAdded)\n  Required Action: \(.requiredAction)\n  Due Date: \(.dueDate)"'
+          else
+            NOT_FOUND=$((NOT_FOUND+1))
+            echo "Not on KEV: $CVE"
+          fi
+        done
+        echo "=== Summary ==="
+        echo "CVEs checked: $((FOUND+NOT_FOUND))"
+        echo "On CISA KEV (actively exploited): $FOUND"
+        echo "Not on CISA KEV: $NOT_FOUND"

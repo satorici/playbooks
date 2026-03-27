@@ -1,0 +1,32 @@
+settings:
+  name: "GDPR Fines: Enforcement action check"
+  description: "Checks for past GDPR enforcement actions against a company using the GDPR Enforcement Tracker dataset."
+  image: debian
+  author:
+    - https://github.com/satorici
+  example: satori run satori://compliance/gdpr-fines.yml -d COMPANY="Meta Platforms" --report --output
+
+gdpr-fines:
+  install:
+    - apt-get update -qq && apt-get install -qy curl ca-certificates >>/dev/null
+
+  check_enforcement:
+    setSeverity: 2
+    assertStdoutNotContains: "FINE_FOUND"
+    run:
+      - |
+        echo "=== GDPR Enforcement Action Check: ${{COMPANY}} ==="
+        curl -sL -o /tmp/gdpr.csv "https://raw.githubusercontent.com/jhjanicki/GDPR/main/GDPR.csv"
+        TOTAL=$(wc -l < /tmp/gdpr.csv | tr -d ' ')
+        echo "GDPR Enforcement Tracker: $TOTAL records loaded"
+        MATCHES=$(grep -i "${{COMPANY}}" /tmp/gdpr.csv || true)
+        COUNT=$(echo "$MATCHES" | grep -c . || echo 0)
+        if [ -n "$MATCHES" ] && [ "$COUNT" -gt 0 ]; then
+          echo "FINE_FOUND: $COUNT enforcement action(s) for ${{COMPANY}}"
+          echo "$MATCHES" | while IFS=',' read -r ETID COUNTRY DATE FINE FINE_CLEAN CONTROLLER ART TYPE SOURCE; do
+            echo "  Fine: $FINE | Date: $DATE | Country: $COUNTRY | Controller: $CONTROLLER | Article: $ART | Type: $TYPE"
+          done | head -20
+        else
+          echo "No GDPR fines found for ${{COMPANY}}"
+        fi
+        echo "Manual verification: https://www.enforcementtracker.com/"

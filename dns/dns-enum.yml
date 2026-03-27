@@ -1,0 +1,52 @@
+settings:
+  name: "DNS Enum: Full DNS footprint mapping"
+  description: "Maps the target's full DNS footprint using dig for record resolution and crt.sh certificate transparency logs for subdomain discovery. Passive reconnaissance only."
+  image: debian
+  author:
+    - https://github.com/satorici
+  example: satori run satori://dns/dns-enum.yml -d DOMAIN="tesla.com" --report --output
+
+dns-enum:
+  install:
+    - apt-get update -qq && apt-get install -qy dnsutils curl jq ca-certificates >>/dev/null
+
+  dns_records:
+    assertReturnCode: 0
+    run:
+      - |
+        echo "=== A Records ==="
+        dig +short A ${{DOMAIN}}
+        echo "=== AAAA Records ==="
+        dig +short AAAA ${{DOMAIN}}
+        echo "=== MX Records ==="
+        dig +short MX ${{DOMAIN}}
+        echo "=== NS Records ==="
+        dig +short NS ${{DOMAIN}}
+        echo "=== TXT Records ==="
+        dig +short TXT ${{DOMAIN}}
+        echo "=== CNAME Records ==="
+        dig +short CNAME ${{DOMAIN}}
+
+  crt_sh_subdomains:
+    assertReturnCode: 0
+    run:
+      - |
+        echo "=== Certificate Transparency Subdomains ==="
+        curl -s "https://crt.sh/?q=%25.${{DOMAIN}}&output=json" | \
+          jq -r '.[].name_value' 2>/dev/null | \
+          sort -u | \
+          head -200
+
+  resolve_subdomains:
+    assertReturnCode: 0
+    run:
+      - |
+        echo "=== Subdomain IP Resolution ==="
+        curl -s "https://crt.sh/?q=%25.${{DOMAIN}}&output=json" | \
+          jq -r '.[].name_value' 2>/dev/null | \
+          sort -u | head -50 | while read sub; do
+            IP=$(dig +short A "$sub" 2>/dev/null | head -1)
+            if [ -n "$IP" ]; then
+              echo "$sub -> $IP"
+            fi
+          done

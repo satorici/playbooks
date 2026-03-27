@@ -1,0 +1,60 @@
+settings:
+  name: "Job Board Recon: Security hiring gap analysis"
+  description: "Identifies security team gaps by searching for open security-related hiring positions via Google dorking of LinkedIn, Indeed, and Glassdoor. Passive web search only."
+  image: debian
+  author:
+    - https://github.com/satorici
+  example: satori run satori://osint/job-board-recon.yml -d COMPANY="Example Corp" --report --output
+
+job-board-recon:
+  install:
+    - apt-get update -qq && apt-get install -qy curl ca-certificates >>/dev/null
+
+  linkedin_search:
+    assertReturnCode: 0
+    run:
+      - |
+        echo "=== LinkedIn Job Search: ${{COMPANY}} ==="
+        ENCODED=$(echo "${{COMPANY}}" | sed 's/ /+/g')
+        for TERM in "CISO" "security+engineer" "SOC+analyst" "information+security" "cybersecurity"; do
+          echo ""
+          echo "--- Searching: $TERM ---"
+          RESULT=$(curl -sL "https://www.google.com/search?q=site:linkedin.com/jobs+%22${ENCODED}%22+%22${TERM}%22&num=5" \
+            -H "User-Agent: Mozilla/5.0 (compatible; Satori-CI)" 2>/dev/null)
+          echo "$RESULT" | grep -oP '(?<=<a href="/url\?q=)[^&"]+linkedin\.com/jobs[^&"]*' | head -5 || \
+          echo "$RESULT" | grep -oiP 'linkedin\.com/jobs/view/[^"<\s]+' | head -5 || \
+          echo "No LinkedIn results found for $TERM"
+        done
+
+  indeed_search:
+    assertReturnCode: 0
+    run:
+      - |
+        echo "=== Indeed Job Search: ${{COMPANY}} ==="
+        ENCODED=$(echo "${{COMPANY}}" | sed 's/ /+/g')
+        for TERM in "CISO" "security+engineer" "SOC+analyst" "cybersecurity"; do
+          echo ""
+          echo "--- Searching: $TERM ---"
+          RESULT=$(curl -sL "https://www.google.com/search?q=site:indeed.com+%22${ENCODED}%22+%22${TERM}%22&num=5" \
+            -H "User-Agent: Mozilla/5.0 (compatible; Satori-CI)" 2>/dev/null)
+          echo "$RESULT" | grep -oP '(?<=<a href="/url\?q=)[^&"]+indeed\.com[^&"]*' | head -5 || \
+          echo "$RESULT" | grep -oiP 'indeed\.com/viewjob[^"<\s]+' | head -5 || \
+          echo "No Indeed results found for $TERM"
+        done
+
+  analysis:
+    assertReturnCode: 0
+    run:
+      - |
+        echo "=== Security Hiring Analysis Guide ==="
+        echo "Interpretation of findings:"
+        echo "  - Hiring a CISO: Company likely does not have one yet"
+        echo "  - Hiring SOC analysts: Building a security team, indicates investment"
+        echo "  - Hiring security engineers: Expanding existing security capabilities"
+        echo "  - No security roles found: May indicate no dedicated security function"
+        echo "  - Senior roles open 3+ months: Difficulty filling, potential gap"
+        echo "Note: Job board scraping is limited by anti-bot protections."
+        echo "For comprehensive results, manual review is recommended at:"
+        echo "  - https://www.linkedin.com/jobs/search/?keywords=${{COMPANY}}%20security"
+        echo "  - https://www.indeed.com/jobs?q=${{COMPANY}}+cybersecurity"
+        echo "  - https://www.glassdoor.com/Job/jobs.htm?sc.keyword=${{COMPANY}}+security"

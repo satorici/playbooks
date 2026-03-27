@@ -1,0 +1,62 @@
+settings:
+  name: "Qualys SSL Labs: SSL/TLS configuration assessment"
+  description: "Assesses SSL/TLS configuration quality using the Qualys SSL Labs API. Reports grade, certificate details, protocol support, and known vulnerabilities like BEAST, POODLE, and Heartbleed."
+  image: debian
+  author:
+    - https://github.com/satorici
+  example: satori run satori://web/tls/ssllabs.yml -d DOMAIN="quorumcyber.com" --report --output
+
+ssllabs:
+  install:
+    - apt-get update -qq && apt-get install -qy curl jq python3 ca-certificates >>/dev/null
+
+  start_scan:
+    setSeverity: 3
+    assertReturnCode: 0
+    assertStdoutNotContains:
+      - "Grade: T"
+      - "Grade: F"
+    run:
+      - |
+        CLEAN_JSON() {
+          python3 -c "
+        import sys, json
+        raw = sys.stdin.buffer.read()
+        clean = raw.decode('utf-8', errors='replace')
+        obj = json.loads(clean)
+        json.dump(obj, sys.stdout)
+        " 2>/dev/null
+        }
+        echo "=== Starting SSL Labs scan for ${{DOMAIN}} ==="
+        curl -s "https://api.ssllabs.com/api/v3/analyze?host=${{DOMAIN}}&startNew=on&all=done" | CLEAN_JSON | jq '{status: .status, host: .host}'
+        echo "Waiting for scan to complete..."
+        i=1
+        while [ "$i" -le 20 ]; do
+          sleep 15
+          curl -s "https://api.ssllabs.com/api/v3/analyze?host=${{DOMAIN}}&all=done" | CLEAN_JSON > /tmp/ssl_result.json 2>/dev/null
+          STATUS=$(jq -r '.status // empty' /tmp/ssl_result.json 2>/dev/null)
+          if [ -z "$STATUS" ]; then
+            echo "Warning: empty status on attempt $i/20, skipping"
+            i=$((i + 1))
+            continue
+          fi
+          echo "Status: $STATUS (attempt $i/20)"
+          if [ "$STATUS" = "READY" ]; then
+            echo "=== Overall Results ==="
+            jq -r '.endpoints[] | "IP: \(.ipAddress) | Grade: \(.grade) | Delegation: \(.delegation)"' /tmp/ssl_result.json
+            echo "=== Certificate Details ==="
+            jq '.endpoints[0].details.cert | {subject: .subject, issuer: .issuerSubject, notBefore: .notBefore, notAfter: .notAfter, sigAlg: .sigAlg}' /tmp/ssl_result.json
+            echo "=== Protocol Support ==="
+            jq -r '.endpoints[0].details.protocols[] | "  \(.name) \(.version)"' /tmp/ssl_result.json
+            echo "=== Known Vulnerabilities ==="
+            jq '.endpoints[0].details | {heartbleed: .heartbleed, poodle: .poodle, poodleTls: .poodleTls, drownVulnerable: .drownVulnerable, logjam: .logjam, freak: .freak, supportsRc4: .supportsRc4}' /tmp/ssl_result.json
+            exit 0
+          elif [ "$STATUS" = "ERROR" ]; then
+            echo "SSL Labs returned an error"
+            jq . /tmp/ssl_result.json
+            exit 1
+          fi
+          i=$((i + 1))
+        done
+        echo "Scan timed out after 5 minutes"
+        exit 1

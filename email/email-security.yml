@@ -1,0 +1,107 @@
+settings:
+  name: "Email Security: SPF, DMARC, and DKIM assessment"
+  description: "Checks email authentication and anti-spoofing configuration by querying SPF, DMARC, and DKIM DNS records. Assesses strictness levels and provides an overall email security rating. Passive DNS lookups only."
+  image: debian
+  author:
+    - https://github.com/satorici
+  example: satori run satori://email/email-security.yml -d DOMAIN="quorumcyber.com" --report --output
+
+email-security:
+  install:
+    - apt-get update -qq && apt-get install -qy dnsutils >>/dev/null
+
+  spf_check:
+    setSeverity: 3
+    assertReturnCode: 0
+    run:
+      - |
+        echo "=== SPF Record ==="
+        SPF=$(dig +short TXT ${{DOMAIN}} | grep -i "v=spf1" || true)
+        if [ -n "$SPF" ]; then
+          echo "SPF Found: $SPF"
+          if echo "$SPF" | grep -q "\-all"; then
+            echo "Strictness: STRICT (-all) - Hard fail for unauthorized senders"
+          elif echo "$SPF" | grep -q "~all"; then
+            echo "Strictness: SOFT FAIL (~all) - Marks unauthorized mail but delivers"
+          elif echo "$SPF" | grep -q "?all"; then
+            echo "Strictness: NEUTRAL (?all) - No policy on unauthorized mail"
+          elif echo "$SPF" | grep -q "+all"; then
+            echo "Strictness: PERMISSIVE (+all) - DANGEROUS: allows anyone to send"
+          else
+            echo "Strictness: Unknown mechanism"
+          fi
+        else
+          echo "SPF: NOT FOUND - No SPF record configured"
+        fi
+
+  dmarc_check:
+    setSeverity: 2
+    assertReturnCode: 0
+    run:
+      - |
+        echo "=== DMARC Record ==="
+        DMARC=$(dig +short TXT _dmarc.${{DOMAIN}} || true)
+        if [ -n "$DMARC" ]; then
+          echo "DMARC Found: $DMARC"
+          if echo "$DMARC" | grep -qi "p=reject"; then
+            echo "Policy: REJECT (strong) - Unauthorized mail is rejected"
+          elif echo "$DMARC" | grep -qi "p=quarantine"; then
+            echo "Policy: QUARANTINE (moderate) - Unauthorized mail goes to spam"
+          elif echo "$DMARC" | grep -qi "p=none"; then
+            echo "Policy: NONE (weak) - Monitoring only, no enforcement"
+          fi
+          RUA=$(echo "$DMARC" | grep -oP 'rua=\K[^;]+' || echo "Not configured")
+          echo "Reporting address (rua): $RUA"
+        else
+          echo "DMARC: NOT FOUND - No DMARC record configured"
+        fi
+
+  dkim_check:
+    setSeverity: 3
+    assertReturnCode: 0
+    run:
+      - |
+        echo "=== DKIM Records (common selectors) ==="
+        FOUND=0
+        for SELECTOR in google default selector1 selector2 k1 dkim s1 s2 mail; do
+          RESULT=$(dig +short TXT ${SELECTOR}._domainkey.${{DOMAIN}} 2>/dev/null || true)
+          if [ -n "$RESULT" ]; then
+            echo "DKIM Found [$SELECTOR]: $RESULT"
+            FOUND=1
+          fi
+        done
+        if [ "$FOUND" -eq 0 ]; then
+          echo "DKIM: No records found for common selectors"
+          echo "Note: DKIM selectors are domain-specific; custom selectors may exist"
+        fi
+
+  overall_rating:
+    setSeverity: 2
+    assertStdoutNotContains:
+      - "ABSENT"
+      - "WEAK"
+    run:
+      - |
+        echo "=== Overall Email Security Rating ==="
+        SCORE=0
+        SPF=$(dig +short TXT ${{DOMAIN}} | grep -i "v=spf1" || true)
+        DMARC=$(dig +short TXT _dmarc.${{DOMAIN}} || true)
+        DKIM_FOUND=0
+        for SELECTOR in google default selector1 selector2 k1 dkim s1 s2 mail; do
+          R=$(dig +short TXT ${SELECTOR}._domainkey.${{DOMAIN}} 2>/dev/null || true)
+          [ -n "$R" ] && DKIM_FOUND=1
+        done
+        [ -n "$SPF" ] && SCORE=$((SCORE+1))
+        echo "$SPF" | grep -q "\-all" && SCORE=$((SCORE+1))
+        [ -n "$DMARC" ] && SCORE=$((SCORE+1))
+        echo "$DMARC" | grep -qi "p=reject\|p=quarantine" && SCORE=$((SCORE+1))
+        [ "$DKIM_FOUND" -eq 1 ] && SCORE=$((SCORE+1))
+        if [ "$SCORE" -ge 4 ]; then
+          echo "Rating: STRONG ($SCORE/5)"
+        elif [ "$SCORE" -ge 2 ]; then
+          echo "Rating: MODERATE ($SCORE/5)"
+        elif [ "$SCORE" -ge 1 ]; then
+          echo "Rating: WEAK ($SCORE/5)"
+        else
+          echo "Rating: ABSENT ($SCORE/5) - No email authentication configured"
+        fi

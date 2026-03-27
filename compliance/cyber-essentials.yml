@@ -1,0 +1,35 @@
+settings:
+  name: "Cyber Essentials: UK certification check"
+  description: "Checks if a company holds UK Cyber Essentials or Cyber Essentials Plus certification by querying the NCSC directory."
+  image: debian
+  author:
+    - https://github.com/satorici
+  example: satori run satori://compliance/cyber-essentials.yml -d COMPANY="Quorum Cyber" --report --output
+
+cyber-essentials:
+  install:
+    - apt-get update -qq && apt-get install -qy curl ca-certificates >>/dev/null
+
+  check_certification:
+    setSeverity: 3
+    assertStdoutNotContains: "NO_CERTIFICATION"
+    run:
+      - |
+        echo "=== NCSC Cyber Essentials Certification Check ==="
+        echo "Company: ${{COMPANY}}"
+        ENCODED=$(echo "${{COMPANY}}" | sed 's/ /%20/g')
+        RESULT=$(curl -s "https://www.ncsc.gov.uk/api/1/services/advancedSearch?postFilterType=cyberessentials&query=${ENCODED}" \
+          -H "Accept: application/json" \
+          -H "User-Agent: Satori-CI" 2>/dev/null || true)
+        if [ -n "$RESULT" ] && echo "$RESULT" | jq -e '.rows' >/dev/null 2>&1; then
+          COUNT=$(echo "$RESULT" | jq '.rows | length')
+          if [ "$COUNT" -gt 0 ]; then
+            echo "Certification records found: $COUNT"
+            echo "$RESULT" | jq -r '.rows[] | "  Company: \(.organisationName // "N/A")\n  Level: \(.cyberEssentialsLevel // "N/A")\n  Certified: \(.certificationDate // "N/A")\n  Expiry: \(.expiryDate // "N/A")\n"'
+          else
+            echo "NO_CERTIFICATION: No Cyber Essentials certification found for ${{COMPANY}}"
+          fi
+        else
+          echo "NO_CERTIFICATION: NCSC API unavailable, cannot confirm certification for ${{COMPANY}}"
+          echo "Manual verification: https://www.ncsc.gov.uk/cyberessentials/search"
+        fi

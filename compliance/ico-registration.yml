@@ -1,0 +1,45 @@
+settings:
+  name: "ICO Registration: UK data controller check"
+  description: "Checks UK Information Commissioner's Office (ICO) data controller registration status by searching the ICO register."
+  image: debian
+  author:
+    - https://github.com/satorici
+  example: satori run satori://compliance/ico-registration.yml -d COMPANY="Example Ltd" --report --output
+
+ico-registration:
+  install:
+    - apt-get update -qq && apt-get install -qy curl ca-certificates >>/dev/null
+
+  check_registration:
+    assertReturnCode: 0
+    run:
+      - |
+        echo "=== ICO Data Controller Registration Check ==="
+        echo "Company: ${{COMPANY}}"
+        ENCODED=$(echo "${{COMPANY}}" | sed 's/ /+/g')
+        RESULT=$(curl -s "https://ico.org.uk/ESDWebPages/Search?q=${ENCODED}" \
+          -H "User-Agent: Satori-CI" 2>/dev/null)
+        if [ -n "$RESULT" ]; then
+          echo "=== Search Results ==="
+          echo "$RESULT" | grep -oP '(?<=<td>)[^<]+(?=</td>)' | head -30
+          echo ""
+          REG_NUM=$(echo "$RESULT" | grep -oP 'Z[A-Z0-9]{6,7}' | head -5 || true)
+          if [ -n "$REG_NUM" ]; then
+            echo "Registration number(s) found:"
+            echo "$REG_NUM"
+            echo ""
+            for NUM in $REG_NUM; do
+              echo "=== Details for $NUM ==="
+              curl -s "https://ico.org.uk/ESDWebPages/Entry/$NUM" \
+                -H "User-Agent: Satori-CI" 2>/dev/null | \
+                grep -oP '(?<=<td>)[^<]+(?=</td>)' | head -20
+              echo ""
+            done
+          else
+            echo "No ICO registration found for ${{COMPANY}}"
+            echo "If this company processes UK personal data, this may be a compliance gap."
+          fi
+        else
+          echo "Could not reach ICO register."
+          echo "Manual verification: https://ico.org.uk/ESDWebPages/Search"
+        fi
