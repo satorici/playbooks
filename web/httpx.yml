@@ -14,8 +14,6 @@ httpx:
     - curl -sL https://api.github.com/repos/projectdiscovery/httpx/releases/latest | grep browser_download_url | grep 'linux_amd64\.zip"' | head -1 | cut -d'"' -f4 | xargs curl -sL -o /tmp/httpx.zip
     - unzip -o /tmp/httpx.zip -d /usr/local/bin/
 
-  help:
-    - httpx -h
 
   test:
     assertStdoutContains: "SUCCESS"

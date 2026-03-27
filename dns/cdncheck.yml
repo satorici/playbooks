@@ -14,8 +14,6 @@ cdncheck:
     - curl -sL https://api.github.com/repos/projectdiscovery/cdncheck/releases/latest | grep browser_download_url | grep 'linux_amd64\.zip"' | head -1 | cut -d'"' -f4 | xargs curl -sL -o /tmp/cdncheck.zip
     - unzip -o /tmp/cdncheck.zip -d /usr/local/bin/
 
-  help:
-    - cdncheck -duc -h
 
   check:
     assertReturnCode: 0

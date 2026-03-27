@@ -14,8 +14,6 @@ wafw00f:
     - pipx ensurepath
     - pipx install git+https://github.com/EnableSecurity/wafw00f.git
 
-  help:
-    - /root/.local/bin/wafw00f --help
 
   test:
     assertReturnCode: 0

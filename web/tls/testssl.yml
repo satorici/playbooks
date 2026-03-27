@@ -12,8 +12,6 @@ testssl:
   install:
     - apt-get update >>/dev/null; apt-get install -qy testssl.sh >>/dev/null
 
-  help:
-    - testssl --help
 
   test:
     run:

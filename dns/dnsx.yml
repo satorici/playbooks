@@ -14,8 +14,6 @@ dnsx:
     - curl -sL https://api.github.com/repos/projectdiscovery/dnsx/releases/latest | grep browser_download_url | grep 'linux_amd64\.zip"' | head -1 | cut -d'"' -f4 | xargs curl -sL -o /tmp/dnsx.zip
     - unzip -o /tmp/dnsx.zip -d /usr/local/bin/
 
-  help:
-    - dnsx -h
 
   test:
     assertReturnCode: 0

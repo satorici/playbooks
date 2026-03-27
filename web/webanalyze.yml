@@ -14,8 +14,6 @@ webanalyze:
     - curl -sL https://api.github.com/repos/rverton/webanalyze/releases/latest | grep browser_download_url | grep 'Linux_x86_64\.tar\.gz"' | head -1 | cut -d'"' -f4 | xargs curl -sL | tar xz -C /usr/local/bin/
     - webanalyze -update
 
-  help:
-    - webanalyze -h
 
   test:
     assertReturnCode: 0
