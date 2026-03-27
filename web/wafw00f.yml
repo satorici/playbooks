@@ -10,8 +10,8 @@ settings:
 
 wafw00f:
   install:
-    - apt-get update -qq && apt-get install -qy python3-pip -qq >>/dev/null 2>&1 || true
-    - pip install wafw00f -q --disable-pip-version-check --root-user-action=ignore 2>/dev/null || pip3 install wafw00f -q --disable-pip-version-check --root-user-action=ignore
+    - export DEBIAN_FRONTEND=noninteractive && apt-get update -qq && apt-get install -qy python3-pip -qq >>/dev/null 2>&1 || true
+    - pip3 install wafw00f -q --break-system-packages --root-user-action=ignore --disable-pip-version-check 2>/dev/null || pip install wafw00f -q --break-system-packages --root-user-action=ignore --disable-pip-version-check
 
 
   test:
