@@ -17,4 +17,4 @@ wafw00f:
   test:
     assertReturnCode: 0
     run:
-      - /root/.local/bin/wafw00f ${{URL}}
+      - wafw00f ${{URL}} || /root/.local/bin/wafw00f ${{URL}} || python3 -m wafw00f ${{URL}}
