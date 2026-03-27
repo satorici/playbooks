@@ -5,6 +5,7 @@ settings:
   author:
     - https://github.com/satorici
   example: satori run satori://osint/haveibeenpwned.yml -d DOMAIN="linkedin.com" -d HIBP_API_KEY="your_key" --report --output
+  redacted: HIBP_API_KEY
 
 haveibeenpwned:
   install:

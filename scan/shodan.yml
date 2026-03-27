@@ -5,6 +5,7 @@ settings:
   author:
     - https://github.com/satorici
   example: satori run satori://scan/shodan.yml -d DOMAIN="scanme.nmap.org" -d SHODAN_API_KEY="your_key" --report --output
+  redacted: SHODAN_API_KEY
 
 shodan:
   install:

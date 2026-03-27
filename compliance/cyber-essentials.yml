@@ -5,6 +5,7 @@ settings:
   author:
     - https://github.com/satorici
   example: satori run satori://compliance/cyber-essentials.yml -d COMPANY="Quorum Cyber" -d CAPTCHA_KEY="your_2captcha_key" --report --output
+  redacted: CAPTCHA_KEY
 
 cyber-essentials:
   install:
