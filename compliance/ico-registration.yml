@@ -19,8 +19,10 @@ ico-registration:
         for SUFFIX in "" " Limited" " Ltd" " Security Limited" " Security Ltd"; do
           SEARCH="${{COMPANY}}${SUFFIX}"
           ENCODED=$(echo "$SEARCH" | sed 's/ /+/g')
-          RESULT=$(curl -sL "https://ico.org.uk/ESDWebPages/Search?fieldcompanyname=${ENCODED}")
-          REG_NUM=$(echo "$RESULT" | grep -oE 'Z[A-Z0-9]{6,7}' | head -1)
+          RESULT=$(curl -sL -X POST "https://ico.org.uk/ESDWebPages/Search" \
+            -d "fieldcompanyname=${ENCODED}&fieldregistration=&fieldpostcode=&fieldstartdate=&fieldenddate=" \
+            -H "Content-Type: application/x-www-form-urlencoded")
+          REG_NUM=$(echo "$RESULT" | grep -oE 'Z[A-Z0-9]{5,8}' | head -1)
           if [ -n "$REG_NUM" ]; then
             echo "ICO Registration: $REG_NUM (matched: $SEARCH)"
             DETAILS=$(curl -sL "https://ico.org.uk/ESDWebPages/Entry/$REG_NUM")
