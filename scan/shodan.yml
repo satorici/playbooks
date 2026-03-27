@@ -1,6 +1,6 @@
 settings:
   name: "Shodan: Exposed services and CVE identification"
-  description: "Queries Shodan API to identify exposed services, open ports, software versions, and known CVEs on the target's infrastructure. Requires SHODAN_API_KEY."
+  description: "Queries Shodan API to identify exposed services, open ports, software versions, and known CVEs on the target's infrastructure and subdomains. Requires SHODAN_API_KEY."
   image: debian
   author:
     - https://github.com/satorici
@@ -12,31 +12,47 @@ shodan:
   install:
     - export DEBIAN_FRONTEND=noninteractive && apt-get update -qq && apt-get install -qy curl jq python3 dnsutils ca-certificates >>/dev/null
 
-  resolve_domain:
-    setSeverity: 5
-    assertReturnCode: 0
-    run:
-      - |
-        echo "=== Resolving ${{DOMAIN}} via Shodan ==="
-        curl -s "https://api.shodan.io/dns/resolve?hostnames=${{DOMAIN}}&key=${{SHODAN_API_KEY}}" | python3 -c "import sys,json; json.dump(json.loads(sys.stdin.buffer.read().decode('utf-8','replace')),sys.stdout)" 2>/dev/null | jq .
-
-  host_info:
+  scan:
     setSeverity: 2
     assertStdoutNotContains: "VULN_FOUND"
     run:
       - |
         CLEAN() { python3 -c "import sys,json; json.dump(json.loads(sys.stdin.buffer.read().decode('utf-8','replace')),sys.stdout)" 2>/dev/null; }
-        IP=$(curl -s "https://api.shodan.io/dns/resolve?hostnames=${{DOMAIN}}&key=${{SHODAN_API_KEY}}" | CLEAN | jq -r '."${{DOMAIN}}"')
-        echo "=== Shodan Host Info for $IP ==="
-        curl -s "https://api.shodan.io/shodan/host/${IP}?key=${{SHODAN_API_KEY}}" | CLEAN > /tmp/shodan.json
-        jq '{ip: .ip_str, os: .os, ports: .ports, hostnames: .hostnames, vulns: .vulns, last_update: .last_update}' /tmp/shodan.json 2>/dev/null
-        echo "=== Open Ports and Services ==="
-        jq -r '.data[] | "\(.port)/\(.transport) - \(.product // "unknown") \(.version // "") - Last seen: \(.timestamp)"' /tmp/shodan.json 2>/dev/null
-        echo "=== Known CVEs ==="
-        VULNS=$(jq -r '.vulns // {} | keys[]' /tmp/shodan.json 2>/dev/null)
-        if [ -n "$VULNS" ]; then
-          echo "$VULNS"
-          echo "VULN_FOUND: $(echo "$VULNS" | wc -l | tr -d ' ') CVE(s) detected on ${{DOMAIN}}"
-        else
-          echo "No CVEs found"
-        fi
+        SCAN_IP() {
+          local HOST="$1" IP="$2"
+          curl -s "https://api.shodan.io/shodan/host/${IP}?key=${{SHODAN_API_KEY}}" | CLEAN > /tmp/shodan_${IP}.json
+          PORTS=$(jq -r '.ports // [] | join(", ")' /tmp/shodan_${IP}.json 2>/dev/null)
+          VULNS=$(jq -r '.vulns // [] | length' /tmp/shodan_${IP}.json 2>/dev/null)
+          if [ -n "$PORTS" ] && [ "$PORTS" != "null" ]; then
+            echo "$HOST ($IP): ports=$PORTS vulns=$VULNS"
+            jq -r '.data[]? | "  \(.port)/\(.transport) - \(.product // "unknown") \(.version // "") - \(.timestamp)"' /tmp/shodan_${IP}.json 2>/dev/null
+            if [ "$VULNS" -gt 0 ] 2>/dev/null; then
+              jq -r '.vulns[]' /tmp/shodan_${IP}.json 2>/dev/null | while read CVE; do echo "  CVE: $CVE"; done
+              echo "VULN_FOUND: ${VULNS} CVE(s) on $HOST ($IP)"
+            fi
+          fi
+        }
+
+        echo "=== Shodan Scan: ${{DOMAIN}} ==="
+
+        # Scan main domain
+        MAIN_IP=$(dig +short A ${{DOMAIN}} | head -1)
+        echo "Main domain: ${{DOMAIN}} -> $MAIN_IP"
+        SCAN_IP "${{DOMAIN}}" "$MAIN_IP"
+
+        # Discover subdomains with direct IPs (not CDN)
+        echo "=== Scanning subdomains with direct IPs ==="
+        SUBS=$(curl -s "https://crt.sh/?q=%25.${{DOMAIN}}&output=json" | jq -r '.[].name_value' 2>/dev/null | sort -u | grep -v '^\*' | head -30)
+        SEEN=""
+        for SUB in $SUBS; do
+          IP=$(dig +short A "$SUB" 2>/dev/null | head -1)
+          [ -z "$IP" ] && continue
+          echo "$SEEN" | grep -q "$IP" && continue
+          SEEN="$SEEN $IP"
+          # Skip CDN IPs (Cloudflare, Akamai, Azure Front Door)
+          echo "$IP" | grep -qE '^104\.2[0-9]\.|^172\.6[4-9]\.|^172\.7[0-1]\.|^2606:4700' && continue
+          SCAN_IP "$SUB" "$IP"
+          sleep 1
+        done
+
+        echo "=== Scan complete ==="

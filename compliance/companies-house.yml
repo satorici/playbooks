@@ -1,6 +1,6 @@
 settings:
   name: "Companies House: UK corporate structure mapping"
-  description: "Queries the UK Companies House API to map corporate structure, directors, filing history, and company status. Requires COMPANIES_HOUSE_API_KEY (free registration at developer.company-information.service.gov.uk)."
+  description: "Queries the UK Companies House API to map corporate structure, directors, filing history, subsidiaries, charges, and insolvency. Requires COMPANIES_HOUSE_API_KEY (free registration at developer.company-information.service.gov.uk)."
   image: debian
   author:
     - https://github.com/satorici
@@ -72,3 +72,47 @@ companies-house:
         curl -s -u "${{COMPANIES_HOUSE_API_KEY}}:" \
           "https://api.company-information.service.gov.uk/company/$COMPANY_NUMBER/filing-history?items_per_page=10" | \
           jq -r '.items[] | "Date: \(.date) | Type: \(.type) | Description: \(.description)"'
+
+  charges:
+    assertReturnCode: 0
+    run:
+      - |
+        ENCODED=$(echo "${{COMPANY}}" | sed 's/ /%20/g')
+        COMPANY_NUMBER=$(curl -s -u "${{COMPANIES_HOUSE_API_KEY}}:" \
+          "https://api.company-information.service.gov.uk/search/companies?q=${ENCODED}&items_per_page=1" | \
+          jq -r '.items[0].company_number')
+        echo "=== Charges (Mortgages/Security) for $COMPANY_NUMBER ==="
+        curl -s -u "${{COMPANIES_HOUSE_API_KEY}}:" \
+          "https://api.company-information.service.gov.uk/company/$COMPANY_NUMBER/charges" | \
+          jq -r '.items[]? | "Status: \(.status) | Created: \(.created_on) | Delivered: \(.delivered_on) | Persons: \(.persons_entitled[0]?.name // "N/A")"' 2>/dev/null || echo "No charges found"
+
+  insolvency:
+    assertReturnCode: 0
+    run:
+      - |
+        ENCODED=$(echo "${{COMPANY}}" | sed 's/ /%20/g')
+        COMPANY_NUMBER=$(curl -s -u "${{COMPANIES_HOUSE_API_KEY}}:" \
+          "https://api.company-information.service.gov.uk/search/companies?q=${ENCODED}&items_per_page=1" | \
+          jq -r '.items[0].company_number')
+        echo "=== Insolvency History for $COMPANY_NUMBER ==="
+        RESULT=$(curl -s -u "${{COMPANIES_HOUSE_API_KEY}}:" \
+          "https://api.company-information.service.gov.uk/company/$COMPANY_NUMBER/insolvency")
+        STATUS=$(echo "$RESULT" | jq -r '.status // empty' 2>/dev/null)
+        if [ -n "$STATUS" ] && [ "$STATUS" != "null" ]; then
+          echo "$RESULT" | jq -r '.cases[]? | "Type: \(.type) | Date: \(.dates[0]?.date // "N/A") | Notes: \(.notes[0] // "N/A")"' 2>/dev/null
+        else
+          echo "No insolvency history"
+        fi
+
+  persons_significant_control:
+    assertReturnCode: 0
+    run:
+      - |
+        ENCODED=$(echo "${{COMPANY}}" | sed 's/ /%20/g')
+        COMPANY_NUMBER=$(curl -s -u "${{COMPANIES_HOUSE_API_KEY}}:" \
+          "https://api.company-information.service.gov.uk/search/companies?q=${ENCODED}&items_per_page=1" | \
+          jq -r '.items[0].company_number')
+        echo "=== Persons of Significant Control for $COMPANY_NUMBER ==="
+        curl -s -u "${{COMPANIES_HOUSE_API_KEY}}:" \
+          "https://api.company-information.service.gov.uk/company/$COMPANY_NUMBER/persons-with-significant-control" | \
+          jq -r '.items[]? | "Name: \(.name) | Nationality: \(.nationality // "N/A") | Country: \(.country_of_residence // "N/A") | Nature: \(.natures_of_control // [] | join(", "))"' 2>/dev/null || echo "No PSC data"
