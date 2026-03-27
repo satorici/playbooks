@@ -1,71 +1,91 @@
 settings:
-  name: "Cyber Essentials: UK NCSC certification and assurance check"
-  description: "Checks if a company holds UK NCSC assured provider status (CIR, Cyber Advisor) and searches for Cyber Essentials certification evidence."
-  image: debian
+  name: "Cyber Essentials: UK certification check"
+  description: "Checks if a company holds UK Cyber Essentials or Cyber Essentials Plus certification by searching the IASME certificate database."
+  image: python
   author:
     - https://github.com/satorici
-  example: satori run satori://compliance/cyber-essentials.yml -d COMPANY="Quorum Cyber" --report --output
+  example: satori run satori://compliance/cyber-essentials.yml -d COMPANY="Quorum Cyber" -d CAPTCHA_KEY="your_2captcha_key" --report --output
 
 cyber-essentials:
   install:
-    - export DEBIAN_FRONTEND=noninteractive && apt-get update -qq && apt-get install -qy curl python3 ca-certificates >>/dev/null
+    - pip install requests -q --disable-pip-version-check --root-user-action=ignore
 
   check_certification:
     setSeverity: 3
     assertStdoutNotContains: "NO_CERTIFICATION"
     run:
       - |
-        python3 -c "
-        import urllib.request, json, re, sys
+        python3 << 'PYEOF'
+        import requests, time, json
 
-        company = '${{COMPANY}}'
-        print(f'=== NCSC Certification Check: {company} ===')
+        company = "${{COMPANY}}"
+        captcha_key = "${{CAPTCHA_KEY}}"
+        sitekey = "0x4AAAAAAAQPkwt0CDGWAOiW"
+        page_url = "https://iasme.co.uk/cyber-essentials/ncsc-certificate-search/"
 
-        found = False
-        headers = {'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json'}
+        print(f"=== Cyber Essentials Certification Check: {company} ===")
 
-        # Check NCSC Assured Providers
-        for lid, name in [('14547', 'Assured Providers'), ('16580', 'General Search')]:
-            url = f'https://www.ncsc.gov.uk/api/listing/{lid}?fulltext={company.replace(\" \",\"+\")}'
-            req = urllib.request.Request(url, headers=headers)
-            try:
-                resp = urllib.request.urlopen(req, timeout=15)
-                data = json.loads(resp.read().decode('utf-8', errors='ignore'))
-                items = data.get('items', [])
-                for item in items:
-                    markup = item.get('markup', '')
-                    title_m = re.search(r'<h3[^>]*>(.*?)</h', markup, re.DOTALL)
-                    title = re.sub(r'<[^>]+>', '', title_m.group(1)).strip() if title_m else ''
-                    desc_m = re.search(r'lakes:wysiwyg\">(.*?)</div>', markup, re.DOTALL)
-                    desc = re.sub(r'<[^>]+>', '', desc_m.group(1)).strip() if desc_m else ''
-                    href_m = re.search(r'href=\"(/organisation/[^\"]+)\"', markup)
-                    href = f'https://www.ncsc.gov.uk{href_m.group(1)}' if href_m else ''
-                    if company.lower().split()[0] in title.lower():
-                        found = True
-                        print(f'NCSC Assured: {title}')
-                        print(f'  Status: {desc}')
-                        if href:
-                            print(f'  URL: {href}')
-            except:
-                pass
+        # Step 1: Solve Turnstile via 2captcha
+        print("Solving Turnstile challenge...")
+        r = requests.post("https://2captcha.com/in.php", data={
+            "key": captcha_key,
+            "method": "turnstile",
+            "sitekey": sitekey,
+            "pageurl": page_url,
+            "json": 1
+        })
+        task = r.json()
+        if task.get("status") != 1:
+            print(f"NO_CERTIFICATION: Captcha service error: {task}")
+            exit(0)
 
-        # Check NCSC org page directly
-        slug = company.lower().replace(' ', '-').replace('limited', 'ltd')
-        for suffix in ['', '/cyber-incident-response-cir', '/cyber-advisor']:
-            url = f'https://www.ncsc.gov.uk/organisation/{slug}{suffix}'
-            req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
-            try:
-                resp = urllib.request.urlopen(req, timeout=10)
-                html = resp.read().decode('utf-8', errors='ignore')
-                text = re.sub(r'<[^>]+>', ' ', html)
-                if 'certified' in text.lower() or 'assured' in text.lower():
-                    found = True
-                    cert_info = re.findall(r'(Certified|Assured|Status)[^.]{0,100}', text)
-                    for c in cert_info[:3]:
-                        print(f'  {c.strip()}')
-            except:
-                pass
+        task_id = task["request"]
+        token = None
+        for i in range(30):
+            time.sleep(5)
+            r = requests.get(f"https://2captcha.com/res.php?key={captcha_key}&action=get&id={task_id}&json=1")
+            result = r.json()
+            if result.get("status") == 1:
+                token = result["request"]
+                print("Turnstile solved")
+                break
+            elif "CAPCHA_NOT_READY" not in result.get("request", ""):
+                print(f"NO_CERTIFICATION: Captcha solve failed: {result}")
+                exit(0)
 
-        if not found:
-            print(f'NO_CERTIFICATION: Cyber Essentials certification could not be confirmed for {company}')
-        "
+        if not token:
+            print("NO_CERTIFICATION: Captcha solve timed out")
+            exit(0)
+
+        # Step 2: Search IASME
+        s = requests.Session()
+        s.headers.update({"User-Agent": "Mozilla/5.0"})
+        s.get(page_url)
+
+        r = s.post("https://iasme.co.uk/wp-admin/admin-ajax.php", data={
+            "action": "cert_search",
+            "search_term": company,
+            "cert": "ncsc",
+            "search_type": "search",
+            "cfToken": token
+        })
+
+        data = r.json()
+        if data.get("success"):
+            results = data.get("data", [])
+            if isinstance(results, list) and len(results) > 0:
+                print(f"CERTIFIED: {len(results)} certificate(s) found for {company}")
+                for cert in results[:10]:
+                    if isinstance(cert, dict):
+                        print(f"  Company: {cert.get('companyName', 'N/A')}")
+                        print(f"  Level: {cert.get('certLevel', 'N/A')}")
+                        print(f"  Certificate: {cert.get('certNumber', 'N/A')}")
+                        print(f"  Expires: {cert.get('expiryDate', 'N/A')}")
+                    elif isinstance(cert, list):
+                        print(f"  {' | '.join(str(c) for c in cert)}")
+            else:
+                print(f"NO_CERTIFICATION: No Cyber Essentials certification found for {company}")
+        else:
+            msg = data.get("data", {}).get("message", "unknown error")
+            print(f"NO_CERTIFICATION: Search failed: {msg}")
+        PYEOF
