@@ -10,7 +10,7 @@ settings:
 
 smap:
   install:
-    - apt-get update -qq && apt-get install -qy curl ca-certificates xz-utils >>/dev/null
+    - export DEBIAN_FRONTEND=noninteractive && apt-get update -qq && apt-get install -qy curl ca-certificates xz-utils >>/dev/null
     - curl -sL https://api.github.com/repos/s0md3v/smap/releases/latest | grep browser_download_url | grep 'linux_amd64\.tar\.xz"' | head -1 | cut -d'"' -f4 | xargs curl -sL -o /tmp/smap.tar.xz
     - tar xJf /tmp/smap.tar.xz -C /tmp/ && find /tmp -name smap -type f -exec mv {} /usr/local/bin/ \; && chmod +x /usr/local/bin/smap
 
