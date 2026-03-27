@@ -1,0 +1,57 @@
+settings:
+  name: "LinkedIn Company Intelligence: Profile, hiring, and competitors"
+  description: "Enriches company data via NinjaPear API (LinkedIn data) and Adzuna Jobs API. Returns company profile, specialties, competitors, and open security roles."
+  image: debian
+  author:
+    - https://github.com/satorici
+  example: satori run satori://osint/linkedin-company.yml -d DOMAIN="quorumcyber.com" -d COMPANY="Quorum Cyber" -d PROXYCURL="your_key" -d ADZUNA_ID="your_id" -d ADZUNA_KEY="your_key" --report --output
+  redacted:
+    - PROXYCURL
+    - ADZUNA_KEY
+
+linkedin-company:
+  install:
+    - export DEBIAN_FRONTEND=noninteractive && apt-get update -qq && apt-get install -qy curl jq ca-certificates >>/dev/null
+
+  company_profile:
+    assertReturnCode: 0
+    run:
+      - |
+        echo "=== Company Profile: ${{COMPANY}} ==="
+        RESULT=$(curl -s "https://nubela.co/api/v1/company/details?website=${{DOMAIN}}" \
+          -H "Authorization: Bearer ${{PROXYCURL}}")
+        echo "$RESULT" | jq '{
+          name: .name,
+          description: .description,
+          tagline: .tagline,
+          type: .company_type,
+          founded: .founded_year,
+          industry: .industry,
+          specialties: .specialties,
+          address: .addresses[0],
+          twitter: .twitter_url,
+          facebook: .facebook_url,
+          instagram: .instagram_url
+        }' 2>/dev/null
+
+  security_jobs:
+    assertReturnCode: 0
+    run:
+      - |
+        echo "=== Security Hiring: ${{COMPANY}} ==="
+        ENCODED=$(echo "${{COMPANY}}" | sed 's/ /+/g')
+        FOUND=0
+        for TERM in "cybersecurity" "security+engineer" "SOC+analyst" "CISO" "information+security" "penetration+tester"; do
+          RESULT=$(curl -s "https://api.adzuna.com/v1/api/jobs/gb/search/1?app_id=${{ADZUNA_ID}}&app_key=${{ADZUNA_KEY}}&what=${ENCODED}+${TERM}&results_per_page=5")
+          COUNT=$(echo "$RESULT" | jq '.count // 0')
+          if [ "$COUNT" -gt 0 ]; then
+            echo "--- $TERM: $COUNT job(s) ---"
+            echo "$RESULT" | jq -r '.results[] | "  \(.title) | \(.company.display_name) | \(.location.display_name) | \(.created)"' 2>/dev/null
+            FOUND=$((FOUND + COUNT))
+          fi
+        done
+        if [ "$FOUND" -eq 0 ]; then
+          echo "No security roles found for ${{COMPANY}}"
+        else
+          echo "=== $FOUND security role(s) found ==="
+        fi
