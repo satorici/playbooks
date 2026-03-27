@@ -5,7 +5,8 @@ settings:
   author:
     - https://github.com/satorici
   example: satori run satori://compliance/companies-house.yml -d COMPANY="Example Ltd" -d COMPANIES_HOUSE_API_KEY="your_key" --report --output
-  redacted: COMPANIES_HOUSE_API_KEY
+  redacted:
+    - COMPANIES_HOUSE_API_KEY
 
 companies-house:
   install:
