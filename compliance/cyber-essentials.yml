@@ -8,7 +8,7 @@ settings:
 
 cyber-essentials:
   install:
-    - apt-get update -qq && apt-get install -qy python3-requests >>/dev/null 2>&1 || pip install requests -q --disable-pip-version-check --root-user-action=ignore
+    - export DEBIAN_FRONTEND=noninteractive && apt-get update -qq && apt-get install -qy python3-requests >>/dev/null 2>&1 || pip install requests -q --disable-pip-version-check --root-user-action=ignore
 
   check_certification:
     setSeverity: 3
