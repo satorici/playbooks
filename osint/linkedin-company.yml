@@ -1,6 +1,6 @@
 settings:
   name: "LinkedIn Company Intelligence: Profile, hiring, and competitors"
-  description: "Enriches company data via NinjaPear API (LinkedIn data) and Adzuna Jobs API. Returns company profile, specialties, competitors, and open security roles."
+  description: "Enriches company data via NinjaPear API (LinkedIn data) and Adzuna Jobs API. Returns company profile, specialties, funding history, and open security roles."
   image: debian
   author:
     - https://github.com/satorici
@@ -33,6 +33,17 @@ linkedin-company:
           facebook: .facebook_url,
           instagram: .instagram_url
         }' 2>/dev/null
+
+  funding:
+    assertReturnCode: 0
+    run:
+      - |
+        echo "=== Funding History: ${{COMPANY}} ==="
+        curl -s "https://nubela.co/api/v1/company/funding?website=${{DOMAIN}}" \
+          -H "Authorization: Bearer ${{PROXYCURL}}" | jq -r '
+          "Total raised: $\(.total_funds_raised_usd // "undisclosed")",
+          (.funding_rounds[]? | "  \(.date) | \(.round_type) | $\(.amount_usd // "undisclosed") | Investors: \([.investors[]?.name] | join(", "))")
+        ' 2>/dev/null || echo "No funding data available"
 
   security_jobs:
     assertReturnCode: 0
