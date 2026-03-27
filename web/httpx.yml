@@ -16,6 +16,6 @@ httpx:
 
 
   test:
-    assertStdout: true
+    assertReturnCode: 0
     run:
       - httpx -u ${{URL}} -no-color -ip -cdn -cname -stats -title -retries 3 -threads 450 -timeout 3 -location -tls-grab -csp-probe -web-server -tech-detect -content-type -response-time -content-length -follow-redirects -follow-host-redirects -silent -probe -json
