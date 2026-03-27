@@ -92,9 +92,10 @@ cyber-essentials:
                 for cert in results[:10]:
                     if isinstance(cert, dict):
                         print(f"  Company: {cert.get('companyName', 'N/A')}")
-                        print(f"  Level: {cert.get('certLevel', 'N/A')}")
-                        print(f"  Certificate: {cert.get('certNumber', 'N/A')}")
-                        print(f"  Expires: {cert.get('expiryDate', 'N/A')}")
+                        print(f"  Level: {cert.get('certificateLevel', cert.get('certLevel', 'N/A'))}")
+                        print(f"  Certificate: {cert.get('certReference', cert.get('certNumber', 'N/A'))}")
+                        print(f"  Certified: {cert.get('certificationDate', 'N/A')}")
+                        print(f"  Expires: {cert.get('certificationExpiryDate', cert.get('expiryDate', 'N/A'))}")
                     elif isinstance(cert, list):
                         print(f"  {' | '.join(str(c) for c in cert)}")
             else:
