@@ -1,60 +1,35 @@
 settings:
   name: "Job Board Recon: Security hiring gap analysis"
-  description: "Identifies security team gaps by searching for open security-related hiring positions via Google dorking of LinkedIn, Indeed, and Glassdoor. Passive web search only."
+  description: "Identifies security team gaps by searching for open security-related hiring positions via the Adzuna Jobs API. Requires ADZUNA_ID and ADZUNA_KEY."
   image: debian
   author:
     - https://github.com/satorici
-  example: satori run satori://osint/job-board-recon.yml -d COMPANY="Example Corp" --report --output
+  example: satori run satori://osint/job-board-recon.yml -d COMPANY="NCC Group" -d ADZUNA_ID="your_id" -d ADZUNA_KEY="your_key" --report --output
+  redacted:
+    - ADZUNA_KEY
 
 job-board-recon:
   install:
-    - export DEBIAN_FRONTEND=noninteractive && apt-get update -qq && apt-get install -qy curl ca-certificates >>/dev/null
+    - export DEBIAN_FRONTEND=noninteractive && apt-get update -qq && apt-get install -qy curl jq ca-certificates >>/dev/null
 
-  linkedin_search:
+  security_jobs:
     assertReturnCode: 0
     run:
       - |
-        echo "=== LinkedIn Job Search: ${{COMPANY}} ==="
+        echo "=== Security Hiring Analysis: ${{COMPANY}} ==="
         ENCODED=$(echo "${{COMPANY}}" | sed 's/ /+/g')
-        for TERM in "CISO" "security+engineer" "SOC+analyst" "information+security" "cybersecurity"; do
-          echo ""
-          echo "--- Searching: $TERM ---"
-          RESULT=$(curl -sL "https://www.google.com/search?q=site:linkedin.com/jobs+%22${ENCODED}%22+%22${TERM}%22&num=5" \
-            -H "User-Agent: Mozilla/5.0 (compatible; Satori-CI)" 2>/dev/null)
-          echo "$RESULT" | grep -oP '(?<=<a href="/url\?q=)[^&"]+linkedin\.com/jobs[^&"]*' | head -5 || \
-          echo "$RESULT" | grep -oiP 'linkedin\.com/jobs/view/[^"<\s]+' | head -5 || \
-          echo "No LinkedIn results found for $TERM"
+        FOUND=0
+        for TERM in "cybersecurity" "security+engineer" "SOC+analyst" "CISO" "information+security" "penetration+tester"; do
+          RESULT=$(curl -s "https://api.adzuna.com/v1/api/jobs/gb/search/1?app_id=${{ADZUNA_ID}}&app_key=${{ADZUNA_KEY}}&what=${ENCODED}+${TERM}&results_per_page=5")
+          COUNT=$(echo "$RESULT" | jq '.count // 0')
+          if [ "$COUNT" -gt 0 ]; then
+            echo "--- $TERM: $COUNT job(s) ---"
+            echo "$RESULT" | jq -r '.results[] | "  \(.title) | \(.company.display_name) | \(.location.display_name) | \(.created)"' 2>/dev/null
+            FOUND=$((FOUND + COUNT))
+          fi
         done
-
-  indeed_search:
-    assertReturnCode: 0
-    run:
-      - |
-        echo "=== Indeed Job Search: ${{COMPANY}} ==="
-        ENCODED=$(echo "${{COMPANY}}" | sed 's/ /+/g')
-        for TERM in "CISO" "security+engineer" "SOC+analyst" "cybersecurity"; do
-          echo ""
-          echo "--- Searching: $TERM ---"
-          RESULT=$(curl -sL "https://www.google.com/search?q=site:indeed.com+%22${ENCODED}%22+%22${TERM}%22&num=5" \
-            -H "User-Agent: Mozilla/5.0 (compatible; Satori-CI)" 2>/dev/null)
-          echo "$RESULT" | grep -oP '(?<=<a href="/url\?q=)[^&"]+indeed\.com[^&"]*' | head -5 || \
-          echo "$RESULT" | grep -oiP 'indeed\.com/viewjob[^"<\s]+' | head -5 || \
-          echo "No Indeed results found for $TERM"
-        done
-
-  analysis:
-    assertReturnCode: 0
-    run:
-      - |
-        echo "=== Security Hiring Analysis Guide ==="
-        echo "Interpretation of findings:"
-        echo "  - Hiring a CISO: Company likely does not have one yet"
-        echo "  - Hiring SOC analysts: Building a security team, indicates investment"
-        echo "  - Hiring security engineers: Expanding existing security capabilities"
-        echo "  - No security roles found: May indicate no dedicated security function"
-        echo "  - Senior roles open 3+ months: Difficulty filling, potential gap"
-        echo "Note: Job board scraping is limited by anti-bot protections."
-        echo "For comprehensive results, manual review is recommended at:"
-        echo "  - https://www.linkedin.com/jobs/search/?keywords=${{COMPANY}}%20security"
-        echo "  - https://www.indeed.com/jobs?q=${{COMPANY}}+cybersecurity"
-        echo "  - https://www.glassdoor.com/Job/jobs.htm?sc.keyword=${{COMPANY}}+security"
+        if [ "$FOUND" -eq 0 ]; then
+          echo "No security roles found for ${{COMPANY}}"
+        else
+          echo "=== $FOUND security role(s) found ==="
+        fi
