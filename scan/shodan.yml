@@ -10,7 +10,7 @@ settings:
 
 shodan:
   install:
-    - export DEBIAN_FRONTEND=noninteractive && apt-get update -qq && apt-get install -qy curl jq python3 dnsutils ca-certificates >>/dev/null
+    - command -v dig >/dev/null 2>&1 && command -v jq >/dev/null 2>&1 || (export DEBIAN_FRONTEND=noninteractive && apt-get update -qq && apt-get install -qy curl jq python3 dnsutils ca-certificates >>/dev/null)
 
   scan:
     setSeverity: 2

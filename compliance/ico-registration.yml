@@ -8,7 +8,7 @@ settings:
 
 ico-registration:
   install:
-    - export DEBIAN_FRONTEND=noninteractive && apt-get update -qq && apt-get install -qy curl ca-certificates >>/dev/null
+    - command -v curl >/dev/null 2>&1 || (export DEBIAN_FRONTEND=noninteractive && apt-get update -qq && apt-get install -qy curl ca-certificates >>/dev/null)
 
   check_registration:
     assertReturnCode: 0

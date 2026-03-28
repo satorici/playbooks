@@ -10,8 +10,7 @@ settings:
 
 webanalyze:
   install:
-    - export DEBIAN_FRONTEND=noninteractive && apt-get update -qq && apt-get install -qy curl ca-certificates >>/dev/null
-    - curl -sL https://api.github.com/repos/rverton/webanalyze/releases/latest | grep browser_download_url | grep 'Linux_x86_64\.tar\.gz"' | head -1 | cut -d'"' -f4 | xargs curl -sL | tar xz -C /usr/local/bin/
+    - command -v webanalyze >/dev/null 2>&1 || (export DEBIAN_FRONTEND=noninteractive && apt-get update -qq && apt-get install -qy curl ca-certificates >>/dev/null && curl -sL https://api.github.com/repos/rverton/webanalyze/releases/latest | grep browser_download_url | grep 'Linux_x86_64\.tar\.gz"' | head -1 | cut -d'"' -f4 | xargs curl -sL | tar xz -C /usr/local/bin/)
     - webanalyze -update
 
 

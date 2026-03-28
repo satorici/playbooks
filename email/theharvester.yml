@@ -10,8 +10,7 @@ settings:
 
 theHarvest:
   install:
-    - export DEBIAN_FRONTEND=noninteractive && apt-get update -qq && apt-get install -qy python3-pip git -qq >>/dev/null 2>&1 || true
-    - pip3 install git+https://github.com/laramies/theHarvester.git -q --break-system-packages --root-user-action=ignore --disable-pip-version-check 2>/dev/null || pip install git+https://github.com/laramies/theHarvester.git -q --break-system-packages --root-user-action=ignore --disable-pip-version-check
+    - command -v theHarvester >/dev/null 2>&1 || (export DEBIAN_FRONTEND=noninteractive && apt-get update -qq && apt-get install -qy python3-pip git -qq >>/dev/null 2>&1 || true; pip3 install git+https://github.com/laramies/theHarvester.git -q --break-system-packages --root-user-action=ignore --disable-pip-version-check 2>/dev/null || pip install git+https://github.com/laramies/theHarvester.git -q --break-system-packages --root-user-action=ignore --disable-pip-version-check)
 
 
   test:

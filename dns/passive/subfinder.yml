@@ -10,9 +10,7 @@ settings:
 
 subfinder:
   install:
-    - export DEBIAN_FRONTEND=noninteractive && apt-get update -qq && apt-get install -qy curl unzip ca-certificates >>/dev/null
-    - curl -sL https://api.github.com/repos/projectdiscovery/subfinder/releases/latest | grep browser_download_url | grep 'linux_amd64\.zip"' | head -1 | cut -d'"' -f4 | xargs curl -sL -o /tmp/subfinder.zip
-    - unzip -o /tmp/subfinder.zip -d /usr/local/bin/
+    - command -v subfinder >/dev/null 2>&1 || (export DEBIAN_FRONTEND=noninteractive && apt-get update -qq && apt-get install -qy curl unzip ca-certificates >>/dev/null && curl -sL https://api.github.com/repos/projectdiscovery/subfinder/releases/latest | grep browser_download_url | grep 'linux_amd64\.zip"' | head -1 | cut -d'"' -f4 | xargs curl -sL -o /tmp/subfinder.zip && unzip -o /tmp/subfinder.zip -d /usr/local/bin/)
 
 
   test:
