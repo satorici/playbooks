@@ -31,15 +31,22 @@ ssllabs:
         curl -s "https://api.ssllabs.com/api/v3/analyze?host=${{DOMAIN}}&startNew=on&all=done" | CLEAN_JSON | jq '{status: .status, host: .host}'
         echo "Waiting for scan to complete..."
         i=1
-        while [ "$i" -le 20 ]; do
+        EMPTY=0
+        while [ "$i" -le 12 ]; do
           sleep 15
           curl -s "https://api.ssllabs.com/api/v3/analyze?host=${{DOMAIN}}&all=done" | CLEAN_JSON > /tmp/ssl_result.json 2>/dev/null
           STATUS=$(jq -r '.status // empty' /tmp/ssl_result.json 2>/dev/null)
           if [ -z "$STATUS" ]; then
-            echo "Warning: empty status on attempt $i/20, skipping"
+            EMPTY=$((EMPTY + 1))
+            echo "Warning: empty status on attempt $i/20 ($EMPTY consecutive)"
+            if [ "$EMPTY" -ge 3 ]; then
+              echo "SSL Labs not responding after $EMPTY empty responses, aborting"
+              exit 1
+            fi
             i=$((i + 1))
             continue
           fi
+          EMPTY=0
           echo "Status: $STATUS (attempt $i/20)"
           if [ "$STATUS" = "READY" ]; then
             echo "=== Overall Results ==="
@@ -58,5 +65,5 @@ ssllabs:
           fi
           i=$((i + 1))
         done
-        echo "Scan timed out after 5 minutes"
+        echo "Scan timed out after 3 minutes"
         exit 1
