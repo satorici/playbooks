@@ -1,0 +1,79 @@
+settings:
+  name: "Wayback Machine: Web archive activity check"
+  description: "Checks the Wayback Machine (archive.org) for a domain's archive history. Reports first snapshot, last snapshot, and recent activity. A domain with no recent snapshots or only error codes suggests the company is inactive or dead."
+  image: debian
+  author:
+    - https://github.com/satorici
+  example: satori run satori://osint/wayback-check.yml -d DOMAIN="cloudflare.com" --report --output
+
+wayback-check:
+  install:
+    - which curl >/dev/null 2>&1 || (export DEBIAN_FRONTEND=noninteractive && apt-get update -qq && apt-get install -qy curl ca-certificates >>/dev/null 2>&1)
+
+  check_archive:
+    setSeverity: 3
+    assertStdoutNotContains: "WAYBACK_INACTIVE"
+    run:
+      - |
+        DOMAIN="${{DOMAIN}}"
+        echo "=== Wayback Machine Check: $DOMAIN ==="
+
+        # Get last snapshot
+        LAST=$(curl -s -m 15 "https://web.archive.org/cdx/search/cdx?url=$DOMAIN&output=json&limit=1&fl=timestamp,statuscode&sort=reverse" 2>/dev/null)
+        LAST_TS=$(echo "$LAST" | grep -oE '"[0-9]{14}"' | head -1 | tr -d '"')
+        LAST_CODE=$(echo "$LAST" | grep -oE '"[0-9]{3}"' | tail -1 | tr -d '"')
+
+        # Get first snapshot
+        FIRST=$(curl -s -m 15 "https://web.archive.org/cdx/search/cdx?url=$DOMAIN&output=json&limit=1&fl=timestamp,statuscode&sort=asc&filter=statuscode:200" 2>/dev/null)
+        FIRST_TS=$(echo "$FIRST" | grep -oE '"[0-9]{14}"' | head -1 | tr -d '"')
+
+        # Format timestamps
+        format_ts() {
+          ts="$1"
+          if [ -n "$ts" ] && [ ${#ts} -ge 8 ]; then
+            echo "${ts:0:4}-${ts:4:2}-${ts:6:2}"
+          else
+            echo "N/A"
+          fi
+        }
+
+        FIRST_DATE=$(format_ts "$FIRST_TS")
+        LAST_DATE=$(format_ts "$LAST_TS")
+
+        echo "First snapshot: $FIRST_DATE"
+        echo "Last snapshot: $LAST_DATE (HTTP $LAST_CODE)"
+
+        if [ -n "$FIRST_TS" ] && [ -n "$LAST_TS" ]; then
+          # Calculate domain age
+          FIRST_YEAR=${FIRST_TS:0:4}
+          LAST_YEAR=${LAST_TS:0:4}
+          CURRENT_YEAR=$(date +%Y)
+          AGE=$((CURRENT_YEAR - FIRST_YEAR))
+          echo "Domain web presence: ~${AGE} years"
+
+          # Check if last snapshot is recent (within 6 months)
+          LAST_YYYYMM="${LAST_TS:0:6}"
+          CURRENT_YYYYMM=$(date +%Y%m)
+          SIX_MONTHS_AGO=$(date -v-6m +%Y%m 2>/dev/null || date -d "6 months ago" +%Y%m 2>/dev/null || echo "000000")
+
+          if [ "$LAST_YYYYMM" -ge "$SIX_MONTHS_AGO" ] 2>/dev/null; then
+            if [ "$LAST_CODE" = "200" ]; then
+              echo "WAYBACK_ACTIVE: $DOMAIN has recent web activity (last: $LAST_DATE, HTTP 200)"
+            elif [ "$LAST_CODE" = "301" ] || [ "$LAST_CODE" = "302" ]; then
+              echo "WAYBACK_REDIRECT: $DOMAIN redirects (last: $LAST_DATE, HTTP $LAST_CODE) — domain may have been acquired or parked"
+            else
+              echo "WAYBACK_DEGRADED: $DOMAIN returning HTTP $LAST_CODE (last: $LAST_DATE) — possible issues"
+            fi
+          else
+            echo "WAYBACK_INACTIVE: $DOMAIN has no recent web activity (last snapshot: $LAST_DATE) — company may be defunct"
+          fi
+        elif [ -z "$FIRST_TS" ] && [ -z "$LAST_TS" ]; then
+          echo "WAYBACK_INACTIVE: $DOMAIN has no Wayback Machine history — domain may be new or never had a website"
+        else
+          echo "WAYBACK_ACTIVE: $DOMAIN has archive history"
+        fi
+
+        # Show Wayback URL
+        if [ -n "$LAST_TS" ]; then
+          echo "Archive: https://web.archive.org/web/$LAST_TS/https://$DOMAIN/"
+        fi

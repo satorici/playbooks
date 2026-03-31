@@ -1,0 +1,58 @@
+settings:
+  name: "WHOIS: Domain registration and expiry check"
+  description: "Checks domain WHOIS data including registration date, expiry date, registrar, and domain status. Expired or soon-to-expire domains are a strong signal of company distress or abandonment."
+  image: debian
+  author:
+    - https://github.com/satorici
+  example: satori run satori://dns/whois-check.yml -d DOMAIN="cloudflare.com" --report --output
+
+whois-check:
+  install:
+    - command -v whois >/dev/null 2>&1 || (export DEBIAN_FRONTEND=noninteractive && apt-get update -qq && apt-get install -qy whois >>/dev/null 2>&1)
+
+  check_domain:
+    setSeverity: 2
+    assertStdoutNotContains: "DOMAIN_EXPIRED"
+    run:
+      - |
+        DOMAIN="${{DOMAIN}}"
+        echo "=== WHOIS Domain Check: $DOMAIN ==="
+        RAW=$(whois "$DOMAIN" 2>/dev/null)
+
+        CREATION=$(echo "$RAW" | grep -iE "Creation Date:" | head -1 | grep -oE "[0-9]{4}-[0-9]{2}-[0-9]{2}")
+        EXPIRY=$(echo "$RAW" | grep -iE "Registry Expiry Date:" | head -1 | grep -oE "[0-9]{4}-[0-9]{2}-[0-9]{2}")
+        REGISTRAR=$(echo "$RAW" | grep -iE "Registrar:" | head -1 | sed 's/.*: *//')
+        STATUS=$(echo "$RAW" | grep -iE "Domain Status:" | head -3 | sed 's/.*: *//')
+        NAMESERVERS=$(echo "$RAW" | grep -iE "Name Server:" | head -4 | sed 's/.*: *//')
+
+        echo "Registrar: ${REGISTRAR:-N/A}"
+        echo "Created: ${CREATION:-N/A}"
+        echo "Expires: ${EXPIRY:-N/A}"
+        echo "Name Servers:"
+        echo "${NAMESERVERS:-  N/A}" | while read ns; do echo "  $ns"; done
+        echo "Status:"
+        echo "${STATUS:-  N/A}" | while read st; do echo "  $st"; done
+
+        # Check if expired
+        if echo "$RAW" | grep -qi "no match\|not found\|no data found\|no entries found"; then
+          echo "DOMAIN_EXPIRED: $DOMAIN is not registered or has expired"
+        elif [ -n "$EXPIRY" ]; then
+          # Parse expiry date and compare
+          EXPIRY_EPOCH=$(date -j -f "%Y-%m-%dT%H:%M:%SZ" "$EXPIRY" +%s 2>/dev/null || date -d "$EXPIRY" +%s 2>/dev/null || echo "0")
+          NOW_EPOCH=$(date +%s)
+          if [ "$EXPIRY_EPOCH" != "0" ] && [ "$EXPIRY_EPOCH" -lt "$NOW_EPOCH" ]; then
+            echo "DOMAIN_EXPIRED: $DOMAIN expired on $EXPIRY"
+          elif [ "$EXPIRY_EPOCH" != "0" ]; then
+            DAYS_LEFT=$(( (EXPIRY_EPOCH - NOW_EPOCH) / 86400 ))
+            echo "DOMAIN_ACTIVE: $DOMAIN expires in $DAYS_LEFT days ($EXPIRY)"
+            if [ "$DAYS_LEFT" -lt 30 ]; then
+              echo "WARNING: Domain expires in less than 30 days"
+            fi
+          else
+            echo "DOMAIN_ACTIVE: $DOMAIN is registered (expiry: $EXPIRY)"
+          fi
+        elif echo "$STATUS" | grep -qi "active\|ok\|clientTransfer"; then
+          echo "DOMAIN_ACTIVE: $DOMAIN is registered and active"
+        else
+          echo "DOMAIN_ACTIVE: $DOMAIN appears registered (limited WHOIS data)"
+        fi

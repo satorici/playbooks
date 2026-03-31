@@ -1,0 +1,58 @@
+settings:
+  name: "Stock Market: Public listing and trading status check"
+  description: "Checks if a company is publicly traded by searching Yahoo Finance. Returns exchange, ticker symbol, sector, and trading status. A delisted or absent stock is a signal of company distress, acquisition, or private status."
+  image: debian
+  author:
+    - https://github.com/satorici
+  example: satori run satori://compliance/stock-check.yml -d COMPANY="Cloudflare" --report --output
+
+stock-check:
+  install:
+    - which curl >/dev/null 2>&1 && which python3 >/dev/null 2>&1 || (export DEBIAN_FRONTEND=noninteractive && apt-get update -qq && apt-get install -qy curl python3 ca-certificates >>/dev/null 2>&1)
+
+  check_listing:
+    assertStdout: true
+    run:
+      - |
+        python3 << 'PYEOF'
+        import urllib.request, json, sys, os
+
+        company = "${{COMPANY}}"
+        search = company.replace(" ", "+")
+
+        print(f"=== Stock Market Check: {company} ===")
+
+        try:
+            req = urllib.request.Request(
+                f"https://query1.finance.yahoo.com/v1/finance/search?q={search}&quotesCount=5",
+                headers={"User-Agent": "Mozilla/5.0"}
+            )
+            resp = urllib.request.urlopen(req, timeout=15)
+            data = json.loads(resp.read())
+        except Exception as e:
+            print(f"ERROR: Could not query Yahoo Finance: {e}")
+            sys.exit(0)
+
+        equities = [q for q in data.get("quotes", []) if q.get("quoteType") == "EQUITY"]
+
+        # Prefer name match
+        company_lower = company.lower()
+        matched = [q for q in equities if company_lower in (q.get("shortname", "") or q.get("longname", "")).lower()]
+        results = matched if matched else equities[:2]
+
+        if results:
+            for q in results[:3]:
+                symbol = q.get("symbol", "N/A")
+                exchange = q.get("exchDisp", q.get("exchange", "N/A"))
+                name = q.get("shortname", q.get("longname", "N/A"))
+                sector = q.get("sectorDisp", q.get("sector", "N/A"))
+                industry = q.get("industryDisp", q.get("industry", "N/A"))
+                print(f"PUBLICLY_TRADED: {name}")
+                print(f"  Ticker: {symbol}")
+                print(f"  Exchange: {exchange}")
+                print(f"  Sector: {sector}")
+                print(f"  Industry: {industry}")
+        else:
+            print(f"NOT_PUBLIC: {company} - no equity listing found on any exchange")
+            print(f"  Company may be private, acquired, or delisted")
+        PYEOF
