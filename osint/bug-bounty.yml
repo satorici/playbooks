@@ -1,0 +1,63 @@
+settings:
+  name: "Bug Bounty: Program discovery across platforms"
+  description: "Checks if a company has a public bug bounty or vulnerability disclosure program on HackerOne, Bugcrowd, Intigriti, or via security.txt. Having a bug bounty program indicates security maturity and proactive vulnerability management."
+  image: debian
+  author:
+    - https://github.com/satorici
+  example: satori run satori://osint/bug-bounty.yml -d DOMAIN="cloudflare.com" -d COMPANY="cloudflare" --report --output
+
+bug-bounty:
+  install:
+    - which curl >/dev/null 2>&1 || (export DEBIAN_FRONTEND=noninteractive && apt-get update -qq && apt-get install -qy curl ca-certificates >>/dev/null 2>&1)
+
+  check_programs:
+    setSeverity: 4
+    assertStdoutNotContains: "NO_BUG_BOUNTY"
+    run:
+      - |
+        DOMAIN="${{DOMAIN}}"
+        COMPANY="${{COMPANY}}"
+        SLUG=$(echo "$COMPANY" | tr '[:upper:]' '[:lower:]' | sed 's/ /-/g;s/[^a-z0-9-]//g')
+        echo "=== Bug Bounty Program Check: $COMPANY ($DOMAIN) ==="
+        FOUND=0
+
+        # HackerOne - check company slug
+        for try in "$SLUG" "$(echo $DOMAIN | cut -d. -f1)"; do
+          CODE=$(curl -s -o /tmp/h1.html -w "%{http_code}" -m 10 "https://hackerone.com/$try" -H "User-Agent: Mozilla/5.0" 2>/dev/null)
+          if [ "$CODE" = "200" ] && grep -qi "bug bounty\|vulnerability\|security" /tmp/h1.html 2>/dev/null; then
+            echo "HACKERONE: https://hackerone.com/$try"
+            FOUND=$((FOUND + 1))
+            break
+          fi
+        done
+
+        # Bugcrowd - check company slug
+        for try in "$SLUG" "$(echo $DOMAIN | cut -d. -f1)"; do
+          CODE=$(curl -s -o /dev/null -w "%{http_code}" -m 10 "https://bugcrowd.com/$try" -H "User-Agent: Mozilla/5.0" 2>/dev/null)
+          if [ "$CODE" = "200" ]; then
+            echo "BUGCROWD: https://bugcrowd.com/$try"
+            FOUND=$((FOUND + 1))
+            break
+          fi
+        done
+
+        # Intigriti
+        CODE=$(curl -s -o /dev/null -w "%{http_code}" -m 10 "https://app.intigriti.com/company/$SLUG/programs" -H "User-Agent: Mozilla/5.0" 2>/dev/null)
+        if [ "$CODE" = "200" ]; then
+          echo "INTIGRITI: https://app.intigriti.com/company/$SLUG/programs"
+          FOUND=$((FOUND + 1))
+        fi
+
+        # security.txt bounty reference
+        SECTXT=$(curl -sL -m 10 "https://$DOMAIN/.well-known/security.txt" 2>/dev/null)
+        if echo "$SECTXT" | grep -qi "bounty\|hackerone\|bugcrowd\|intigriti\|yeswehack"; then
+          BOUNTY_URL=$(echo "$SECTXT" | grep -iE "hackerone|bugcrowd|intigriti|yeswehack|bounty" | head -1 | sed 's/.*: //')
+          echo "SECURITY_TXT_BOUNTY: $BOUNTY_URL"
+          FOUND=$((FOUND + 1))
+        fi
+
+        if [ "$FOUND" -gt 0 ]; then
+          echo "BUG_BOUNTY_FOUND: $FOUND program(s) detected for $COMPANY"
+        else
+          echo "NO_BUG_BOUNTY: No public bug bounty program found for $COMPANY"
+        fi

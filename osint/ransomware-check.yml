@@ -1,0 +1,76 @@
+settings:
+  name: "Ransomware Check: Ransomware victim history"
+  description: "Checks if a company or domain has been listed as a ransomware victim by searching the ransomware.live database (26,000+ victims). Returns ransomware group name, discovery date, country, and sector."
+  image: debian
+  author:
+    - https://github.com/satorici
+  example: satori run satori://osint/ransomware-check.yml -d DOMAIN="colonial.com" -d COMPANY="Colonial Pipeline" --report --output
+
+ransomware-check:
+  install:
+    - which curl >/dev/null 2>&1 && which python3 >/dev/null 2>&1 || (export DEBIAN_FRONTEND=noninteractive && apt-get update -qq && apt-get install -qy curl python3 ca-certificates >>/dev/null 2>&1)
+
+  check_victim:
+    setSeverity: 1
+    assertStdoutNotContains: "RANSOMWARE_VICTIM"
+    run:
+      - |
+        python3 << 'PYEOF'
+        import urllib.request, json, sys
+
+        domain = "${{DOMAIN}}"
+        company = "${{COMPANY}}"
+
+        print(f"=== Ransomware Victim Check: {company} ({domain}) ===")
+
+        try:
+            req = urllib.request.Request("https://data.ransomware.live/victims.json", headers={"User-Agent": "Mozilla/5.0"})
+            resp = urllib.request.urlopen(req, timeout=30)
+            data = json.loads(resp.read())
+        except Exception as e:
+            print(f"ERROR: Could not fetch ransomware database: {e}")
+            sys.exit(1)
+
+        domain_clean = domain.lower().replace("www.", "")
+        domain_base = domain_clean.split(".")[0]
+        company_lower = company.lower()
+
+        matches = []
+        for v in data:
+            website = (v.get("website") or "").lower().replace("www.", "")
+            title = (v.get("post_title") or "").lower()
+
+            if domain_clean in website or website == domain_clean:
+                matches.append(v)
+            elif domain_base in website and len(domain_base) > 3:
+                matches.append(v)
+            elif company_lower in title:
+                matches.append(v)
+
+        if matches:
+            # Deduplicate by group+date
+            seen = set()
+            unique = []
+            for m in matches:
+                key = f"{m.get('group_name','')}:{m.get('discovered','')[:10]}"
+                if key not in seen:
+                    seen.add(key)
+                    unique.append(m)
+
+            print(f"RANSOMWARE_VICTIM: {len(unique)} ransomware incident(s) found")
+            for m in unique:
+                group = m.get("group_name", "Unknown")
+                date = (m.get("discovered") or "Unknown")[:10]
+                country = m.get("country", "N/A")
+                activity = m.get("activity", "N/A")
+                title = m.get("post_title", "N/A")
+                print(f"  Group: {group}")
+                print(f"  Date: {date}")
+                print(f"  Victim: {title}")
+                print(f"  Country: {country}")
+                print(f"  Sector: {activity}")
+                print(f"  ---")
+        else:
+            print(f"NO_RANSOMWARE_HISTORY: {company} ({domain}) not found in ransomware victim database")
+            print(f"  Checked against {len(data)} known victims")
+        PYEOF

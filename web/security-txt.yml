@@ -1,0 +1,33 @@
+settings:
+  name: "Security.txt: Security contact and disclosure policy check"
+  description: "Checks if a domain publishes a security.txt file (RFC 9116) at /.well-known/security.txt. Presence indicates a mature security program with defined vulnerability disclosure processes, security contacts, and often a bug bounty program."
+  image: debian
+  author:
+    - https://github.com/satorici
+  example: satori run satori://web/security-txt.yml -d DOMAIN="cloudflare.com" --report --output
+
+security-txt:
+  install:
+    - which curl >/dev/null 2>&1 || (export DEBIAN_FRONTEND=noninteractive && apt-get update -qq && apt-get install -qy curl ca-certificates >>/dev/null 2>&1)
+
+  check:
+    setSeverity: 4
+    assertStdoutNotContains: "NO_SECURITY_TXT"
+    run:
+      - |
+        DOMAIN="${{DOMAIN}}"
+        echo "=== Security.txt Check: $DOMAIN ==="
+        RESPONSE=$(curl -sL -m 10 "https://$DOMAIN/.well-known/security.txt" 2>/dev/null)
+        if echo "$RESPONSE" | grep -qi "Contact:"; then
+          echo "SECURITY_TXT_FOUND: $DOMAIN has a security.txt"
+          echo "$RESPONSE" | grep -iE "^(Contact|Expires|Encryption|Acknowledgments|Preferred-Languages|Canonical|Policy|Hiring):" | head -15
+        else
+          # Fallback: try /security.txt (old location)
+          RESPONSE2=$(curl -sL -m 10 "https://$DOMAIN/security.txt" 2>/dev/null)
+          if echo "$RESPONSE2" | grep -qi "Contact:"; then
+            echo "SECURITY_TXT_FOUND: $DOMAIN has a security.txt (legacy path)"
+            echo "$RESPONSE2" | grep -iE "^(Contact|Expires|Encryption|Acknowledgments|Preferred-Languages|Canonical|Policy|Hiring):" | head -15
+          else
+            echo "NO_SECURITY_TXT: $DOMAIN does not publish a security.txt"
+          fi
+        fi
