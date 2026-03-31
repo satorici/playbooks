@@ -39,36 +39,40 @@ cyber-essentials:
         })
         s.get(page_url)
 
-        # Step 2: Solve Turnstile via 2captcha
-        print("Solving Turnstile challenge...")
-        r = requests.post("https://2captcha.com/in.php", data={
-            "key": captcha_key,
-            "method": "turnstile",
-            "sitekey": sitekey,
-            "pageurl": page_url,
-            "json": 1
-        })
-        task = r.json()
-        if task.get("status") != 1:
-            print(f"NO_CERTIFICATION: Captcha service error: {task}")
-            exit(0)
-
-        task_id = task["request"]
+        # Step 2: Solve Turnstile via 2captcha (with retries)
         token = None
-        for i in range(30):
-            time.sleep(5)
-            r = requests.get(f"https://2captcha.com/res.php?key={captcha_key}&action=get&id={task_id}&json=1")
-            result = r.json()
-            if result.get("status") == 1:
-                token = result["request"]
-                print("Turnstile solved")
+        for attempt in range(3):
+            print(f"Solving Turnstile challenge (attempt {attempt + 1}/3)...")
+            r = requests.post("https://2captcha.com/in.php", data={
+                "key": captcha_key,
+                "method": "turnstile",
+                "sitekey": sitekey,
+                "pageurl": page_url,
+                "json": 1
+            })
+            task = r.json()
+            if task.get("status") != 1:
+                print(f"Captcha service error: {task}")
+                continue
+
+            task_id = task["request"]
+            for i in range(30):
+                time.sleep(5)
+                r = requests.get(f"https://2captcha.com/res.php?key={captcha_key}&action=get&id={task_id}&json=1")
+                result = r.json()
+                if result.get("status") == 1:
+                    token = result["request"]
+                    print("Turnstile solved")
+                    break
+                elif "CAPCHA_NOT_READY" not in result.get("request", ""):
+                    print(f"Captcha solve failed: {result}")
+                    break
+            if token:
                 break
-            elif "CAPCHA_NOT_READY" not in result.get("request", ""):
-                print(f"NO_CERTIFICATION: Captcha solve failed: {result}")
-                exit(0)
+            print(f"Attempt {attempt + 1} failed, retrying...")
 
         if not token:
-            print("NO_CERTIFICATION: Captcha solve timed out")
+            print("NO_CERTIFICATION: Captcha solve failed after 3 attempts")
             exit(0)
 
         # Step 3: Search IASME with session cookies
