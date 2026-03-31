@@ -6,11 +6,11 @@ settings:
     - https://github.com/PentestPad
   gallery:
     - https://files.catbox.moe/46j46k.png
-  example: satori run satori://dns/subzy.yml -d DOMAIN="satori.ci" --report --output
+  example: satori run satori://dns/subzy.yml -d DOMAIN="nonexistent-app-12345.herokuapp.com" --report --output
 
 subzy:
   install:
-    - go install github.com/PentestPad/subzy@latest
+    - command -v subzy >/dev/null 2>&1 || (export DEBIAN_FRONTEND=noninteractive && apt-get update -qq && apt-get install -qy golang-go ca-certificates >>/dev/null 2>&1 && go install github.com/PentestPad/subzy@latest && find / -name subzy -type f 2>/dev/null | head -1 | xargs -I{} cp {} /usr/local/bin/)
 
   help:
     - subzy --help
