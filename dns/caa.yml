@@ -1,0 +1,29 @@
+settings:
+  name: "DNS CAA: Certificate Authority Authorization check"
+  description: "Checks if a domain has DNS CAA records configured. CAA records restrict which Certificate Authorities can issue certificates for the domain, preventing unauthorized certificate issuance and reducing the risk of man-in-the-middle attacks."
+  image: debian
+  author:
+    - https://github.com/satorici
+  example: satori run satori://dns/caa.yml -d DOMAIN="satori.ci" --report --output
+
+dns-caa:
+  install:
+    - command -v dig >/dev/null 2>&1 || (export DEBIAN_FRONTEND=noninteractive && apt-get update -qq && apt-get install -qy dnsutils >>/dev/null 2>&1)
+
+  check_caa:
+    setSeverity: 3
+    assertStdoutNotContains: "NO_CAA_RECORDS"
+    run:
+      - |
+        DOMAIN="${{DOMAIN}}"
+        echo "=== DNS CAA Record Check: $DOMAIN ==="
+        RECORDS=$(dig +short CAA "$DOMAIN" 2>/dev/null)
+        if [ -z "$RECORDS" ]; then
+          echo "NO_CAA_RECORDS: $DOMAIN has no CAA records configured"
+          echo "Any Certificate Authority can issue certificates for this domain"
+        else
+          echo "CAA_CONFIGURED: $DOMAIN has CAA records"
+          echo "$RECORDS" | while read line; do
+            echo "  $line"
+          done
+        fi

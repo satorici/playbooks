@@ -1,0 +1,30 @@
+settings:
+  name: "HSTS Preload: Chrome preload list membership check"
+  description: "Checks if a domain is registered on the HSTS Preload List, which is hardcoded into Chrome, Firefox, Safari, Edge, and other browsers. Domains on the list are always accessed via HTTPS, eliminating the possibility of SSL stripping attacks on the first visit."
+  image: debian
+  author:
+    - https://github.com/satorici
+  example: satori run satori://web/hsts-preload.yml -d DOMAIN="satori.ci" --report --output
+
+hsts-preload:
+  install:
+    - which curl >/dev/null 2>&1 || (export DEBIAN_FRONTEND=noninteractive && apt-get update -qq && apt-get install -qy curl >>/dev/null 2>&1)
+
+  check_preload:
+    setSeverity: 4
+    assertStdoutNotContains: "NOT_PRELOADED"
+    run:
+      - |
+        DOMAIN="${{DOMAIN}}"
+        echo "=== HSTS Preload List Check: $DOMAIN ==="
+        RESPONSE=$(curl -sL "https://hstspreload.org/api/v2/status?domain=${DOMAIN}")
+        STATUS=$(echo "$RESPONSE" | tr -d ' \n' | grep -o '"status":"[^"]*"' | head -1 | sed 's/"status":"//;s/"//')
+        if [ "$STATUS" = "preloaded" ]; then
+          echo "HSTS_PRELOADED: $DOMAIN is on the HSTS Preload List"
+          echo "  Browsers will enforce HTTPS-only access for this domain"
+        elif [ "$STATUS" = "pending" ]; then
+          echo "HSTS_PENDING: $DOMAIN is pending addition to the HSTS Preload List"
+        else
+          echo "NOT_PRELOADED: $DOMAIN is not on the HSTS Preload List (status: ${STATUS:-unknown})"
+          echo "  First-time visitors may be vulnerable to SSL stripping attacks"
+        fi

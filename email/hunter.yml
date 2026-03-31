@@ -1,0 +1,38 @@
+settings:
+  name: "Hunter.io: Email discovery and pattern identification"
+  description: "Discovers professional email addresses associated with a domain using Hunter.io's database. Returns email addresses, their sources, confidence scores, and the organisation's email naming pattern (e.g. {first}.{last}@domain.com). Free tier: 25 searches/month."
+  image: debian
+  author:
+    - https://github.com/satorici
+  example: satori run satori://email/hunter.yml -d DOMAIN="quorumcyber.com" -d HUNTER_API_KEY="your_key" --report --output
+  redacted:
+    - HUNTER_API_KEY
+
+hunter:
+  install:
+    - which curl >/dev/null 2>&1 && which jq >/dev/null 2>&1 || (export DEBIAN_FRONTEND=noninteractive && apt-get update -qq && apt-get install -qy curl jq ca-certificates >>/dev/null 2>&1)
+
+  domain_search:
+    setSeverity: 4
+    assertStdout: true
+    run:
+      - |
+        DOMAIN="${{DOMAIN}}"
+        API_KEY="${{HUNTER_API_KEY}}"
+        echo "=== Hunter.io Email Discovery: $DOMAIN ==="
+        RESPONSE=$(curl -s "https://api.hunter.io/v2/domain-search?domain=${DOMAIN}&api_key=${API_KEY}&limit=10")
+        ERROR=$(echo "$RESPONSE" | jq -r '.errors[0].details // empty' 2>/dev/null)
+        if [ -n "$ERROR" ]; then
+          echo "ERROR: $ERROR"
+          exit 1
+        fi
+        TOTAL_DB=$(echo "$RESPONSE" | jq -r '.meta.results // 0' 2>/dev/null)
+        RETURNED=$(echo "$RESPONSE" | jq -r '.data.emails | length' 2>/dev/null)
+        PATTERN=$(echo "$RESPONSE" | jq -r '.data.pattern // "unknown"' 2>/dev/null)
+        ORG=$(echo "$RESPONSE" | jq -r '.data.organization // "N/A"' 2>/dev/null)
+        echo "Organisation: $ORG"
+        echo "Email pattern: $PATTERN"
+        echo "Total emails in database: $TOTAL_DB"
+        echo "Returned: $RETURNED"
+        echo ""
+        echo "$RESPONSE" | jq -r '.data.emails[] | "  \(.value) | \(.first_name) \(.last_name) | \(.position // "N/A") | confidence: \(.confidence)% | verified: \(.verification.status // "N/A")"' 2>/dev/null

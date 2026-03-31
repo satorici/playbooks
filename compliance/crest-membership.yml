@@ -1,0 +1,33 @@
+settings:
+  name: "CREST: Membership verification"
+  description: "Checks if a company is a CREST-accredited member by querying the CREST Marketplace supplier directory (marketplace.crest.org). Returns membership details including accreditation types, specialisms, and years of membership."
+  image: debian
+  author:
+    - https://github.com/satorici
+  example: satori run satori://compliance/crest-membership.yml -d COMPANY="Quorum Cyber" --report --output
+
+crest-membership:
+  install:
+    - which curl >/dev/null 2>&1 || (export DEBIAN_FRONTEND=noninteractive && apt-get update -qq && apt-get install -qy curl >>/dev/null 2>&1)
+
+  check_membership:
+    setSeverity: 3
+    assertStdoutNotContains: "NO_CREST_MEMBERSHIP"
+    run:
+      - |
+        COMPANY="${{COMPANY}}"
+        SEARCH=$(echo "$COMPANY" | sed 's/ /+/g')
+        echo "=== CREST Membership Check: $COMPANY ==="
+        RESPONSE=$(curl -sL -H "User-Agent: Mozilla/5.0" "https://marketplace.crest.org/wp-json/wp/v2/supplier?search=${SEARCH}")
+        COUNT=$(echo "$RESPONSE" | grep -o '"id"' | wc -l | tr -d ' ')
+        if [ "$COUNT" -gt 0 ]; then
+          echo "CREST_MEMBER: $COUNT result(s) found for $COMPANY"
+          echo "$RESPONSE" | grep -o '"rendered":"[^"]*"' | sed 's/"rendered":"//;s/"$//' | while read name; do
+            echo "  Company: $name"
+          done
+          echo "$RESPONSE" | grep -o '"link":"[^"]*"' | sed 's/"link":"//;s/"$//' | sed 's/\\//g' | while read link; do
+            echo "  Profile: $link"
+          done
+        else
+          echo "NO_CREST_MEMBERSHIP: $COMPANY is not listed in the CREST Marketplace directory"
+        fi

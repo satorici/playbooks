@@ -25,4 +25,4 @@ testssl:
         - CRITICAL
         - FATAL
       check:
-        - cat log
+        - grep -v "CERTIFICATE\|cert_fingerprintSHA" log | grep -v "^\"cert <\|^\"intermediate_cert <" | sort -t',' -k1,1 -u
