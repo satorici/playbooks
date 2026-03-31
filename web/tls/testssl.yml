@@ -16,7 +16,7 @@ testssl:
   test:
     run:
       - testssl -p -s -f -U -S -P --csvfile=log ${{URL}}
-    log:
+    findings:
       assertReturnCode: 0
       assertStdoutNotContains:
         - LOW
@@ -24,5 +24,8 @@ testssl:
         - HIGH
         - CRITICAL
         - FATAL
+      check:
+        - awk -F'","' '$4=="LOW"||$4=="MEDIUM"||$4=="HIGH"||$4=="CRITICAL"||$4=="FATAL"{print}' log; echo "TESTSSL_DONE"
+    log:
       check:
         - grep -v "CERTIFICATE\|cert_fingerprintSHA" log | grep -v "^\"cert <\|^\"intermediate_cert <" | sort -t',' -k1,1 -u
