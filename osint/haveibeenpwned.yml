@@ -4,7 +4,7 @@ settings:
   image: debian
   author:
     - https://github.com/satorici
-  example: satori run satori://osint/haveibeenpwned.yml -d DOMAIN="linkedin.com" -d HIBP_API_KEY="your_key" --report --output
+  example: satori run satori://osint/haveibeenpwned.yml -d DOMAIN="linkedin.com" -d COMPANY="LinkedIn" -d HIBP_API_KEY="your_key" --report --output
   redacted:
     - HIBP_API_KEY
 
@@ -23,8 +23,7 @@ haveibeenpwned:
           "https://haveibeenpwned.com/api/v3/breaches?domain=${{DOMAIN}}")
         if [ "$RESULT" = "[]" ] || [ -z "$RESULT" ]; then
           echo "No breaches found for domain ${{DOMAIN}}"
-          exit 0
-        fi
+        else
         echo "=== Breaches Found ==="
         echo "$RESULT" | jq -r '.[] | "Breach: \(.Name)\n  Date: \(.BreachDate)\n  Records: \(.PwnCount)\n  Data Types: \(.DataClasses | join(", "))\n  Description: \(.Description[:150])...\n"'
         echo "=== Summary ==="
@@ -36,4 +35,19 @@ haveibeenpwned:
         echo "Breaches with passwords: $HAS_PASSWORDS"
         if [ "$HAS_PASSWORDS" -gt 0 ]; then
           echo "CRITICAL: Password data was exposed in $HAS_PASSWORDS breach(es)"
+        fi
+        fi
+
+        # Also search public breaches list by company name (no API key needed)
+        echo ""
+        echo "=== HIBP Public Breach Search: ${{COMPANY}} ==="
+        ALL_BREACHES=$(curl -s -H "user-agent: Satori-CI" "https://haveibeenpwned.com/api/v3/breaches")
+        COMPANY_LOWER=$(echo "${{COMPANY}}" | tr '[:upper:]' '[:lower:]')
+        DOMAIN_BASE=$(echo "${{DOMAIN}}" | cut -d. -f1)
+        MATCHES=$(echo "$ALL_BREACHES" | jq -r --arg company "$COMPANY_LOWER" --arg domain "$DOMAIN_BASE" '[.[] | select((.Name | ascii_downcase | contains($company)) or (.Title | ascii_downcase | contains($company)) or (.Domain | ascii_downcase | contains($domain)))] | .[] | "Breach: \(.Name)\n  Domain: \(.Domain)\n  Date: \(.BreachDate)\n  Records: \(.PwnCount)\n  Passwords: \(if (.DataClasses | index("Passwords")) then "YES" else "No" end)\n"' 2>/dev/null)
+        if [ -n "$MATCHES" ]; then
+          echo "$MATCHES"
+          echo "BREACH_HISTORY_FOUND: ${{COMPANY}} appears in HIBP public breach database"
+        else
+          echo "No public breach history found for ${{COMPANY}}"
         fi
