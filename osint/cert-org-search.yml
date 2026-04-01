@@ -1,0 +1,72 @@
+settings:
+  name: "Certificate Transparency: Organization domain discovery"
+  description: "Searches crt.sh certificate transparency logs by Organization name (not domain) to discover all domains with SSL certificates issued to a specific company. CA-validated org names are high confidence. No API key required."
+  image: debian
+  author:
+    - https://github.com/satorici
+  example: satori run satori://osint/cert-org-search.yml -d COMPANY="Quorum Cyber" -d DOMAIN="quorumcyber.com" --report --output
+  #gallery:
+
+cert-org-search:
+  install:
+    - command -v curl >/dev/null 2>&1 && command -v jq >/dev/null 2>&1 || (export DEBIAN_FRONTEND=noninteractive && apt-get update -qq && apt-get install -qy curl jq ca-certificates >>/dev/null)
+
+  org_certificates:
+    assertReturnCode: 0
+    run:
+      - |
+        echo "=== Certificate Transparency: Org Search for '${{COMPANY}}' ==="
+        ENCODED=$(echo "${{COMPANY}}" | sed 's/ /+/g')
+        RESULT=$(curl -s "https://crt.sh/?O=${ENCODED}&output=json")
+        if echo "$RESULT" | jq -e '.' >/dev/null 2>&1; then
+          CERT_COUNT=$(echo "$RESULT" | jq 'length')
+          echo "Certificates found: $CERT_COUNT"
+          echo ""
+          echo "=== Unique Domains (from certificate SANs) ==="
+          echo "$RESULT" | jq -r '.[].common_name' 2>/dev/null | sort -u | grep -v '^\*' | head -50
+          echo ""
+          echo "=== All SAN Values ==="
+          echo "$RESULT" | jq -r '.[].name_value' 2>/dev/null | tr '\n' '\n' | sort -u | grep -v '^\*' | head -100
+          echo ""
+          echo "=== Unique Issuer Organizations ==="
+          echo "$RESULT" | jq -r '.[].issuer_name' 2>/dev/null | sort -u | head -20
+          echo ""
+          echo "=== Certificate Timeline ==="
+          echo "$RESULT" | jq -r '.[] | "\(.not_before) -> \(.not_after) | \(.common_name)"' 2>/dev/null | sort | tail -20
+        else
+          echo "No certificates found for organization: ${{COMPANY}}"
+          echo "Raw response: $(echo "$RESULT" | head -5)"
+        fi
+
+  domain_certificates:
+    assertReturnCode: 0
+    run:
+      - |
+        echo "=== Certificate Transparency: Domain Search for ${{DOMAIN}} ==="
+        RESULT=$(curl -s "https://crt.sh/?q=%25.${{DOMAIN}}&output=json")
+        if echo "$RESULT" | jq -e '.' >/dev/null 2>&1; then
+          echo "=== Organizations in certificates for ${{DOMAIN}} ==="
+          echo "$RESULT" | jq -r '.[].issuer_name' 2>/dev/null | grep -oP 'O=\K[^,]+' | sort -u | head -20
+          echo ""
+          echo "=== Unique subdomains ==="
+          echo "$RESULT" | jq -r '.[].name_value' 2>/dev/null | sort -u | grep -v '^\*' | head -50
+        else
+          echo "No certificates found for domain: ${{DOMAIN}}"
+        fi
+
+  cross_reference:
+    assertReturnCode: 0
+    run:
+      - |
+        echo "=== Cross-Reference: Domains from org certs vs domain certs ==="
+        ENCODED=$(echo "${{COMPANY}}" | sed 's/ /+/g')
+        ORG_DOMAINS=$(curl -s "https://crt.sh/?O=${ENCODED}&output=json" | jq -r '.[].name_value' 2>/dev/null | sort -u | grep -v '^\*' | sed 's/.*\.//' | sort -u)
+        DOM_DOMAINS=$(curl -s "https://crt.sh/?q=%25.${{DOMAIN}}&output=json" | jq -r '.[].name_value' 2>/dev/null | sort -u | grep -v '^\*')
+        echo "Root domains from org certificates:"
+        echo "$ORG_DOMAINS" | head -30
+        echo ""
+        echo "Domains from domain certificates:"
+        echo "$DOM_DOMAINS" | head -30
+        echo ""
+        echo "=== Domains in org certs NOT matching primary domain ==="
+        curl -s "https://crt.sh/?O=${ENCODED}&output=json" | jq -r '.[].name_value' 2>/dev/null | sort -u | grep -v '^\*' | grep -v "${{DOMAIN}}" | head -30 || echo "All domains match primary domain"

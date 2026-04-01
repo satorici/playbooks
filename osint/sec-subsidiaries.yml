@@ -1,0 +1,59 @@
+settings:
+  name: "SEC EDGAR: Subsidiary discovery from public filings"
+  description: "Searches SEC EDGAR full-text search for Exhibit 21 (subsidiary listings) and 8-K (acquisition announcements) to discover legally disclosed subsidiaries. US public companies only. No API key required."
+  image: debian
+  author:
+    - https://github.com/satorici
+  example: satori run satori://osint/sec-subsidiaries.yml -d COMPANY="CrowdStrike" --report --output
+  #gallery:
+
+sec-subsidiaries:
+  install:
+    - command -v curl >/dev/null 2>&1 && command -v jq >/dev/null 2>&1 || (export DEBIAN_FRONTEND=noninteractive && apt-get update -qq && apt-get install -qy curl jq ca-certificates >>/dev/null)
+
+  exhibit21_search:
+    assertReturnCode: 0
+    run:
+      - |
+        echo "=== SEC EDGAR: Exhibit 21 Subsidiary Filings for '${{COMPANY}}' ==="
+        ENCODED=$(echo "${{COMPANY}}" | sed 's/ /%20/g')
+        RESULT=$(curl -s -H "User-Agent: SatoriCI security-research@satori-ci.com" \
+          "https://efts.sec.gov/LATEST/search-index?q=%22${ENCODED}%22+%22subsidiaries%22")
+        TOTAL=$(echo "$RESULT" | jq -r '.hits.total.value // 0' 2>/dev/null)
+        echo "Filings mentioning subsidiaries: $TOTAL"
+        echo ""
+        echo "=== EX-21 Subsidiary Exhibits ==="
+        echo "$RESULT" | jq -r '.hits.hits[]? | select(._source.file_type | test("EX-21";"i") // false) | "\(._source.file_date) | \(._source.display_names[0] // "Unknown") | \(._source.file_type) | \(._source.file_description // "N/A")"' 2>/dev/null | head -20
+        echo ""
+        echo "=== All Filing Types Found ==="
+        echo "$RESULT" | jq -r '.hits.hits[]? | "\(._source.file_date) | \(._source.display_names[0] // "Unknown") | \(._source.form // "?") | \(._source.file_type // "?") | \(._source.file_description // "N/A")"' 2>/dev/null | head -20
+
+  acquisition_8k:
+    assertReturnCode: 0
+    run:
+      - |
+        echo "=== SEC EDGAR: 8-K Acquisition Filings for '${{COMPANY}}' ==="
+        ENCODED=$(echo "${{COMPANY}}" | sed 's/ /%20/g')
+        RESULT=$(curl -s -H "User-Agent: SatoriCI security-research@satori-ci.com" \
+          "https://efts.sec.gov/LATEST/search-index?q=%22${ENCODED}%22+%22acquisition%22+%22completed%22")
+        TOTAL=$(echo "$RESULT" | jq -r '.hits.total.value // 0' 2>/dev/null)
+        echo "Acquisition filings found: $TOTAL"
+        echo ""
+        echo "$RESULT" | jq -r '.hits.hits[]? | "\(._source.file_date) | \(._source.display_names[0] // "Unknown") | \(._source.form // "?") | \(._source.file_description // "N/A")"' 2>/dev/null | head -20
+
+  company_overview:
+    assertReturnCode: 0
+    run:
+      - |
+        echo "=== SEC EDGAR: Company Overview for '${{COMPANY}}' ==="
+        ENCODED=$(echo "${{COMPANY}}" | sed 's/ /%20/g')
+        RESULT=$(curl -s -H "User-Agent: SatoriCI security-research@satori-ci.com" \
+          "https://efts.sec.gov/LATEST/search-index?q=%22${ENCODED}%22&dateRange=custom&startdt=2023-01-01")
+        TOTAL=$(echo "$RESULT" | jq -r '.hits.total.value // 0' 2>/dev/null)
+        echo "Total filings mentioning '${{COMPANY}}': $TOTAL"
+        echo ""
+        echo "=== Entities filing about this company ==="
+        echo "$RESULT" | jq -r '[.hits.hits[]?._source.display_names[0]] | unique | .[]' 2>/dev/null | head -20
+        echo ""
+        echo "=== Recent filings ==="
+        echo "$RESULT" | jq -r '.hits.hits[]? | "\(._source.file_date) | \(._source.display_names[0] // "Unknown") | \(._source.form // "?") | \(._source.file_description // "N/A")"' 2>/dev/null | head -15
