@@ -19,14 +19,23 @@ crest-membership:
         SEARCH=$(echo "$COMPANY" | sed 's/ /+/g')
         echo "=== CREST Membership Check: $COMPANY ==="
         RESPONSE=$(curl -sL -H "User-Agent: Mozilla/5.0" "https://marketplace.crest.org/wp-json/wp/v2/supplier?search=${SEARCH}")
-        COUNT=$(echo "$RESPONSE" | grep -o '"id"' | wc -l | tr -d ' ')
-        if [ "$COUNT" -gt 0 ]; then
-          echo "CREST_MEMBER: $COUNT result(s) found for $COMPANY"
-          echo "$RESPONSE" | grep -o '"rendered":"[^"]*"' | sed 's/"rendered":"//;s/"$//' | while read name; do
+        COMPANY_LOWER=$(echo "$COMPANY" | tr '[:upper:]' '[:lower:]')
+        NAMES=$(echo "$RESPONSE" | grep -o '"rendered":"[^"]*"' | sed 's/"rendered":"//;s/"$//')
+        MATCHED=0
+        echo "$NAMES" | while read name; do
+          NAME_LOWER=$(echo "$name" | tr '[:upper:]' '[:lower:]')
+          if echo "$NAME_LOWER" | grep -qi "$COMPANY_LOWER"; then
             echo "  Company: $name"
-          done
-          echo "$RESPONSE" | grep -o '"link":"[^"]*"' | sed 's/"link":"//;s/"$//' | sed 's/\\//g' | while read link; do
-            echo "  Profile: $link"
+            MATCHED=1
+          fi
+        done
+        # Re-check match outside subshell
+        MATCH_CHECK=$(echo "$NAMES" | tr '[:upper:]' '[:lower:]' | grep -ci "$COMPANY_LOWER" || echo 0)
+        if [ "$MATCH_CHECK" -gt 0 ]; then
+          echo "CREST_MEMBER: $COMPANY found in CREST Marketplace"
+          echo "$NAMES" | while read name; do
+            NAME_LOWER=$(echo "$name" | tr '[:upper:]' '[:lower:]')
+            echo "$NAME_LOWER" | grep -qi "$COMPANY_LOWER" && echo "  Company: $name"
           done
         else
           echo "NO_CREST_MEMBERSHIP: $COMPANY is not listed in the CREST Marketplace directory"

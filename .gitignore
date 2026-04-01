@@ -141,3 +141,4 @@ dmypy.json
 *.zip
 .satori_credentials.yml
 CLAUDE.md
+__pycache__/
