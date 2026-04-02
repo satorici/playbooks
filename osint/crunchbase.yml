@@ -66,25 +66,47 @@ crunchbase:
         if not token:
             print("ERROR: could not solve after 10 attempts",flush=True); sys.exit(1)
 
-        # Step 2: Fetch page with solved cookies using same proxy + UA
-        print("Fetching page...",flush=True)
-        cookie_str="; ".join(k+"="+v for k,v in cookies.items())
-        headers={"User-Agent":ua,"Cookie":cookie_str,"Accept":"text/html,application/xhtml+xml","Accept-Language":"en-US,en;q=0.9"}
-        resp=cffi_requests.get(CB_URL,headers=headers,proxies={"https":PROXY,"http":PROXY},impersonate="chrome",timeout=30)
-        print("HTTP "+str(resp.status_code),flush=True)
-
-        if resp.status_code==200 and "verify" not in resp.text[:500].lower() and "been blocked" not in resp.text[:500].lower():
-            # Parse the HTML for visible text
-            import re
-            text=re.sub(r'<script[^>]*>.*?</script>','',resp.text,flags=re.DOTALL)
-            text=re.sub(r'<style[^>]*>.*?</style>','',text,flags=re.DOTALL)
-            text=re.sub(r'<[^>]+>',' ',text)
-            text=re.sub(r'\s+',' ',text)
-            lines=[l.strip() for l in text.split('  ') if l.strip() and len(l.strip())>3]
-            for ln in lines[:200]:
-                print(ln,flush=True)
-        else:
-            print("Page not loaded properly",flush=True)
-            print(resp.text[:500],flush=True)
-            sys.exit(1)
+        # Step 2: Fetch page — retry full solve+fetch if 403 (IP mismatch)
+        import re
+        for fetch_try in range(3):
+            print("Fetching (try "+str(fetch_try+1)+")...",flush=True)
+            cookie_str="; ".join(k+"="+v for k,v in cookies.items())
+            headers={"User-Agent":ua,"Cookie":cookie_str,"Accept":"text/html,application/xhtml+xml","Accept-Language":"en-US,en;q=0.9"}
+            resp=cffi_requests.get(CB_URL,headers=headers,proxies={"https":PROXY,"http":PROXY},impersonate="chrome",timeout=30)
+            print("HTTP "+str(resp.status_code),flush=True)
+            if resp.status_code==200 and "verify" not in resp.text[:500].lower() and "been blocked" not in resp.text[:500].lower():
+                text=re.sub(r'<script[^>]*>.*?</script>','',resp.text,flags=re.DOTALL)
+                text=re.sub(r'<style[^>]*>.*?</style>','',text,flags=re.DOTALL)
+                text=re.sub(r'<[^>]+>',' ',text)
+                text=re.sub(r'\s+',' ',text)
+                for ln in [l.strip() for l in text.split('  ') if l.strip() and len(l.strip())>3][:200]:
+                    print(ln,flush=True)
+                sys.exit(0)
+            # If 403, re-solve with new IP
+            print("  Re-solving...",flush=True)
+            token=None
+            for a2 in range(5):
+                sid2="".join(random.choices(string.ascii_lowercase+string.digits,k=8))
+                pu2=urlparse(PROXY.split("_session")[0] if "_session" in PROXY else PROXY)
+                pw2=(pu2.password or "").split("_session")[0]+"_session-"+sid2+"_lifetime-5m"
+                proxy2=pu2.scheme+"://"+pu2.username+":"+pw2+"@"+pu2.hostname+":"+str(pu2.port)
+                r2=requests.post("https://api.capsolver.com/createTask",json={"clientKey":CAPSOLVER,"task":{"type":"AntiCloudflareTask","websiteURL":CB_URL,"proxy":proxy2}})
+                t2=r2.json()
+                if t2.get("errorId",1)!=0: continue
+                for _ in range(20):
+                    time.sleep(5)
+                    r2=requests.post("https://api.capsolver.com/getTaskResult",json={"clientKey":CAPSOLVER,"taskId":t2["taskId"]})
+                    res2=r2.json()
+                    if res2.get("status")=="ready":
+                        sol2=res2["solution"]
+                        token=sol2.get("token","")
+                        ua=sol2.get("userAgent","")
+                        cookies=sol2.get("cookies",{})
+                        PROXY=proxy2
+                        break
+                    elif res2.get("status")!="processing": break
+                if token: break
+            if not token:
+                print("ERROR: re-solve failed",flush=True); sys.exit(1)
+        print("ERROR: fetch failed after retries",flush=True); sys.exit(1)
         PYEOF
