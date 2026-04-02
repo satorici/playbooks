@@ -32,6 +32,7 @@ crunchbase:
         from urllib.parse import urlparse
         SLUG=COMPANY.lower().replace(" ","-")
         CB_URL="https://www.crunchbase.com/organization/"+SLUG
+        ORIG_PROXY=PROXY
 
         print("=== "+COMPANY+" ===",flush=True)
 
@@ -39,7 +40,7 @@ crunchbase:
         token=None
         for attempt in range(10):
             sid="".join(random.choices(string.ascii_lowercase+string.digits,k=8))
-            pu=urlparse(PROXY)
+            pu=urlparse(ORIG_PROXY)
             pw=(pu.password or "").split("_session")[0]+"_session-"+sid+"_lifetime-5m"
             proxy_url=pu.scheme+"://"+pu.username+":"+pw+"@"+pu.hostname+":"+str(pu.port)
             print("Try "+str(attempt+1)+"/10 session="+sid,flush=True)
@@ -87,8 +88,8 @@ crunchbase:
             token=None
             for a2 in range(5):
                 sid2="".join(random.choices(string.ascii_lowercase+string.digits,k=8))
-                pu2=urlparse(PROXY.split("_session")[0] if "_session" in PROXY else PROXY)
-                pw2=(pu2.password or "").split("_session")[0]+"_session-"+sid2+"_lifetime-5m"
+                pu2=urlparse(ORIG_PROXY)
+                pw2=(pu2.password or "")+"_session-"+sid2+"_lifetime-5m"
                 proxy2=pu2.scheme+"://"+pu2.username+":"+pw2+"@"+pu2.hostname+":"+str(pu2.port)
                 r2=requests.post("https://api.capsolver.com/createTask",json={"clientKey":CAPSOLVER,"task":{"type":"AntiCloudflareTask","websiteURL":CB_URL,"proxy":proxy2}})
                 t2=r2.json()
