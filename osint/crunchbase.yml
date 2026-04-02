@@ -49,7 +49,12 @@ crunchbase:
             for attempt in range(50):
                 print("Try "+str(attempt+1),flush=True)
                 api_data.clear()
-                pg.goto(url,timeout=45000)
+                try:
+                    pg.goto(url,timeout=45000)
+                except:
+                    print("  timeout, retrying",flush=True)
+                    pg.context.clear_cookies()
+                    continue
                 for i in range(12):
                     pg.wait_for_timeout(3000)
                     pg.mouse.move(400+i*50,300+i*30)
