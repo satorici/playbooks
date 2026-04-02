@@ -1,0 +1,87 @@
+settings:
+  name: "Crunchbase Company Intelligence: Profile, funding, and key people"
+  description: "Uses Camoufox stealth browser with a residential proxy to bypass Cloudflare and extract company profile, funding rounds, key people, and products from Crunchbase. No API token or login required."
+  image: python:3.12-slim
+  timeout: 600
+  memory: 4096
+  cpu: 2048
+  author:
+    - https://github.com/satorici
+  gallery:
+    - https://files.catbox.moe/placeholder.png
+  example: satori run satori://osint/crunchbase.yml -d COMPANY="Quorum Cyber" -d PROXY_URL="http://user:pass@geo.iproyal.com:12321" --report --output
+  redacted:
+    - PROXY_URL
+
+crunchbase:
+  install:
+    - apt-get update -qq && apt-get install -qy xvfb fonts-liberation libgtk-3-0 libdbus-glib-1-2 libasound2t64 2>/dev/null | tail -1
+    - pip install -q "camoufox[geoip]" requests 2>/dev/null && python3 -m camoufox fetch 2>/dev/null | tail -1
+    - |
+      cat > /tmp/cb.py << 'SCRIPT'
+      import json,sys,time
+      from urllib.parse import urlparse
+      from camoufox.sync_api import Camoufox
+
+      COMPANY=sys.argv[1]
+      PROXY=sys.argv[2]
+      SLUG=COMPANY.lower().replace(" ","-")
+
+      api_data=[]
+      def on_resp(r):
+          if "/v4/" in r.url and r.status==200:
+              try: api_data.append({"path":r.url.split("?")[0].replace("https://www.crunchbase.com",""),"data":r.json()})
+              except: pass
+
+      pcfg=None
+      if PROXY:
+          pu=urlparse(PROXY)
+          pcfg={"server":pu.scheme+"://"+pu.hostname+":"+str(pu.port)}
+          if pu.username: pcfg["username"]=pu.username
+          if pu.password: pcfg["password"]=pu.password
+
+      with Camoufox(headless="virtual",proxy=pcfg,geoip=True,humanize=True) as browser:
+          pg=browser.new_page()
+          pg.on("response",on_resp)
+
+          url="https://www.crunchbase.com/organization/"+SLUG
+          print("=== "+COMPANY+" ("+SLUG+") ===",flush=True)
+
+          solved=False
+          for attempt in range(5):
+              pg.goto(url,timeout=60000)
+              for i in range(12):
+                  pg.wait_for_timeout(3000)
+                  pg.mouse.move(400+i*50,300+i*30)
+                  pg.wait_for_timeout(1000)
+                  pg.mouse.click(500,400)
+                  pg.wait_for_timeout(1000)
+                  body=pg.inner_text("body")
+                  if "verify" not in body.lower() and "challenge" not in body.lower():
+                      solved=True; break
+              if solved:
+                  print("  Resolved on attempt "+str(attempt+1),flush=True)
+                  break
+
+          body=pg.inner_text("body")
+          if not solved:
+              print("ERROR: Challenge not resolved",flush=True)
+              sys.exit(1)
+
+          lines=[l.strip() for l in body.split("\n") if l.strip() and len(l.strip())>3]
+          for ln in lines[:200]:
+              print(ln,flush=True)
+
+          if api_data:
+              print("\n=== Intercepted API Data ===",flush=True)
+              for it in api_data:
+                  if "md/applications" not in it["path"]:
+                      print("\n--- "+it["path"]+" ---",flush=True)
+                      print(json.dumps(it["data"],indent=2,default=str)[:4000],flush=True)
+      SCRIPT
+
+  scrape:
+    assertReturnCode: 0
+    assertStdout: true
+    run:
+      - python3 /tmp/cb.py "${{COMPANY}}" "${{PROXY_URL}}"
