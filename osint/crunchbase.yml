@@ -76,12 +76,73 @@ crunchbase:
             resp=cffi_requests.get(CB_URL,headers=headers,proxies={"https":PROXY,"http":PROXY},impersonate="chrome",timeout=30)
             print("HTTP "+str(resp.status_code),flush=True)
             if resp.status_code==200 and "verify" not in resp.text[:500].lower() and "been blocked" not in resp.text[:500].lower():
-                text=re.sub(r'<script[^>]*>.*?</script>','',resp.text,flags=re.DOTALL)
+                h=resp.text
+                def ex(pat,txt=h,g=1):
+                    m=re.search(pat,txt,re.DOTALL)
+                    return m.group(g).strip() if m else None
+                def exall(pat,txt=h):
+                    return [m.strip() for m in re.findall(pat,txt,re.DOTALL) if m.strip()]
+                # Strip HTML to plain text
+                text=re.sub(r'<script[^>]*>.*?</script>','',h,flags=re.DOTALL)
                 text=re.sub(r'<style[^>]*>.*?</style>','',text,flags=re.DOTALL)
                 text=re.sub(r'<[^>]+>',' ',text)
-                text=re.sub(r'\s+',' ',text)
-                for ln in [l.strip() for l in text.split('  ') if l.strip() and len(l.strip())>3][:200]:
-                    print(ln,flush=True)
+                text=re.sub(r'&nbsp;',' ',text)
+                text=re.sub(r'&amp;','&',text)
+                text=re.sub(r'\s+',' ',text).strip()
+                # Parse from plain text (FAQ section has clean answers)
+                def fx(label):
+                    m=re.search(label+r'\s*[:\s]+([^.?!]+)',text)
+                    return m.group(1).strip() if m else None
+                print("=== "+COMPANY+" ===",flush=True)
+                hq=fx(r"headquarters.*located in")
+                inv=fx(r"invested.*including")
+                comp=fx(r"competitors.*include")
+                lastround=fx(r"last funding round on\s+\w+")
+                totalfund=fx(r"raised to date.*?raised")
+                # Extract from body text
+                m=re.search(r'Legal Name\s+(\S[^\n]+?)(?:\s+Operating)',text)
+                if m: print("Legal Name: "+m.group(1).strip(),flush=True)
+                m=re.search(r'Operating Status\s+(\w+)',text)
+                if m: print("Status: "+m.group(1),flush=True)
+                m=re.search(r'Company Type\s+([\w\s]+?)(?:\s+Founders)',text)
+                if m: print("Type: "+m.group(1).strip(),flush=True)
+                m=re.search(r'Founders\s+(\S[^\n]+?)(?:\s+About)',text)
+                if m: print("Founders: "+m.group(1).strip(),flush=True)
+                m=re.search(r'About the Company\s+(.+?)(?:\s+Phone Number)',text)
+                if m: print("Description: "+m.group(1).strip()[:200],flush=True)
+                m=re.search(r'Phone Number\s+([\+\d\s\(\)]+)',text)
+                if m: print("Phone: "+m.group(1).strip(),flush=True)
+                m=re.search(r'Contact Email\s+(\S+@\S+)',text)
+                if m: print("Email: "+m.group(1).strip(),flush=True)
+                if hq: print("HQ: "+hq,flush=True)
+                m=re.search(r'Headcount\s+([\d,\-]+)',text)
+                if m: print("Employees: "+m.group(1),flush=True)
+                m=re.search(r'Number of Funding Rounds\s+(\d+)',text)
+                if m: print("Funding Rounds: "+m.group(1),flush=True)
+                if inv: print("Investors: "+inv,flush=True)
+                if totalfund: print("Total Funding: "+totalfund,flush=True)
+                if lastround: print("Last Round: "+lastround,flush=True)
+                if comp: print("Competitors: "+comp,flush=True)
+                m=re.search(r'was acquired by\s+(\w[\w\s]+?)(?:\s+on\s)',text)
+                if m: print("Acquired by: "+m.group(1).strip(),flush=True)
+                # People
+                pblock=re.search(r'Employee Profiles\s+(.*?)View All',text)
+                if pblock:
+                    print("Key People:",flush=True)
+                    ptext=re.sub(r'^\s*\d+\s+Contacts\s+\d+\s+Employee Profiles\s*','',pblock.group(1)).strip()
+                    titles=r'(?:Chief \w+ Officer|CEO|CTO|CFO|COO|CRO|CMO|CIO|CISO|Operations Director|VP \w+|Director \w+|Head of \w+|President|General Manager|Co-Founder|Founder)'
+                    for m in re.finditer(r'(\w[\w ]*?)\s+('+titles+r')',ptext):
+                        nm=m.group(1).strip()
+                        rl=m.group(2).strip()
+                        if len(nm)>2 and not nm[0].isdigit():
+                            print("  "+nm+" | "+rl,flush=True)
+                # Tech
+                m=re.search(r'Monthly Web Visits\s+([\d,]+)',text)
+                if m: print("Monthly Visits: "+m.group(1),flush=True)
+                m=re.search(r'IT Spend\s+(\$[\d.]+\w)',text)
+                if m: print("IT Spend: "+m.group(1),flush=True)
+                m=re.search(r'Active Website Tech Count\s+(\d+)',text)
+                if m: print("Tech Stack: "+m.group(1)+" technologies",flush=True)
                 sys.exit(0)
             # If 403, re-solve with new IP
             print("  Re-solving...",flush=True)
