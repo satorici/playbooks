@@ -75,20 +75,36 @@ cyber-essentials:
             print("NO_CERTIFICATION: Captcha solve failed after 3 attempts")
             exit(0)
 
-        # Step 3: Search IASME with session cookies
-        r = s.post("https://iasme.co.uk/wp-admin/admin-ajax.php", data={
-            "action": "cert_search",
-            "search_term": company,
-            "cert": "ncsc",
-            "search_type": "search",
-            "cfToken": token
-        })
+        # Step 3: Search IASME with session cookies (with retries)
+        data = None
+        for search_attempt in range(3):
+            r = s.post("https://iasme.co.uk/wp-admin/admin-ajax.php", data={
+                "action": "cert_search",
+                "search_term": company,
+                "cert": "ncsc",
+                "search_type": "search",
+                "cfToken": token
+            })
 
-        if r.status_code != 200 or not r.text.startswith("{"):
-            print(f"NO_CERTIFICATION: IASME search blocked (HTTP {r.status_code})")
+            if r.status_code == 200 and r.text.startswith("{"):
+                data = r.json()
+                if data.get("success") or "No Cyber Essentials" in str(data.get("data", "")):
+                    break
+                msg = data.get("data", {}).get("message", "")
+                if "error" in msg.lower() or "cloudflare" in msg.lower():
+                    print(f"Search attempt {search_attempt + 1}/3 failed: {msg[:60]}, retrying...")
+                    time.sleep(5)
+                    data = None
+                    continue
+                break
+            else:
+                print(f"Search attempt {search_attempt + 1}/3 blocked (HTTP {r.status_code}), retrying...")
+                time.sleep(5)
+
+        if data is None:
+            print(f"NO_CERTIFICATION: IASME search failed after 3 attempts")
             exit(0)
 
-        data = r.json()
         if data.get("success"):
             results = data.get("data", [])
             if isinstance(results, list) and len(results) > 0:
