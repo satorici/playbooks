@@ -107,19 +107,30 @@ cyber-essentials:
 
         if data.get("success"):
             results = data.get("data", [])
-            if isinstance(results, list) and len(results) > 0:
-                print(f"CERTIFIED: {len(results)} certificate(s) found for {company}")
-                for cert in results[:10]:
-                    if isinstance(cert, dict):
-                        print(f"  Company: {cert.get('companyName', 'N/A')}")
-                        print(f"  Level: {cert.get('certificateLevel', cert.get('certLevel', 'N/A'))}")
-                        print(f"  Certificate: {cert.get('certReference', cert.get('certNumber', 'N/A'))}")
-                        print(f"  Certified: {cert.get('certificationDate', 'N/A')}")
-                        print(f"  Expires: {cert.get('certificationExpiryDate', cert.get('expiryDate', 'N/A'))}")
-                    elif isinstance(cert, list):
-                        print(f"  {' | '.join(str(c) for c in cert)}")
+            # Filter results: returned company name must contain our search term
+            import re as regex
+            company_lower = company.lower()
+            company_pattern = regex.compile(r'\b' + regex.escape(company_lower) + r'\b', regex.IGNORECASE)
+            matched = []
+            for cert in (results if isinstance(results, list) else []):
+                if isinstance(cert, dict):
+                    cert_name = cert.get('companyName', '')
+                    if company_pattern.search(cert_name):
+                        matched.append(cert)
+            if matched:
+                print(f"CERTIFIED: {len(matched)} certificate(s) found for {company}")
+                for cert in matched[:10]:
+                    print(f"  Company: {cert.get('companyName', 'N/A')}")
+                    print(f"  Level: {cert.get('certificateLevel', cert.get('certLevel', 'N/A'))}")
+                    print(f"  Certificate: {cert.get('certReference', cert.get('certNumber', 'N/A'))}")
+                    print(f"  Certified: {cert.get('certificationDate', 'N/A')}")
+                    print(f"  Expires: {cert.get('certificationExpiryDate', cert.get('expiryDate', 'N/A'))}")
             else:
                 print(f"NO_CERTIFICATION: No Cyber Essentials certification found for {company}")
+                if results and isinstance(results, list):
+                    names = [c.get('companyName','') for c in results[:3] if isinstance(c, dict)]
+                    if names:
+                        print(f"  (Search returned: {'; '.join(names)} — no name match)")
         else:
             msg = data.get("data", {}).get("message", "unknown error")
             print(f"NO_CERTIFICATION: Search failed: {msg}")
