@@ -7,8 +7,7 @@ settings:
 
 xalgorix:
   install:
-    - go install -v github.com/xalgord/xalgorix/v3/cmd/xalgorix@latest 2>/dev/null
+    - go install -v github.com/xalgord/xalgorix/v4/cmd/xalgorix@latest 2>/dev/null
 
   run:
     - export XALGORIX_LLM=${{MODEL}} XALGORIX_API_KEY=${{API_KEY}} XALGORIX_API_BASE=https://openrouter.ai/api/v1 && xalgorix --target ${{TARGET}}
-
