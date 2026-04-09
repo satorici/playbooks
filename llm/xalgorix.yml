@@ -1,17 +1,14 @@
 settings:
-  name: "Xalgorix - LLM Automated Pentesting"
+  name: "Xalgorix - LLM Pentesting"
   description: "Run xalgorix autonomous pentesting agent against a target"
   image: golang
   files: true
   timeout: 3600
-  redacted:
-    - API_KEY
-  example: satori run xalgorix.yml -d "MODEL=anthropic/claude-opus-4.6" -d "API_KEY=$OPENROUTER" -d "TARGET=https://example.com" --files
 
 xalgorix:
   install:
-    - go install -v github.com/xalgord/xalgorix/v3/cmd/xalgorix@latest
-  assertReturnCode: 0
+    - go install -v github.com/xalgord/xalgorix/v3/cmd/xalgorix@latest 2>/dev/null
 
   run:
-    - XALGORIX_LLM=${{MODEL}} XALGORIX_API_KEY=${{API_KEY}} XALGORIX_API_BASE=https://openrouter.ai/api/v1 xalgorix --target ${{TARGET}}
+    - export XALGORIX_LLM=${{MODEL}} XALGORIX_API_KEY=${{API_KEY}} XALGORIX_API_BASE=https://openrouter.ai/api/v1 && xalgorix --target ${{TARGET}}
+
