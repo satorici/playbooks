@@ -97,6 +97,7 @@ crunchbase:
                         ld=js.loads(block)
                         if ld.get("@type")=="WebPage":
                             org=ld.get("mainEntity",{})
+                            if org.get("logo"): print("Logo: "+org["logo"],flush=True)
                             if org.get("legalName"): print("Legal Name: "+org["legalName"],flush=True)
                             if org.get("description"): print("Description: "+org["description"][:200],flush=True)
                             if org.get("foundingDate"): print("Founded: "+org["foundingDate"],flush=True)
