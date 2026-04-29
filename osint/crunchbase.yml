@@ -82,29 +82,42 @@ crunchbase:
                     return m.group(g).strip() if m else None
                 def exall(pat,txt=h):
                     return [m.strip() for m in re.findall(pat,txt,re.DOTALL) if m.strip()]
-                # Strip HTML to plain text
+                import json as js
+                print("=== "+COMPANY+" ===",flush=True)
+                # Extract structured data from embedded JSON
+                cats=re.search(r'"categories":\s*(\[.*?\])',h)
+                if cats:
+                    try:
+                        tags=[c["value"] for c in js.loads(cats.group(1))]
+                        if tags: print("Industry: "+", ".join(tags),flush=True)
+                    except: pass
+                # Extract from LD+JSON blocks
+                for block in re.findall(r'<script[^>]*type="application/ld\+json"[^>]*>(.*?)</script>',h,re.DOTALL):
+                    try:
+                        ld=js.loads(block)
+                        if ld.get("@type")=="WebPage":
+                            org=ld.get("mainEntity",{})
+                            if org.get("legalName"): print("Legal Name: "+org["legalName"],flush=True)
+                            if org.get("description"): print("Description: "+org["description"][:200],flush=True)
+                            if org.get("foundingDate"): print("Founded: "+org["foundingDate"],flush=True)
+                            addr=org.get("address",{})
+                            if addr.get("addressLocality"): print("HQ: "+addr["addressLocality"]+", "+addr.get("addressRegion","")+", "+addr.get("addressCountry",""),flush=True)
+                        elif ld.get("@type")=="FAQPage":
+                            for q in ld.get("mainEntity",[]):
+                                name=q.get("name","")
+                                ans=q.get("acceptedAnswer",{}).get("text","")
+                                if "invested" in name.lower(): print("Investors: "+ans[:150],flush=True)
+                                elif "competitor" in name.lower(): print("Competitors: "+ans[:150],flush=True)
+                                elif "funding round" in name.lower(): print("Last Round: "+ans[:150],flush=True)
+                                elif "how much" in name.lower(): print("Total Funding: "+ans[:150],flush=True)
+                    except: pass
+                # Strip HTML to plain text for remaining fields
                 text=re.sub(r'<script[^>]*>.*?</script>','',h,flags=re.DOTALL)
                 text=re.sub(r'<style[^>]*>.*?</style>','',text,flags=re.DOTALL)
                 text=re.sub(r'<[^>]+>',' ',text)
                 text=re.sub(r'&nbsp;',' ',text)
                 text=re.sub(r'&amp;','&',text)
                 text=re.sub(r'\s+',' ',text).strip()
-                # Parse from plain text (FAQ section has clean answers)
-                def fx(label):
-                    m=re.search(label+r'\s*[:\s]+([^.?!]+)',text)
-                    return m.group(1).strip() if m else None
-                print("=== "+COMPANY+" ===",flush=True)
-                hq=fx(r"headquarters.*located in")
-                inv=fx(r"invested.*including")
-                comp=fx(r"competitors.*include")
-                lastround=fx(r"last funding round on\s+\w+")
-                totalfund=fx(r"raised to date.*?raised")
-                # Extract from body text
-                # Extract industry/sector tags (appear between website URL and "Overview")
-                ind=re.search(r'www\.\S+/?\s+(.*?)(?:\s+Overview)',text)
-                if ind:
-                    tags=[t.strip() for t in re.split(r'\s{2,}',ind.group(1)) if len(t.strip())>2 and t.strip()!="Overview"]
-                    if tags: print("Industry: "+", ".join(tags[:5]),flush=True)
                 m=re.search(r'Legal Name\s+(\S[^\n]+?)(?:\s+Operating)',text)
                 if m: print("Legal Name: "+m.group(1).strip(),flush=True)
                 m=re.search(r'Operating Status\s+(\w+)',text)
