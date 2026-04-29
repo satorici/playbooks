@@ -100,6 +100,11 @@ crunchbase:
                 lastround=fx(r"last funding round on\s+\w+")
                 totalfund=fx(r"raised to date.*?raised")
                 # Extract from body text
+                # Extract industry/sector tags (appear between website URL and "Overview")
+                ind=re.search(r'www\.\S+/?\s+(.*?)(?:\s+Overview)',text)
+                if ind:
+                    tags=[t.strip() for t in re.split(r'\s{2,}',ind.group(1)) if len(t.strip())>2 and t.strip()!="Overview"]
+                    if tags: print("Industry: "+", ".join(tags[:5]),flush=True)
                 m=re.search(r'Legal Name\s+(\S[^\n]+?)(?:\s+Operating)',text)
                 if m: print("Legal Name: "+m.group(1).strip(),flush=True)
                 m=re.search(r'Operating Status\s+(\w+)',text)
