@@ -5,4 +5,4 @@ settings:
   example: satori run satori://osint/thecompaniesapi.yml -d HOSTNAME="stripe.com" -d THECOMPANIESAPI="$THECOMPANIESAPI" --report --output
 
 TheCompaniesAPI:
-  - curl -s -H "Authorization: Basic ${{THECOMPANIESAPI}}" "https://api.thecompaniesapi.com/v2/companies/${{HOSTNAME}}"
+  - 'curl -s -H "Authorization: Basic ${{THECOMPANIESAPI}}" "https://api.thecompaniesapi.com/v2/companies/${{HOSTNAME}}"'
