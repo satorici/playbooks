@@ -1,0 +1,8 @@
+settings:
+  name: "TheCompaniesAPI Lookup"
+  description: "Query TheCompaniesAPI for company info by hostname/domain"
+  image: curlimages/curl
+  example: satori run satori://osint/thecompaniesapi.yml -d HOSTNAME="stripe.com" -d THECOMPANIESAPI="$THECOMPANIESAPI" --report --output
+
+TheCompaniesAPI:
+  - curl -s -H "Authorization: Basic ${{THECOMPANIESAPI}}" "https://api.thecompaniesapi.com/v2/companies/${{HOSTNAME}}"
