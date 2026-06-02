@@ -1,0 +1,57 @@
+settings:
+  name: "Domain to GitHub account"
+  description: "Find the most likely main GitHub org/account for a domain"
+  image: debian:stable-slim
+  example: satori run satori://osint/domain-to-github.yml -d DOMAIN=satori.ci --report --output
+
+find_account:
+  install:
+    - export DEBIAN_FRONTEND=noninteractive; apt-get update -qq && apt-get install -qy --no-install-recommends curl jq ca-certificates >/dev/null 2>&1
+
+  run:
+    - |
+      DOMAIN="${{DOMAIN}}"
+      CORE="${DOMAIN%%.*}"
+      FLAT="$(echo "$DOMAIN" | tr -d '.')"
+      if [ -n "$GITHUB_TOKEN" ]; then
+        gh(){ curl -s -H "Authorization: Bearer $GITHUB_TOKEN" -H "Accept: application/vnd.github+json" "$@"; }
+      else
+        gh(){ curl -s -H "Accept: application/vnd.github+json" "$@"; }
+      fi
+      norm(){ echo "$1" | sed -E 's#https?://##; s#^www\.##; s#/.*$##' | tr 'A-Z' 'a-z'; }
+
+      echo "### Resolving '$DOMAIN' (core='$CORE')"
+      CANDS="$( { gh "https://api.github.com/search/users?q=${CORE}&per_page=20" | jq -r '.items[]?.login' 2>/dev/null; echo "$CORE"; echo "$FLAT"; } | sort -u )"
+      BEST=""; BEST_SCORE=-1
+
+      printf "%-22s %-14s %-7s %s\n" "LOGIN" "TYPE" "SCORE" "WEBSITE"
+      ROWS="$(mktemp)"
+      for L in $CANDS; do
+        info="$(gh "https://api.github.com/users/${L}")"
+        echo "$info" | jq -e . >/dev/null 2>&1 || continue
+        [ "$(echo "$info" | jq -r '.login // empty' 2>/dev/null)" = "" ] && continue
+        type="$(echo "$info" | jq -r '.type' 2>/dev/null)"
+        name="$(echo "$info" | jq -r '(.name // "") | ascii_downcase' 2>/dev/null)"
+        blog="$(echo "$info" | jq -r '.blog // ""' 2>/dev/null)"
+        foll="$(echo "$info" | jq -r '.followers // 0' 2>/dev/null)"
+        nblog="$(norm "$blog")"; llog="$(echo "$L" | tr 'A-Z' 'a-z')"
+
+        score=0
+        [ "$nblog" = "$DOMAIN" ]                            && score=$((score+100))
+        echo "$nblog" | grep -qi "$CORE"                    && score=$((score+30))
+        { [ "$llog" = "$CORE" ] || [ "$llog" = "$FLAT" ]; } && score=$((score+40))
+        echo "$name" | grep -qi "$CORE"                     && score=$((score+20))
+        [ "$type" = "Organization" ]                        && score=$((score+10))
+        score=$((score + foll/100))
+
+        printf "%s\t%s\t%-22s %-14s %-7s %s\n" "$type" "$llog" "$L" "$type" "$score" "$blog" >> "$ROWS"
+        [ "$score" -gt "$BEST_SCORE" ] && { BEST_SCORE=$score; BEST="$L"; }
+      done
+      sort -t"$(printf '\t')" -k1,1 -k2,2 "$ROWS" | cut -f3-
+      rm -f "$ROWS"
+      echo "BEST_MATCH=${BEST} (score=${BEST_SCORE}) https://github.com/${BEST}"
+
+  resolved:
+    setOutput: find_account.run
+    assertStdoutContains: "BEST_MATCH="
+    assertStdoutNotContains: "API rate limit exceeded"

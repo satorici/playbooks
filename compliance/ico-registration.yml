@@ -11,23 +11,30 @@ ico-registration:
     - command -v curl >/dev/null 2>&1 || (export DEBIAN_FRONTEND=noninteractive && apt-get update -qq && apt-get install -qy curl ca-certificates >>/dev/null)
 
   check_registration:
-    assertReturnCode: 0
+    assertStdoutContains: "ICO Registration:"
+    setSeverity: 3
     run:
       - |
         echo "=== ICO Data Controller Registration Check ==="
         echo "Company: ${{COMPANY}}"
-        for SUFFIX in "" " Limited" " Ltd" " Security Limited" " Security Ltd"; do
-          SEARCH="${{COMPANY}}${SUFFIX}"
-          ENCODED=$(echo "$SEARCH" | sed 's/ /+/g')
-          RESULT=$(curl -sL -X POST "https://ico.org.uk/ESDWebPages/Search" \
-            -d "fieldcompanyname=${ENCODED}&fieldregistration=&fieldpostcode=&fieldstartdate=&fieldenddate=" \
-            -H "Content-Type: application/x-www-form-urlencoded")
-          REG_NUM=$(echo "$RESULT" | grep -oE 'Z[A-Z0-9]{5,8}' | head -1)
-          if [ -n "$REG_NUM" ]; then
-            echo "ICO Registration: $REG_NUM (matched: $SEARCH)"
-            DETAILS=$(curl -sL "https://ico.org.uk/ESDWebPages/Entry/$REG_NUM")
-            echo "$DETAILS" | grep -oE '<td[^>]*>[^<]+</td>' | sed 's/<[^>]*>//g' | head -20
-            exit 0
-          fi
-        done
-        echo "No ICO registration found for ${{COMPANY}}"
+
+        COOKIES=$(mktemp)
+        PAGE=$(curl -sL -c "$COOKIES" "https://ico.org.uk/ESDWebPages/Search")
+        TOKEN=$(echo "$PAGE" | grep -oE 'name="__RequestVerificationToken"[^>]*value="[^"]*"' \
+          | grep -oE 'value="[^"]*"' | head -1 | sed 's/value="//;s/"//')
+
+        RESULT=$(curl -sL -b "$COOKIES" "https://ico.org.uk/ESDWebPages/DoSearch" \
+          --data-urlencode "__RequestVerificationToken=$TOKEN" \
+          --data-urlencode "fieldname=${{COMPANY}}" \
+          --data-urlencode "fieldregistration=" \
+          --data-urlencode "fieldpostcode=")
+
+        REG_NUM=$(echo "$RESULT" | grep -oE 'Z[AB][0-9]{6}' | head -1)
+        MATCH=$(echo "$RESULT" | grep -oiE "[^>]*${{COMPANY}}[^<]*" | head -1 | sed 's/^[[:space:]]*//;s/[[:space:]]*|[[:space:]]*ICO[[:space:]]*$//')
+
+        if [ -n "$REG_NUM" ]; then
+          echo "ICO Registration: $REG_NUM"
+          echo "Registered name: ${MATCH:-${{COMPANY}}}"
+        else
+          echo "No ICO registration found for ${{COMPANY}}"
+        fi

@@ -7,19 +7,13 @@ settings:
   gallery:
     - https://files.catbox.moe/46j46k.png
   example: satori run satori://dns/subzy.yml -d DOMAIN="nonexistent-app-12345.herokuapp.com" --report --output
-  # NOTE: subdomain takeover affects dangling SUBDOMAINS, not the apex. Pass a
-  # comma-separated list of discovered subdomains (e.g. from subfinder) for a
-  # meaningful scan: -d DOMAIN="a.example.com,b.example.com". A single apex is weak.
+  # NOTE: subdomain takeover affects dangling SUBDOMAINS, not the apex. Pass a comma-separated list of discovered subdomains (e.g. from subfinder) for a meaningful scan: -d DOMAIN="a.example.com,b.example.com". A single apex is weak.
 
 subzy:
   install:
     - command -v subzy >/dev/null 2>&1 || (export DEBIAN_FRONTEND=noninteractive && apt-get update -qq && apt-get install -qy golang-go ca-certificates >>/dev/null 2>&1 && go install github.com/PentestPad/subzy@latest && find / -name subzy -type f 2>/dev/null | head -1 | xargs -I{} cp {} /usr/local/bin/)
 
-  help:
-    - subzy --help
-
   test:
-    # subzy exits 0 even on errors/usage, so assertReturnCode is meaningless.
     # Confirm subzy actually scanned (it prints "Loaded N targets"), then fail
     # only when a real takeover is found. The result line is "[ NOT VULNERABLE ]"
     # when safe and "[ VULNERABLE ]" when vulnerable; the lookbehind matches only

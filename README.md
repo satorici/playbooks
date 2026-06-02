@@ -67,7 +67,7 @@ playbooks/
 
 ## Playbook Catalog
 
-### OSINT (15 playbooks)
+### OSINT (16 playbooks)
 
 | Playbook | Description |
 |---|---|
@@ -77,6 +77,7 @@ playbooks/
 | `satori://osint/crt.yml` — **Certificate Transparency Monitor: Lookalike cert issuance** | Detects phishing infrastructure at provisioning time by watching Certificate Transparency logs (crt.sh) for newly issued certificates whose hostname contains your brand k |
 | `satori://osint/cert-org-search.yml` — **Certificate Transparency: Organization domain discovery** | Searches crt.sh certificate transparency logs by Organization name (not domain) to discover all domains with SSL certificates issued to a specific company. CA-validated o |
 | `satori://osint/crunchbase.yml` — **Crunchbase Company Intelligence: Profile, funding, and key people** | Solves Cloudflare challenge via CapSolver and extracts company profile, funding rounds, key people, and products from Crunchbase using a residential proxy. |
+| `satori://osint/domain-to-github.yml` — **Domain to GitHub account** | Finds the most likely main GitHub organization/account for a company domain by scoring candidates on website match, login/name similarity, and popularity. |
 | `satori://osint/google-news.yml` — **Google News: Recent mentions in the last 30 days** | Searches Google News for recent mentions of a company in the last 30 days via RSS. Returns titles, sources, and publication dates. Useful for identifying recent incidents |
 | `satori://osint/haveibeenpwned.yml` — **HaveIBeenPwned: Breach exposure check** | Checks if employee credentials from the target domain have appeared in known data breaches using the Have I Been Pwned API. Requires HIBP_API_KEY. |
 | `satori://osint/job-board-recon.yml` — **Job Board Recon: Security hiring gap analysis** | Identifies security team gaps by searching for open security-related hiring positions via the Adzuna Jobs API. Requires ADZUNA_ID and ADZUNA_KEY. |
