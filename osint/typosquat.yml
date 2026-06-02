@@ -40,10 +40,11 @@ typosquat:
           CREATED=$(timeout 10 whois "$DOM" 2>/dev/null | grep -iE "creation date|created on|created:|registered on" | head -1 | grep -oE "[0-9]{4}-[0-9]{2}-[0-9]{2}" | head -1)
           AGE="unknown"
           FRESH="no"
-          if [ -n "$CREATED" ]; then
-            DAYS=$(( (NOW - $(date -d "$CREATED" +%s 2>/dev/null || echo "$NOW")) / 86400 ))
+          EPOCH=$(date -d "$CREATED" +%s 2>/dev/null)
+          if [ -n "$CREATED" ] && [ -n "$EPOCH" ]; then
+            DAYS=$(( (NOW - EPOCH) / 86400 ))
             AGE="${DAYS}d"
-            [ "$DAYS" -lt 90 ] && FRESH="yes"
+            [ "$DAYS" -ge 0 ] && [ "$DAYS" -lt 90 ] && FRESH="yes"
           fi
           FLAG="review"
           if [ "$MXF" = "MX" ] || [ "$FRESH" = "yes" ]; then

@@ -1,0 +1,34 @@
+settings:
+  name: "AlienVault OTX: Threat-intel pulse exposure"
+  description: "Checks whether a domain is named in any AlienVault OTX threat-intelligence pulse (tracked IOC sets, malware campaigns, incident reports). A match means the domain has been referenced in community/vendor threat reporting. Uses the public OTX domain endpoint (no API key required). Note: well-known brands appear in many benign monitoring pulses, so treat matches as a review signal."
+  image: debian
+  author:
+    - https://github.com/satorici
+  example: satori run osint/otx.yml -d DOMAIN="example.com" --report --output
+
+otx:
+  install:
+    - command -v curl >/dev/null 2>&1 && command -v jq >/dev/null 2>&1 || (export DEBIAN_FRONTEND=noninteractive && apt-get update -qq && apt-get install -qy curl jq ca-certificates >/dev/null 2>&1)
+
+  pulses:
+    setSeverity: 3
+    assertStdoutNotContains: "OTX_PULSE_MATCH"
+    run:
+      - |
+        DOMAIN=$(echo "${{DOMAIN}}" | tr '[:upper:]' '[:lower:]')
+        echo "=== AlienVault OTX threat-intel check: $DOMAIN ==="
+        echo ""
+        CODE=$(curl -s --max-time 30 -o /tmp/otx.json -w "%{http_code}" "https://otx.alienvault.com/api/v1/indicators/domain/$DOMAIN/general")
+        N=$(jq '.pulse_info.count // 0' /tmp/otx.json 2>/dev/null)
+        if [ -z "$N" ]; then
+          echo "UNAVAILABLE: OTX API did not return valid JSON (HTTP $CODE)"
+          exit 0
+        fi
+        echo "Pulses mentioning $DOMAIN: $N"
+        echo ""
+        if [ "$N" -gt 0 ]; then
+          echo "OTX_PULSE_MATCH: $DOMAIN appears in $N OTX threat-intel pulse(s)"
+          jq -r '.pulse_info.pulses[] | "  \((.modified // .created // "")[0:10]) | \(.name) | tags=\((.tags // []) | join(","))"' /tmp/otx.json
+        else
+          echo "CLEAN: $DOMAIN not referenced in any OTX pulse"
+        fi

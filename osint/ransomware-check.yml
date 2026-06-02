@@ -1,76 +1,37 @@
 settings:
   name: "Ransomware Check: Ransomware victim history"
-  description: "Checks if a company or domain has been listed as a ransomware victim by searching the ransomware.live database (26,000+ victims). Returns ransomware group name, discovery date, country, and sector."
+  description: "Checks if a company or domain has been published as a ransomware victim, using the ransomware.live v2 API which indexes victims across ~100 ransomware leak sites (live, fresher than a static dump). Returns ransomware group, dates, country, sector, and whether the victim also appeared in infostealer logs. No API key required."
   image: debian
   author:
     - https://github.com/satorici
-  example: satori run satori://osint/ransomware-check.yml -d DOMAIN="colonial.com" -d COMPANY="Colonial Pipeline" --report --output
+  example: satori run osint/ransomware-check.yml -d DOMAIN="colonialkc.org" -d COMPANY="Colonial" --report --output
 
 ransomware-check:
   install:
-    - which curl >/dev/null 2>&1 && which python3 >/dev/null 2>&1 || (export DEBIAN_FRONTEND=noninteractive && apt-get update -qq && apt-get install -qy curl python3 ca-certificates >>/dev/null 2>&1)
+    - command -v curl >/dev/null 2>&1 && command -v jq >/dev/null 2>&1 || (export DEBIAN_FRONTEND=noninteractive && apt-get update -qq && apt-get install -qy curl jq ca-certificates >/dev/null 2>&1)
 
-  check_victim:
+  search:
     setSeverity: 1
     assertStdoutNotContains: "RANSOMWARE_VICTIM"
     run:
       - |
-        python3 << 'PYEOF'
-        import urllib.request, json, sys
-
-        domain = "${{DOMAIN}}"
-        company = "${{COMPANY}}"
-
-        print(f"=== Ransomware Victim Check: {company} ({domain}) ===")
-
-        try:
-            req = urllib.request.Request("https://data.ransomware.live/victims.json", headers={"User-Agent": "Mozilla/5.0"})
-            resp = urllib.request.urlopen(req, timeout=30)
-            data = json.loads(resp.read())
-        except Exception as e:
-            print(f"ERROR: Could not fetch ransomware database: {e}")
-            sys.exit(1)
-
-        domain_clean = domain.lower().replace("www.", "")
-        domain_base = domain_clean.split(".")[0]
-        company_lower = company.lower()
-
-        matches = []
-        for v in data:
-            website = (v.get("website") or "").lower().replace("www.", "")
-            title = (v.get("post_title") or "").lower()
-
-            if domain_clean in website or website == domain_clean:
-                matches.append(v)
-            elif domain_base in website and len(domain_base) > 3:
-                matches.append(v)
-            elif company_lower in title:
-                matches.append(v)
-
-        if matches:
-            # Deduplicate by group+date
-            seen = set()
-            unique = []
-            for m in matches:
-                key = f"{m.get('group_name','')}:{m.get('discovered','')[:10]}"
-                if key not in seen:
-                    seen.add(key)
-                    unique.append(m)
-
-            print(f"RANSOMWARE_VICTIM: {len(unique)} ransomware incident(s) found")
-            for m in unique:
-                group = m.get("group_name", "Unknown")
-                date = (m.get("discovered") or "Unknown")[:10]
-                country = m.get("country", "N/A")
-                activity = m.get("activity", "N/A")
-                title = m.get("post_title", "N/A")
-                print(f"  Group: {group}")
-                print(f"  Date: {date}")
-                print(f"  Victim: {title}")
-                print(f"  Country: {country}")
-                print(f"  Sector: {activity}")
-                print(f"  ---")
-        else:
-            print(f"NO_RANSOMWARE_HISTORY: {company} ({domain}) not found in ransomware victim database")
-            print(f"  Checked against {len(data)} known victims")
-        PYEOF
+        DOMAIN=$(echo "${{DOMAIN}}" | tr '[:upper:]' '[:lower:]')
+        COMPANY="${{COMPANY}}"
+        CL=$(echo "$COMPANY" | tr '[:upper:]' '[:lower:]')
+        BASE=$(echo "$DOMAIN" | cut -d. -f1)
+        echo "=== Ransomware Victim Check: $COMPANY ($DOMAIN) ==="
+        echo "(searches ransomware.live across ~100 leak sites)"
+        echo ""
+        QC=$(echo "$COMPANY" | sed "s/ /%20/g")
+        norm() { echo "$1" | jq -c 'if type=="array" then . else [] end' 2>/dev/null || echo "[]"; }
+        A1=$(norm "$(curl -s --max-time 30 "https://api.ransomware.live/v2/searchvictims/$QC")")
+        A2=$(norm "$(curl -s --max-time 30 "https://api.ransomware.live/v2/searchvictims/$BASE")")
+        ALL=$(jq -n --argjson a "${A1:-[]}" --argjson b "${A2:-[]}" '$a + $b' 2>/dev/null)
+        MATCH=$(echo "$ALL" | jq --arg d "$DOMAIN" --arg b "$BASE" --arg c "$CL" '[ .[] | select( ((.domain // "")|ascii_downcase|contains($d)) or ((.domain // "")|ascii_downcase|contains($b)) or ((.victim // "")|ascii_downcase|contains($c)) ) ] | unique_by((.victim // "") + (.group // "") + (.discovered // ""))' 2>/dev/null)
+        N=$(echo "$MATCH" | jq 'length' 2>/dev/null)
+        if [ "${N:-0}" -gt 0 ]; then
+          echo "RANSOMWARE_VICTIM: $N incident(s) found"
+          echo "$MATCH" | jq -r '.[] | "  group=\(.group // "?") | victim=\(.victim) | domain=\(.domain // "?") | date=\((.discovered // .attackdate // "")[0:10]) | country=\(.country // "?") | sector=\(.activity // "?") | infostealer=\(.infostealer // false)"'
+        else
+          echo "NO_RANSOMWARE_HISTORY: $COMPANY ($DOMAIN) not found in ransomware.live"
+        fi

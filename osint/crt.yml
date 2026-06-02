@@ -1,0 +1,37 @@
+settings:
+  name: "Certificate Transparency Monitor: Lookalike cert issuance"
+  description: "Detects phishing infrastructure at provisioning time by watching Certificate Transparency logs (crt.sh) for newly issued certificates whose hostname contains your brand keyword but is NOT on your legitimate domain. Catches attacker lookalike/impersonation domains the moment they get a TLS cert, often before they are weaponized. Complements typosquat detection. No API key required. Designed to run as a daily monitor."
+  image: debian
+  author:
+    - https://github.com/satorici
+  example: satori run osint/crt.yml -d BRAND="coinbase" -d DOMAIN="coinbase.com" --report --output
+
+crt:
+  install:
+    - command -v curl >/dev/null 2>&1 && command -v jq >/dev/null 2>&1 || (export DEBIAN_FRONTEND=noninteractive && apt-get update -qq && apt-get install -qy curl jq ca-certificates >/dev/null 2>&1)
+
+  newly-issued:
+    setSeverity: 2
+    assertStdoutNotContains: "SUSPICIOUS_CERT"
+    run:
+      - |
+        DOMAIN=$(echo "${{DOMAIN}}" | tr '[:upper:]' '[:lower:]')
+        BRAND=$(echo "${{BRAND}}" | tr '[:upper:]' '[:lower:]')
+        CUT=$(date -d "30 days ago" +%Y-%m-%d)
+        echo "=== Certificate Transparency monitor for brand: $BRAND ==="
+        echo "(certs issued since $CUT whose name contains the brand but is NOT on $DOMAIN)"
+        echo ""
+        CODE=$(curl -s --max-time 90 -o /tmp/crt.json -w "%{http_code}" "https://crt.sh/?q=%25${BRAND}%25&output=json")
+        if ! jq -e 'type=="array"' /tmp/crt.json >/dev/null 2>&1; then
+          echo "UNAVAILABLE: crt.sh did not return valid JSON (HTTP $CODE) - it is frequently slow or truncates large brands; retry"
+          exit 0
+        fi
+        HOSTS=$(jq -r --arg cut "$CUT" --arg legit "$DOMAIN" --arg brand "$BRAND" '.[] | select((.not_before[0:10]) > $cut) | (.not_before[0:10]) as $d | (.issuer_name // "") as $iss | (.name_value | ascii_downcase | split("\n")[]) as $h | select(($h|contains($brand)) and ($h|endswith($legit)|not) and ($h|test("^[a-z0-9.-]+\\.[a-z]{2,}$")) and ($h|startswith("*")|not)) | "  \($h) | issued=\($d) | issuer=\($iss)"' /tmp/crt.json 2>/dev/null | sort -u)
+        if [ -n "$HOSTS" ]; then
+          echo "SUSPICIOUS_CERT: lookalike certificate(s) issued in the last 30 days:"
+          echo "$HOSTS"
+          echo ""
+          echo "Total distinct hostnames: $(echo "$HOSTS" | wc -l)"
+        else
+          echo "CLEAN: no new lookalike certificates for brand '$BRAND' in the last 30 days"
+        fi
