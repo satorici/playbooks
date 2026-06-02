@@ -17,6 +17,7 @@ testssl:
     run:
       - testssl -p -s -f -U -S -P --csvfile=log ${{URL}}
     findings:
+      setSeverity: 3
       assertReturnCode: 0
       assertStdoutNotContains:
         - LOW

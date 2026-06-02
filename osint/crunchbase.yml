@@ -2,7 +2,7 @@ settings:
   name: "Crunchbase Company Intelligence: Profile, funding, and key people"
   description: "Solves Cloudflare challenge via CapSolver and extracts company profile, funding rounds, key people, and products from Crunchbase using a residential proxy."
   image: python:3.12-slim
-  timeout: 120
+  timeout: 300
   author:
     - https://github.com/satorici
   gallery:
@@ -69,13 +69,21 @@ crunchbase:
 
         # Step 2: Fetch page — retry full solve+fetch if 403 (IP mismatch)
         import re
-        for fetch_try in range(3):
+        for fetch_try in range(6):
             print("Fetching (try "+str(fetch_try+1)+")...",flush=True)
             cookie_str="; ".join(k+"="+v for k,v in cookies.items())
             headers={"User-Agent":ua,"Cookie":cookie_str,"Accept":"text/html,application/xhtml+xml","Accept-Language":"en-US,en;q=0.9"}
-            resp=cffi_requests.get(CB_URL,headers=headers,proxies={"https":PROXY,"http":PROXY},impersonate="chrome",timeout=30)
-            print("HTTP "+str(resp.status_code),flush=True)
-            if resp.status_code==200 and "verify" not in resp.text[:500].lower() and "been blocked" not in resp.text[:500].lower():
+            try:
+                resp=cffi_requests.get(CB_URL,headers=headers,proxies={"https":PROXY,"http":PROXY},impersonate="chrome",timeout=30)
+            except Exception as e:
+                print("FETCH ERROR: "+str(e)[:120],flush=True)
+                resp=None
+            if resp is None:
+                print("  Re-solving (connection failed)...",flush=True)
+                token=None
+            else:
+                print("HTTP "+str(resp.status_code),flush=True)
+            if resp is not None and resp.status_code==200 and "verify" not in resp.text[:500].lower() and "been blocked" not in resp.text[:500].lower():
                 h=resp.text
                 def ex(pat,txt=h,g=1):
                     m=re.search(pat,txt,re.DOTALL)
@@ -133,15 +141,10 @@ crunchbase:
                 if m: print("Phone: "+m.group(1).strip(),flush=True)
                 m=re.search(r'Contact Email\s+(\S+@\S+)',text)
                 if m: print("Email: "+m.group(1).strip(),flush=True)
-                if hq: print("HQ: "+hq,flush=True)
                 m=re.search(r'Headcount\s+([\d,\-]+)',text)
                 if m: print("Employees: "+m.group(1),flush=True)
                 m=re.search(r'Number of Funding Rounds\s+(\d+)',text)
                 if m: print("Funding Rounds: "+m.group(1),flush=True)
-                if inv: print("Investors: "+inv,flush=True)
-                if totalfund: print("Total Funding: "+totalfund,flush=True)
-                if lastround: print("Last Round: "+lastround,flush=True)
-                if comp: print("Competitors: "+comp,flush=True)
                 m=re.search(r'was acquired by\s+(\w[\w\s]+?)(?:\s+on\s)',text)
                 if m: print("Acquired by: "+m.group(1).strip(),flush=True)
                 # People
@@ -169,7 +172,7 @@ crunchbase:
             for a2 in range(5):
                 sid2="".join(random.choices(string.ascii_lowercase+string.digits,k=8))
                 pu2=urlparse(ORIG_PROXY)
-                pw2=(pu2.password or "")+"_session-"+sid2+"_lifetime-5m"
+                pw2=(pu2.password or "").split("_session")[0]+"_session-"+sid2+"_lifetime-5m"
                 proxy2=pu2.scheme+"://"+pu2.username+":"+pw2+"@"+pu2.hostname+":"+str(pu2.port)
                 r2=requests.post("https://api.capsolver.com/createTask",json={"clientKey":CAPSOLVER,"task":{"type":"AntiCloudflareTask","websiteURL":CB_URL,"proxy":proxy2}})
                 t2=r2.json()
@@ -189,5 +192,7 @@ crunchbase:
                 if token: break
             if not token:
                 print("ERROR: re-solve failed",flush=True); sys.exit(1)
-        print("ERROR: fetch failed after retries",flush=True); sys.exit(1)
+        print("ERROR: fetch failed after retries",flush=True)
+        print("NOTE: All solved residential IPs were rejected by Crunchbase with HTTP 403 ('you have been blocked') this run. Crunchbase's bot management blocks most proxy IPs even after the Cloudflare challenge is solved; success is intermittent and depends on landing a non-flagged residential exit IP. Re-run to retry, or use the official Crunchbase API (https://data.crunchbase.com) for reliable data.",flush=True)
+        sys.exit(1)
         PYEOF

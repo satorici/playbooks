@@ -1,6 +1,6 @@
 settings:
   name: "LinkedIn Company Intelligence: Profile, hiring, and competitors"
-  description: "Enriches company data via NinjaPear API (LinkedIn data) and Adzuna Jobs API. Returns company profile, specialties, funding history, and open security roles."
+  description: "Enriches company data via Proxycurl (nubela.co, LinkedIn data) and Adzuna Jobs API. Returns company profile, specialties, funding history, and open security roles."
   image: debian
   author:
     - https://github.com/satorici
@@ -20,49 +20,69 @@ linkedin-company:
         echo "=== Company Profile: ${{COMPANY}} ==="
         RESULT=$(curl -s "https://nubela.co/api/v1/company/details?website=${{DOMAIN}}" \
           -H "Authorization: Bearer ${{PROXYCURL}}")
-        echo "$RESULT" | jq '{
-          name: .name,
-          description: .description,
-          tagline: .tagline,
-          type: .company_type,
-          founded: .founded_year,
-          industry: .industry,
-          specialties: .specialties,
-          address: .addresses[0],
-          twitter: .twitter_url,
-          facebook: .facebook_url,
-          instagram: .instagram_url
-        }' 2>/dev/null
+        # Surface API errors instead of swallowing them with 2>/dev/null
+        if echo "$RESULT" | jq -e 'has("error")' >/dev/null 2>&1; then
+          echo "Proxycurl error: $(echo "$RESULT" | jq -r '.error // .description // "unknown error"')"
+        else
+          echo "$RESULT" | jq '{
+            name: .name,
+            description: .description,
+            tagline: .tagline,
+            type: .company_type,
+            founded: .founded_year,
+            industry: .industry,
+            specialties: .specialties,
+            address: .addresses[0],
+            twitter: .twitter_url,
+            facebook: .facebook_url,
+            instagram: .instagram_url
+          }'
+        fi
 
   funding:
     assertReturnCode: 0
     run:
       - |
         echo "=== Funding History: ${{COMPANY}} ==="
-        curl -s "https://nubela.co/api/v1/company/funding?website=${{DOMAIN}}" \
-          -H "Authorization: Bearer ${{PROXYCURL}}" | jq -r '
-          "Total raised: $\(.total_funds_raised_usd // "undisclosed")",
-          (.funding_rounds[]? | "  \(.date) | \(.round_type) | $\(.amount_usd // "undisclosed") | Investors: \([.investors[]?.name] | join(", "))")
-        ' 2>/dev/null || echo "No funding data available"
+        RESULT=$(curl -s "https://nubela.co/api/v1/company/funding?website=${{DOMAIN}}" \
+          -H "Authorization: Bearer ${{PROXYCURL}}")
+        if echo "$RESULT" | jq -e 'has("error")' >/dev/null 2>&1; then
+          echo "Proxycurl error: $(echo "$RESULT" | jq -r '.error // .description // "unknown error"')"
+        elif [ "$(echo "$RESULT" | jq '(.funding_rounds | length) // 0')" = "0" ]; then
+          echo "No funding data available"
+        else
+          echo "$RESULT" | jq -r '
+            "Total raised: $\(.total_funds_raised_usd // "undisclosed")",
+            (.funding_rounds[]? | "  \(.date) | \(.round_type) | $\(.amount_usd // "undisclosed") | Investors: \([.investors[]?.name] | join(", "))")'
+        fi
 
   security_jobs:
     assertReturnCode: 0
     run:
       - |
         echo "=== Security Hiring: ${{COMPANY}} ==="
-        ENCODED=$(echo "${{COMPANY}}" | sed 's/ /+/g')
-        FOUND=0
-        for TERM in "cybersecurity" "security+engineer" "SOC+analyst" "CISO" "information+security" "penetration+tester"; do
-          RESULT=$(curl -s "https://api.adzuna.com/v1/api/jobs/gb/search/1?app_id=${{ADZUNA_ID}}&app_key=${{ADZUNA_KEY}}&what=${ENCODED}+${TERM}&results_per_page=5")
-          COUNT=$(echo "$RESULT" | jq '.count // 0')
-          if [ "$COUNT" -gt 0 ]; then
-            echo "--- $TERM: $COUNT job(s) ---"
-            echo "$RESULT" | jq -r '.results[] | "  \(.title) | \(.company.display_name) | \(.location.display_name) | \(.created)"' 2>/dev/null
-            FOUND=$((FOUND + COUNT))
-          fi
-        done
-        if [ "$FOUND" -eq 0 ]; then
-          echo "No security roles found for ${{COMPANY}}"
+        # Adzuna treats what as AND-matched keywords, so jamming the company
+        # name plus a role term into what matches nothing. Search the company
+        # postings via what_phrase (exact company name), then filter the
+        # results for security-related titles client side.
+        ENCODED=$(echo "${{COMPANY}}" | sed 's/ /%20/g')
+        RESULT=$(curl -s "https://api.adzuna.com/v1/api/jobs/gb/search/1?app_id=${{ADZUNA_ID}}&app_key=${{ADZUNA_KEY}}&what_phrase=${ENCODED}&results_per_page=50&content-type=application/json")
+        # Adzuna returns an `exception` field on auth/quota errors
+        if echo "$RESULT" | jq -e 'has("exception")' >/dev/null 2>&1; then
+          echo "Adzuna error: $(echo "$RESULT" | jq -r '.exception')"
+          exit 1
+        fi
+        SEC='cyber|security|soc|ciso|infosec|penetration|pentest|threat|incident|vulnerab|malware|forensic|detection'
+        MATCHED=$(echo "$RESULT" | jq -r --arg co "${{COMPANY}}" --arg sec "$SEC" '
+          .results[]?
+          | select((.company.display_name // "") | ascii_downcase | contains($co | ascii_downcase))
+          | select((.title // "") | ascii_downcase | test($sec))
+          | "  \(.title) | \(.company.display_name) | \(.location.display_name) | \(.created)"')
+        if [ -n "$MATCHED" ]; then
+          COUNT=$(printf '%s\n' "$MATCHED" | grep -c .)
+          echo "$MATCHED"
+          echo "=== $COUNT security role(s) found ==="
         else
-          echo "=== $FOUND security role(s) found ==="
+          TOTAL=$(echo "$RESULT" | jq '.count // 0')
+          echo "No security roles found for ${{COMPANY}} (${TOTAL} total open role(s) matched the company)"
         fi
