@@ -1,0 +1,82 @@
+settings:
+  name: "Blocklist Check: Phishing & malware feed exposure"
+  description: "Alerts a domain owner if their domain or subdomains appear on public phishing/malware blocklists (URLhaus, OpenPhish, Phishunt, PhishStats). A hit means the domain is likely compromised and serving malicious content, or has been flagged and is damaging its reputation/deliverability. No API key required. Designed to run as a daily monitor."
+  image: debian
+  author:
+    - https://github.com/satorici
+  example: satori local osint/blocklist-check.yml -d DOMAIN="example.com" --report --output
+
+blocklist-check:
+  install:
+    - command -v curl >/dev/null 2>&1 && command -v jq >/dev/null 2>&1 || (export DEBIAN_FRONTEND=noninteractive && apt-get update -qq && apt-get install -qy curl jq ca-certificates >>/dev/null 2>&1)
+
+  feeds:
+    setSeverity: 1
+    assertStdoutNotContains: "BLOCKLISTED"
+    run:
+      - |
+        DOMAIN=$(echo "${{DOMAIN}}" | tr '[:upper:]' '[:lower:]')
+        echo "=== Public Blocklist Exposure Check: $DOMAIN ==="
+        echo "(matches the domain and any subdomain; feeds include historical entries)"
+        echo ""
+
+        # Does the domain still resolve? A live hit means active compromise;
+        # a hit on a dead domain is just a stale feed record, not actionable.
+        if getent hosts "$DOMAIN" >/dev/null 2>&1; then
+          LIVE=1; echo "DNS: $DOMAIN resolves (live asset)"
+        else
+          LIVE=0; echo "DNS: $DOMAIN does NOT resolve (dead/sinkholed — any hit is likely historical)"
+        fi
+        echo ""
+        HITS=0
+
+        # Regex to match the domain as a host or subdomain inside a URL/host string.
+        RE="(^|//|\.|@)$(echo "$DOMAIN" | sed 's/\./\\./g')([:/]|$)"
+
+        # Fetch all sources in parallel; each writes its raw hits to a temp file.
+        D=$(mktemp -d)
+        curl -sL --max-time 30 https://urlhaus.abuse.ch/downloads/text/ | grep -v '^#' | grep -iE "$RE" > "$D/urlhaus" &
+        curl -sL --max-time 30 https://openphish.com/feed.txt           | grep -iE "$RE" > "$D/openphish" &
+        curl -sL --max-time 30 https://phishunt.io/feed.txt             | grep -iE "$RE" > "$D/phishunt" &
+        curl -sL --max-time 30 "https://api.phishstats.info/api/phishing?_where=(url,like,~${DOMAIN}~)&_size=100" > "$D/phishstats.json" &
+        wait
+
+        # Render a plain-URL feed result.
+        report_feed() { # name file
+          echo "--- $1 ---"
+          if [ -s "$2" ]; then
+            C=$(wc -l < "$2"); HITS=$((HITS+C))
+            echo "LISTED: $C entry(ies)"; cat "$2"
+          else
+            echo "clean"
+          fi
+          echo ""
+        }
+        report_feed "URLhaus (malware URLs)"          "$D/urlhaus"
+        report_feed "OpenPhish (phishing URLs)"       "$D/openphish"
+        report_feed "Phishunt (suspected phishing)"   "$D/phishunt"
+
+        # PhishStats: targeted domain query (not a dump). Distinguish empty vs unreachable.
+        echo "--- PhishStats (phishing database) ---"
+        PSCOUNT=$(jq 'length' "$D/phishstats.json" 2>/dev/null)
+        if [ -z "$PSCOUNT" ]; then
+          echo "UNAVAILABLE: PhishStats API did not respond"
+        elif [ "$PSCOUNT" -gt 0 ]; then
+          HITS=$((HITS+PSCOUNT))
+          echo "LISTED: $PSCOUNT entry(ies)"
+          jq -r '.[] | "  \(.date[0:10]) | \(.url) | score \(.score // "n/a") | \(.countryname // "?")"' "$D/phishstats.json"
+        else
+          echo "clean"
+        fi
+        echo ""
+        rm -rf "$D"
+
+        # --- Summary ---
+        echo "=== Summary ==="
+        if [ "$HITS" -gt 0 ] && [ "$LIVE" -eq 1 ]; then
+          echo "BLOCKLISTED: $DOMAIN is LIVE and appears in $HITS public blocklist entry(ies) — active compromise, investigate now."
+        elif [ "$HITS" -gt 0 ]; then
+          echo "HISTORICAL: $DOMAIN appears in $HITS blocklist entry(ies) but no longer resolves — likely stale feed record, not an active threat."
+        else
+          echo "CLEAN: $DOMAIN not found in the checked public blocklists."
+        fi
