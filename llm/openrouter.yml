@@ -1,0 +1,22 @@
+settings:
+  name: "OpenRouter: Query referencing a local file"
+  description: "Sends a prompt plus the contents of a local file to an OpenRouter model via its OpenAI-compatible API and returns the model's answer."
+  image: debian
+  timeout: 300
+  author:
+    - https://github.com/satorici
+  gallery:
+    - https://files.catbox.moe/5wp866.png
+  example: satori local ./ -p satori://llm/openrouter.yml -d FILE="./main.py" -d PROMPT="Review this file for bugs" -d MODEL="google/gemini-2.5-flash" -d OPENROUTER=$OPENROUTER --output
+  redacted:
+    - OPENROUTER
+
+MODEL:
+  - - "google/gemini-2.5-flash"
+
+openrouter:
+  install:
+    - apt-get update >>/dev/null; apt-get install -qy curl jq >>/dev/null
+
+  test:
+    - 'jq -n --arg model "${{MODEL}}" --arg prompt "${{PROMPT}}" --rawfile file "${{FILE}}" ''{model: $model, messages: [{role: "user", content: ($prompt + "\n\n--- FILE: ${{FILE}} ---\n" + $file)}]}'' | curl -s https://openrouter.ai/api/v1/chat/completions -H "Authorization: Bearer ${{OPENROUTER}}" -H "Content-Type: application/json" -d @- | jq -r ''.choices[0].message.content // .'''

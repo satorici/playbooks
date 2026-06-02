@@ -14,6 +14,7 @@ Playbooks for querying and interacting with large language models via Ollama, Ai
 | [llama3.2.yml](llama3.2.yml) | Ollama | Queries Llama 3.2 with the provided input |
 | [llmfit.yml](llmfit.yml) | llmfit | Runs the llmfit CLI tool |
 | [openai.yml](openai.yml) | Ollama | Runs the OpenAI gpt-oss:20b model locally using Ollama |
+| [openrouter.yml](openrouter.yml) | OpenRouter | Sends a prompt plus the contents of a local file to an OpenRouter model and returns the answer |
 | [qwen.yml](qwen.yml) | Ollama | Queries Qwen with the provided input |
 | [tools/repo-by-file.yml](tools/repo-by-file.yml) | Ollama | Queries a GitHub repository file-by-file using Llama 3.2 with Ollama |
 | [tools/repo.yml](tools/repo.yml) | Ollama | Queries a GitHub repository using Llama 3.2 with Ollama |
@@ -38,4 +39,8 @@ satori run satori://llm/gemini.yml -d REPO="owner/repo" -d PROMPT="Analyze this 
 
 ```bash
 satori run satori://llm/tools/repo.yml -d INPUT="What does example.c and attack.c do?" -d REPO="royleekiat/overflow-example" --report --output
+```
+
+```bash
+satori local ./ -p satori://llm/openrouter.yml -d FILE="./main.py" -d PROMPT="Review this file for bugs" -d MODEL="google/gemini-2.5-flash" -d OPENROUTER=$OPENROUTER --output
 ```
