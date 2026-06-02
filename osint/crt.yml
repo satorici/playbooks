@@ -4,7 +4,7 @@ settings:
   image: debian
   author:
     - https://github.com/satorici
-  example: satori run osint/crt.yml -d BRAND="coinbase" -d DOMAIN="coinbase.com" --report --output
+  example: satori run osint/crt.yml -d DOMAIN="coinbase.com" --report --output
 
 crt:
   install:
@@ -16,7 +16,7 @@ crt:
     run:
       - |
         DOMAIN=$(echo "${{DOMAIN}}" | tr '[:upper:]' '[:lower:]')
-        BRAND=$(echo "${{BRAND}}" | tr '[:upper:]' '[:lower:]')
+        BRAND=$(echo "$DOMAIN" | sed 's/\.[^.]*$//' | sed 's/.*\.//')
         CUT=$(date -d "30 days ago" +%Y-%m-%d)
         echo "=== Certificate Transparency monitor for brand: $BRAND ==="
         echo "(certs issued since $CUT whose name contains the brand but is NOT on $DOMAIN)"
