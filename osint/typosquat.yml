@@ -1,0 +1,56 @@
+settings:
+  name: "Typosquat Detection: Lookalike / impersonation domains"
+  description: "Detects attacker-registered lookalike domains impersonating your brand (typosquats, homoglyphs, TLD swaps, bitsquats). Uses dnstwist to generate permutations, keeps only the ones that are registered and resolve, checks for MX records (mail-capable = BEC/phishing risk), and ages each via WHOIS so freshly registered impostors are flagged as high risk. No API key required. Designed to run as a daily monitor."
+  image: python
+  author:
+    - https://github.com/satorici
+  example: satori run osint/typosquat.yml -d DOMAIN="paypal.com" --report --output
+
+typosquat:
+  install:
+    - pip install --quiet dnstwist >/dev/null 2>&1
+    - export DEBIAN_FRONTEND=noninteractive && apt-get update -qq && apt-get install -qy whois jq >/dev/null 2>&1
+
+  lookalikes:
+    setSeverity: 2
+    assertStdoutNotContains: "SUSPICIOUS_LOOKALIKE"
+    run:
+      - |
+        DOMAIN=$(echo "${{DOMAIN}}" | tr '[:upper:]' '[:lower:]')
+        echo "=== Lookalike / Typosquat Detection: $DOMAIN ==="
+        echo "(registered permutations that resolve; freshly registered or mail-capable = high risk)"
+        echo ""
+
+        # dnstwist generates permutations, resolves them, and only returns the registered ones.
+        JSON=$(dnstwist --registered --mxcheck --threads 50 --format json "$DOMAIN" 2>/dev/null)
+
+        # Drop the original domain row (fuzzer == *original); keep domain, first A record, and MX flag.
+        LIST=$(echo "$JSON" | jq -r '.[] | select(.fuzzer != "*original") | "\(.domain) \(.dns_a[0] // "-") \(if (.dns_mx // [] | length) > 0 then "MX" else "no-mx" end)"')
+
+        if [ -z "$LIST" ]; then
+          echo "CLEAN: no registered lookalike domains found for $DOMAIN"
+          exit 0
+        fi
+
+        echo "Found $(echo "$LIST" | wc -l) registered lookalike domain(s):"
+        echo ""
+
+        NOW=$(date +%s)
+        echo "$LIST" | while read -r DOM IP MXF; do
+          CREATED=$(timeout 10 whois "$DOM" 2>/dev/null | grep -iE "creation date|created on|created:|registered on" | head -1 | grep -oE "[0-9]{4}-[0-9]{2}-[0-9]{2}" | head -1)
+          AGE="unknown"
+          FRESH="no"
+          if [ -n "$CREATED" ]; then
+            DAYS=$(( (NOW - $(date -d "$CREATED" +%s 2>/dev/null || echo "$NOW")) / 86400 ))
+            AGE="${DAYS}d"
+            [ "$DAYS" -lt 90 ] && FRESH="yes"
+          fi
+          FLAG="review"
+          if [ "$MXF" = "MX" ] || [ "$FRESH" = "yes" ]; then
+            FLAG="SUSPICIOUS_LOOKALIKE"
+          fi
+          echo "  $DOM | ip=$IP | $MXF | created=${CREATED:-unknown} (age=$AGE) | $FLAG"
+        done
+
+        echo ""
+        echo "Legend: MX = can send mail (BEC/phishing capable); age<90d = freshly registered = high risk."
