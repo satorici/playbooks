@@ -1,0 +1,124 @@
+settings:
+  name: "Breach News: Compromise mentions scored by an LLM"
+  description: "Searches Google News for a company alongside a compromise lexicon (hack, ransomware, breach, data leak, phishing, compromised, exposed, stolen data) and asks an OpenRouter LLM (Google Gemini 2.5 Flash) to judge whether the headlines credibly indicate THAT company was itself breached/compromised. Returns a scorable verdict (BREACH_NEWS_FOUND vs CLEAN). Unlike osint/google-news.yml (which lists any mention without filtering or scoring), this filters by the compromise lexicon and discards false positives such as a security vendor merely reporting on someone else's incident."
+  image: debian
+  timeout: 300
+  author:
+    - https://github.com/satorici
+  example: satori run satori://osint/breach-news.yml -d COMPANY="Acme Corp" -d DOMAIN="acme.com" -d WINDOW="90d" -d OPENROUTER=$OPENROUTER --report --output
+  redacted:
+    - OPENROUTER
+
+MODEL:
+  - - "google/gemini-2.5-flash"
+
+breach-news:
+  install:
+    - command -v curl >/dev/null 2>&1 && command -v jq >/dev/null 2>&1 && command -v python3 >/dev/null 2>&1 || (export DEBIAN_FRONTEND=noninteractive && apt-get update -qq && apt-get install -qy curl jq python3 ca-certificates >/dev/null 2>&1)
+
+  search:
+    setSeverity: 2
+    assertStdoutNotContains: "BREACH_NEWS_FOUND"
+    run:
+      - |
+        COMPANY="${{COMPANY}}"
+        DOMAIN="${{DOMAIN}}"
+        echo "=== Breach News check: $COMPANY ($DOMAIN) — last ${{WINDOW}} ==="
+        echo ""
+
+        # 1) Pull Google News RSS filtered by the compromise lexicon.
+        python3 << 'PYEOF' > /tmp/headlines.txt
+        import urllib.request, urllib.parse, re, sys
+        from html import unescape
+
+        company = """${{COMPANY}}""".strip()
+        domain  = """${{DOMAIN}}""".strip()
+        window  = """${{WINDOW}}""".strip() or "365d"
+
+        lexicon = '(hack OR hacked OR ransomware OR breach OR "data leak" OR phishing OR compromised OR exposed OR "stolen data" OR cyberattack OR leaked)'
+        company_q = f'"{company}"'
+        if domain:
+            company_q = f'({company_q} OR "{domain}")'
+        q = f'{company_q} {lexicon} when:{window}'
+        url = "https://news.google.com/rss/search?q=" + urllib.parse.quote(q) + "&hl=en"
+
+        try:
+            req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+            rss = urllib.request.urlopen(req, timeout=20).read().decode("utf-8", "replace")
+        except Exception as e:
+            print(f"FETCH_ERROR: {e}", file=sys.stderr)
+            sys.exit(0)
+
+        items = re.findall(r"<item>(.*?)</item>", rss, re.DOTALL)
+        for item in items[:15]:
+            t = re.search(r"<title>(.*?)</title>", item)
+            s = re.search(r"<source[^>]*>(.*?)</source>", item)
+            d = re.search(r"<pubDate>(.*?)</pubDate>", item)
+            t = unescape(t.group(1)) if t else "N/A"
+            s = unescape(s.group(1)) if s else "?"
+            d = (d.group(1).strip()[:16]) if d else "?"
+            print(f"- {t}  [{s}, {d}]")
+        PYEOF
+
+        N=$(grep -c '^- ' /tmp/headlines.txt 2>/dev/null || echo 0)
+        echo "Filtered headlines (company + compromise lexicon): $N"
+        echo "----------------------------------------------------"
+        cat /tmp/headlines.txt
+        echo "----------------------------------------------------"
+        echo ""
+
+        # No lexicon-matching news at all -> nothing to score.
+        if [ "${N:-0}" -eq 0 ]; then
+          echo "CLEAN: no compromise-related news found for $COMPANY in the last ${{WINDOW}}"
+          exit 0
+        fi
+
+        if [ -z "${{OPENROUTER}}" ]; then
+          echo "UNAVAILABLE: OPENROUTER key not provided; cannot score headlines"
+          exit 0
+        fi
+
+        # 2) Ask gemini-flash to judge whether THIS company was itself compromised.
+        SYS='You are a cyber threat-intel analyst. You are given news headlines that matched a company name plus a compromise lexicon. Decide whether any headline credibly indicates that the COMPANY ITSELF suffered a security incident (data breach, ransomware, intrusion, leak of its data/customers). Be strict about false positives: IGNORE headlines where the company is a security vendor reporting on or responding to someone else other breach, generic product/marketing news, opinion pieces, or a different entity that shares the name. Reply with ONLY a JSON object, no markdown fences: {"verdict":"BREACH"|"CLEAN","confidence":0-100,"summary":"one sentence","evidence":["the exact headlines that support a breach, or empty"]}'
+
+        REQ=$(jq -n --arg model "${{MODEL}}" --arg sys "$SYS" \
+                 --arg company "$COMPANY" --rawfile hl /tmp/headlines.txt \
+                 '{model:$model, messages:[
+                    {role:"system", content:$sys},
+                    {role:"user", content:("Company: " + $company + "\n\nHeadlines:\n" + $hl)}
+                  ]}')
+
+        printf '%s' "$REQ" | curl -s --max-time 60 https://openrouter.ai/api/v1/chat/completions \
+          -H "Authorization: Bearer ${{OPENROUTER}}" -H "Content-Type: application/json" -d @- > /tmp/resp.json
+
+        # Extract the model text with -j (raw); write to a file so downstream
+        # jq parses from disk (no echo/quoting surprises with newlines or fences).
+        jq -j '.choices[0].message.content // empty' /tmp/resp.json > /tmp/llm_raw.txt 2>/dev/null
+        if [ ! -s /tmp/llm_raw.txt ]; then
+          echo "UNAVAILABLE: LLM returned no content"
+          jq -r '.error.message // "(no error field)"' /tmp/resp.json 2>/dev/null | head -3
+          exit 0
+        fi
+
+        # Some models wrap JSON in ```json fences — drop any fence lines, keep the rest.
+        grep -v '^```' /tmp/llm_raw.txt > /tmp/llm.json
+        VERDICT=$(jq -r '.verdict // empty' /tmp/llm.json 2>/dev/null | tr '[:lower:]' '[:upper:]')
+        CONF=$(jq -r '.confidence // "?"' /tmp/llm.json 2>/dev/null)
+        SUMMARY=$(jq -r '.summary // ""' /tmp/llm.json 2>/dev/null)
+        if [ -z "$VERDICT" ]; then
+          echo "UNAVAILABLE: could not parse LLM verdict; raw model output below"
+          head -c 600 /tmp/llm_raw.txt
+          echo ""
+          exit 0
+        fi
+
+        echo "LLM confidence: $CONF"
+        echo "LLM summary: $SUMMARY"
+        echo ""
+
+        if [ "$VERDICT" = "BREACH" ]; then
+          echo "BREACH_NEWS_FOUND: news credibly links $COMPANY to a security incident"
+          jq -r '.evidence[]? | "  * " + .' /tmp/llm.json 2>/dev/null
+        else
+          echo "CLEAN: no headline credibly indicates $COMPANY itself was compromised"
+        fi

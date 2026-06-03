@@ -1,0 +1,69 @@
+settings:
+  name: "RBL Check: IP reputation (spam / botnet C2)"
+  description: "Resolves the organisation's own IPs (domain A records + each MX host) and checks them against IP reputation blocklists: DNS blocklists for spam/policy/exploit (Spamhaus ZEN, Barracuda, SORBS, SpamCop) and the abuse.ch Feodo Tracker for active botnet C2. A live hit means an IP in the org's space is sending spam or is a compromised/C2 host — the IP-axis complement to the domain-axis blocklist-check. No API key required."
+  image: debian
+  author:
+    - https://github.com/satorici
+  example: satori local osint/rbl-check.yml -d DOMAIN="example.com" --report --output
+
+rbl-check:
+  install:
+    - command -v dig >/dev/null 2>&1 && command -v curl >/dev/null 2>&1 || (export DEBIAN_FRONTEND=noninteractive && apt-get update -qq && apt-get install -qy dnsutils curl ca-certificates >>/dev/null 2>&1)
+    # Resolve the org's own IPs once (A of the domain + A of each MX host) → shared file.
+    - |
+      DOMAIN=$(echo "${{DOMAIN}}" | tr '[:upper:]' '[:lower:]')
+      {
+        dig +short A "$DOMAIN"
+        for mx in $(dig +short MX "$DOMAIN" | awk '{print $2}' | sed 's/\.$//'); do
+          dig +short A "$mx"
+        done
+      } 2>/dev/null | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$' | sort -u > /tmp/rbl_ips.txt
+      echo "=== Resolved IPs for $DOMAIN (A + MX) ==="
+      if [ -s /tmp/rbl_ips.txt ]; then sed 's/^/  /' /tmp/rbl_ips.txt; else echo "  (none — domain has no A/MX records)"; fi
+
+  botnet-c2:
+    setSeverity: 1
+    assertStdoutNotContains: "C2_LISTED"
+    run:
+      - |
+        echo "=== abuse.ch Feodo Tracker (active botnet C2) ==="
+        if [ ! -s /tmp/rbl_ips.txt ]; then echo "NO_IPS: nothing to check"; exit 0; fi
+        # Aggressive feed = full set of tracked C2 IPs (the basic list is near-empty);
+        # a match on the org's OWN resolved IP is a strong compromise signal regardless.
+        FEODO=$(curl -sL --max-time 30 https://feodotracker.abuse.ch/downloads/ipblocklist_aggressive.txt | grep -vE '^#|^$')
+        if [ -z "$FEODO" ]; then echo "UNAVAILABLE: Feodo feed unreachable"; exit 0; fi
+        HITS=0
+        while read -r ip; do
+          if echo "$FEODO" | grep -Fxq "$ip"; then echo "C2_LISTED: $ip is a known botnet C2 (Feodo Tracker)"; HITS=$((HITS+1)); fi
+        done < /tmp/rbl_ips.txt
+        [ "$HITS" -eq 0 ] && echo "CLEAN: no organisation IP on the Feodo C2 list."
+
+  spam-policy:
+    setSeverity: 3
+    assertStdoutNotContains: "SPAM_LISTED"
+    run:
+      - |
+        echo "=== DNS Blocklists (spam / policy / exploit) ==="
+        if [ ! -s /tmp/rbl_ips.txt ]; then echo "NO_IPS: nothing to check"; exit 0; fi
+        HITS=0; LIVE=0; DOWN=0
+        for bl in zen.spamhaus.org b.barracudacentral.org dnsbl.sorbs.net bl.spamcop.net; do
+          # Probe each list with its universal test entry (127.0.0.2 → "2.0.0.127.<bl>").
+          # If the list won't answer its own test point, this resolver is blocked/refused
+          # by it → mark UNAVAILABLE. Trusting "clean" from a blocked list = false negative.
+          probe=$(dig +short "2.0.0.127.$bl" 2>/dev/null)
+          if ! echo "$probe" | grep -q '^127\.0\.'; then
+            echo "--- $bl --- UNAVAILABLE (resolver refused / no answer to test point)"; DOWN=$((DOWN+1)); continue
+          fi
+          LIVE=$((LIVE+1)); echo "--- $bl ---"; n=0
+          while read -r ip; do
+            rev=$(echo "$ip" | awk -F. '{print $4"."$3"."$2"."$1}')
+            resp=$(dig +short "$rev.$bl" 2>/dev/null)
+            if echo "$resp" | grep -qE '^127\.0\.'; then
+              echo "SPAM_LISTED: $ip on $bl ($resp)"; n=$((n+1)); HITS=$((HITS+1))
+            fi
+          done < /tmp/rbl_ips.txt
+          [ "$n" -eq 0 ] && echo "clean"
+        done
+        [ "$DOWN" -gt 0 ] && echo "NOTE: $DOWN list(s) UNAVAILABLE from this resolver (Spamhaus/Barracuda commonly refuse public resolvers) — inconclusive, not clean."
+        if [ "$HITS" -eq 0 ] && [ "$LIVE" -gt 0 ]; then echo "CLEAN: no organisation IP on the $LIVE reachable spam/policy blocklist(s)."
+        elif [ "$HITS" -eq 0 ]; then echo "INCONCLUSIVE: no spam blocklist was reachable from this resolver."; fi

@@ -129,7 +129,7 @@ playbooks/
 | `satori://dns/tko-subs.yml` — **tko-subs: detect and takeover subdomains with dead DNS records** | tko-subs detects and exploits subdomain takeover vulnerabilities by scanning for misconfigured DNS records that point to external services no longer in use. It helps iden |
 | `satori://dns/whois-check.yml` — **WHOIS: Domain registration and expiry check** | Checks domain WHOIS data including registration date, expiry date, registrar, and domain status. Expired or soon-to-expire domains are a strong signal of company distress |
 
-### Web Security (39 playbooks)
+### Web Security (40 playbooks)
 
 | Playbook | Description |
 |---|---|
@@ -157,6 +157,7 @@ playbooks/
 | `satori://web/passive/socialhunter.yml` — **Socialhunter: crawls the given URL and finds broken social media links that can be hijacked** | socialhunter crawls a given website to identify broken social media links that could be hijacked, potentially allowing attackers to conduct phishing attacks or damage a c |
 | `satori://web/sqlmap.yml` — **sqlmap: automates the process of detecting and exploiting SQL injection flaws** | sqlmap automates the detection and exploitation of SQL injection vulnerabilities in web applications. It identifies injection points, extracts database information, and s |
 | `satori://web/tls/sslscan.yml` — **SSLScan: Identify security issues related to SSL/TLS/HTTPS services** | It reports the protocol versions, cipher suites, key exchanges, signature algorithms, and certificates in use. |
+| `satori://web/strix.yml` — **Strix: AI-powered automated pentesting** | Autonomous AI pentest agent (usestrix/strix) driven by Claude Haiku 4.5 via OpenRouter. Runs the full Kali toolset (agent-browser, nuclei, httpx, sqlmap, ...) directly inside the Satori container — no Docker-in-Docker — and files confirmed vulnerabilities (SQLi, XSS, IDOR, CSRF, XXE, race conditions). Requires OPENROUTER. |
 | `satori://web/tls/testssl.yml` — **TestSSL: Checks TLS/SSL ciphers and protocols for security flaws** | Check a server's service on any port for the support of TLS/SSL ciphers, protocols as well as some cryptographic flaws. |
 | `satori://web/tls/tlsx.yml` — **TLSX: TLS grabber** | TLSX is a command-line tool designed for comprehensive TLS data collection and analysis. It supports multiple connection modes, customizable cipher suites, and SNI config |
 | `satori://web/twa.yml` — **TWA: Tiny Web Auditor** | twa audits web security headers and configurations. It checks for issues such as HTTP redirects to HTTP, missing security headers, and the absence of Content-Security-Pol |
