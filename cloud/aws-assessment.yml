@@ -1,0 +1,138 @@
+settings:
+  name: "AWS Assessment with AI multi-tool cloud audit by Gemini"
+  description: "Runs a read-only AWS security assessment using several complementary tools (ScoutSuite for posture, Prowler for compliance/CIS checks, a jq-based IAM over-privilege analysis in the spirit of Cloudsplaining, plus best-effort pulls of native AWS sources: GuardDuty, Security Hub and IAM Access Analyzer). Each source is reduced to a compact findings JSON under /data (captured by --files), merged, and handed to Google Gemini Flash (via OpenRouter) which correlates them across tools into a prioritized report. The AI step is grounded: it summarizes only the merged findings JSON and is instructed never to invent resources. Credentials are written to disk once (read-only audit user) so they are never passed on command lines."
+  image: python:3.12
+  files: True
+  # Prowler scanning ALL regions is memory-hungry; default task memory OOM-kills it (RC 137).
+  cpu: 4096
+  memory: 16384
+  gallery:
+    - https://files.catbox.moe/6tmso8.png
+  author:
+    - https://github.com/nccgroup
+    - https://github.com/prowler-cloud/prowler
+  example: satori run satori://cloud/aws-assessment.yml -d AWS_ACCESS_KEY=$AWS_ACCESS_KEY -d AWS_SECRET_KEY=$AWS_SECRET_KEY -d OPENROUTER=$OPENROUTER --files --report --output
+  redacted:
+    - AWS_ACCESS_KEY
+    - AWS_SECRET_KEY
+    - OPENROUTER
+
+assess:
+  # NOTE: image is python:3.12 on purpose — Prowler 5.x requires Python <3.13, so the
+  # default `debian` image (Python 3.13) silently installs the incompatible Prowler 3.x.
+  # Each command ends with a 0-exit (echo / mkdir) so a single pip failure does NOT abort the
+  # whole install step; pip logs are written to /data for debugging via --files.
+  install:
+    - export DEBIAN_FRONTEND=noninteractive; apt-get update >/dev/null 2>&1; apt-get install -qy jq curl awscli >/dev/null 2>&1; mkdir -p /data/out
+    - aws configure set aws_access_key_id ${{AWS_ACCESS_KEY}}; aws configure set aws_secret_access_key ${{AWS_SECRET_KEY}}; aws configure set region us-east-1
+    - aws ec2 describe-regions --query "Regions[].RegionName" --output text | tr "\t" "\n" > /data/regions.txt; [ -s /data/regions.txt ] || echo us-east-1 > /data/regions.txt
+    - python3 -m venv /opt/ss; /opt/ss/bin/pip install -q scoutsuite > /data/ss_pip.log 2>&1; echo "SS_RC=$?" >> /data/ss_pip.log
+    - python3 -m venv /opt/pw; /opt/pw/bin/pip install -q prowler > /data/pw_pip.log 2>&1; echo "PW_RC=$?" >> /data/pw_pip.log
+    - python3 -m venv /opt/cs; /opt/cs/bin/pip install -q cloudsplaining > /data/cs_pip.log 2>&1; echo "CS_RC=$?" >> /data/cs_pip.log
+
+  # ---- 1. ScoutSuite: cloud posture (writes under /data so --files captures it) ----
+  scoutsuite:
+    - cd /data; /opt/ss/bin/scout aws --no-browser || true
+    - |-
+      set +f; tail -n +2 /data/scoutsuite-report/scoutsuite-results/scoutsuite_results_aws-*.js | jq -c '[.services | to_entries[] | .key as $svc | (.value.findings // {}) | to_entries[] | .value | select(.flagged_items > 0) | {service: $svc, level: .level, finding: .description, flagged: .flagged_items}]' > /data/out/scoutsuite.json || echo '[]' > /data/out/scoutsuite.json
+
+  # ---- 2. Prowler: compliance / CIS (all regions; high+critical FAILs; aggregated by check to bound AI context) ----
+  prowler:
+    - /opt/pw/bin/prowler aws --status FAIL --severity critical high -M json-ocsf -o /data/prowler --log-level ERROR > /data/prowler_run.log 2>&1; echo "PROWLER_RC=$?" >> /data/prowler_run.log; { echo "--- ls /data/prowler ---"; ls -laR /data/prowler; } >> /data/prowler_run.log 2>&1
+    - |-
+      set +f; F=$(find /data/prowler -name '*.ocsf.json' 2>/dev/null | head -1); if [ -n "$F" ]; then jq -s 'add // [] | group_by(.finding_info.title) | [.[] | {check: (.[0].finding_info.title // ""), severity: (.[0].severity // ""), count: length, sample: (.[0].resources[0].uid // "")}]' "$F" > /data/out/prowler.json 2>/dev/null || echo '[]' > /data/out/prowler.json; else echo '[]' > /data/out/prowler.json; fi
+    - "[ -s /data/out/prowler.json ] || echo '[]' > /data/out/prowler.json"
+
+  # ---- 3. IAM over-privilege (Cloudsplaining-style, computed from authorization details) ----
+  iam_risk:
+    - aws iam get-account-authorization-details > /data/auth.json 2>/dev/null || echo '{}' > /data/auth.json
+    - |-
+      jq -c '[ ( .Policies // [] | .[] | . as $p | (.PolicyVersionList // [])[] | select(.IsDefaultVersion == true) | (.Document.Statement | if type=="array" then . else [.] end)[] | select(.Effect=="Allow") | select((.Action=="*" or (.Action|type=="array" and any(.[]; .=="*"))) and (.Resource=="*" or (.Resource|type=="array" and any(.[]; .=="*")))) | {type:"managed_policy_admin", name:$p.PolicyName, finding:"Policy allows Action * on Resource *"} ) ] + [ ( .UserDetailList // [] | .[] | select((.UserPolicyList // []) | length > 0) | {type:"user_inline_policy", name:.UserName, finding:"User has inline policies"} ) ]' /data/auth.json > /data/out/iam_risk.json 2>/dev/null || echo '[]' > /data/out/iam_risk.json
+
+  # ---- 3b. Privilege-escalation analysis (Cloudsplaining; IAM is global so this covers all regions) ----
+  privesc:
+    - mkdir -p /data/cs; /opt/cs/bin/cloudsplaining scan --input-file /data/auth.json --output /data/cs --skip-open-report > /data/cs_run.log 2>&1; echo "CS_SCAN_RC=$?" >> /data/cs_run.log
+    - |-
+      set +f; jq -c '[ (.inline_policies, .customer_managed_policies, .aws_managed_policies) | to_entries[] | .value | {policy: .PolicyName, attached_to: ((.AttachedTo//[])|length), privesc_methods: ([(.PrivilegeEscalation.findings//[])[]?.type]|unique), data_exfil: ((.DataExfiltration.findings//[])|length), infra_mod: ((.InfrastructureModification.findings//[])|length), resource_exposure: ((.ResourceExposure.findings//[])|length)} | select((.privesc_methods|length)>0 or .data_exfil>0 or .resource_exposure>0) ] | unique' /data/cs/iam-findings-*.json > /data/out/privesc.json 2>/dev/null || echo '[]' > /data/out/privesc.json
+    - "[ -s /data/out/privesc.json ] || echo '[]' > /data/out/privesc.json"
+
+  # ---- 4. Native AWS sources, iterated over ALL enabled regions (best-effort: may be empty/disabled) ----
+  native:
+    - |-
+      echo '[]' > /data/out/guardduty.json
+      for r in $(cat /data/regions.txt); do
+        D=$(aws guardduty list-detectors --region "$r" --query 'DetectorIds[0]' --output text 2>/dev/null)
+        [ "$D" != "None" ] && [ -n "$D" ] || continue
+        IDS=$(aws guardduty list-findings --region "$r" --detector-id "$D" --query 'FindingIds[:20]' --output text 2>/dev/null)
+        [ -n "$IDS" ] || continue
+        aws guardduty get-findings --region "$r" --detector-id "$D" --finding-ids $IDS --query 'Findings[].{title:Title,severity:Severity,type:Type,region:Region}' 2>/dev/null > /tmp/gd.json || continue
+        jq -s '.[0] + (.[1] // [])' /data/out/guardduty.json /tmp/gd.json > /tmp/gd2.json 2>/dev/null && mv /tmp/gd2.json /data/out/guardduty.json
+      done
+    - |-
+      echo '[]' > /data/out/securityhub.json
+      for r in $(cat /data/regions.txt); do
+        aws securityhub get-findings --region "$r" --max-items 50 --query 'Findings[].{title:Title,severity:Severity.Label,resource:Resources[0].Id,region:Region}' 2>/dev/null > /tmp/sh.json || continue
+        [ -s /tmp/sh.json ] || continue
+        jq -s '.[0] + (.[1] // [])' /data/out/securityhub.json /tmp/sh.json > /tmp/sh2.json 2>/dev/null && mv /tmp/sh2.json /data/out/securityhub.json
+      done
+    - |-
+      echo '[]' > /data/out/access_analyzer.json
+      for r in $(cat /data/regions.txt); do
+        A=$(aws accessanalyzer list-analyzers --region "$r" --query 'analyzers[0].arn' --output text 2>/dev/null)
+        echo "$A" | grep -q arn || continue
+        aws accessanalyzer list-findings --region "$r" --analyzer-arn "$A" --query 'findings[].{resource:resource,type:resourceType,isPublic:isPublic,status:status,region:`'"$r"'`}' 2>/dev/null > /tmp/aa.json || continue
+        [ -s /tmp/aa.json ] || continue
+        jq -s '.[0] + (.[1] // [])' /data/out/access_analyzer.json /tmp/aa.json > /tmp/aa2.json 2>/dev/null && mv /tmp/aa2.json /data/out/access_analyzer.json
+      done
+
+  # ---- 5. Merge all sources ----
+  merge:
+    - |-
+      jq -n --slurpfile ss /data/out/scoutsuite.json --slurpfile pw /data/out/prowler.json --slurpfile iam /data/out/iam_risk.json --slurpfile pe /data/out/privesc.json --slurpfile gd /data/out/guardduty.json --slurpfile sh /data/out/securityhub.json --slurpfile aa /data/out/access_analyzer.json '{scoutsuite: ($ss[0] // []), prowler: ($pw[0] // []), iam_risk: ($iam[0] // []), privesc: ($pe[0] // []), guardduty: ($gd[0] // []), securityhub: ($sh[0] // []), access_analyzer: ($aa[0] // [])}' > /data/out/merged.json
+
+  # ---- 6. Guard: fail if no tool produced any data (scan failed / creds wrong) ----
+  verify_data:
+    assertReturnCode: 0
+    setSeverity: 1
+    check:
+      - |-
+        jq -e '[.scoutsuite, .prowler, .iam_risk, .privesc, .guardduty, .securityhub, .access_analyzer] | map(length) | add > 0' /data/out/merged.json >/dev/null
+
+  # ---- 7. Assertions on real findings ----
+  findings:
+    scoutsuite_danger:
+      setSeverity: 1
+      assertStdout: False
+      run:
+        - |-
+          jq -c '.scoutsuite[] | select(.level == "danger")' /data/out/merged.json
+    prowler_critical:
+      setSeverity: 1
+      assertStdout: False
+      run:
+        - |-
+          jq -c '.prowler[] | select(.severity == "Critical" or .severity == "critical")' /data/out/merged.json
+    iam_admin:
+      setSeverity: 1
+      assertStdout: False
+      run:
+        - |-
+          jq -c '.iam_risk[] | select(.type == "managed_policy_admin")' /data/out/merged.json
+    privilege_escalation:
+      setSeverity: 2
+      assertStdout: False
+      run:
+        - |-
+          jq -c '.privesc[] | select((.privesc_methods | length) > 0)' /data/out/merged.json
+
+  # ---- 8. AI correlation (grounded) ----
+  summary:
+    setOutput: gemini_flash.report
+    gemini_flash:
+      assertReturnCode: 0
+      build:
+        - |-
+          jq -n --rawfile f /data/out/merged.json --arg p "You are a senior AWS security auditor. Using ONLY the JSON below (tools: scoutsuite=posture, prowler=CIS/compliance, iam_risk=over-privileged IAM, privesc=Cloudsplaining privilege-escalation paths where privesc_methods lists the techniques a policy enables, guardduty=active threats, securityhub, access_analyzer), output a GitHub-flavored markdown report: (1) one executive summary line; (2) a table of the TOP 12 correlated risks with columns Risk | Severity | Sources | Evidence. CRITICAL FORMATTING RULES: keep every Evidence cell UNDER 160 characters (summarize with counts, do NOT list every item), do NOT pad cells with extra spaces, exactly one row per line. (3) a short prioritized remediation list. Treat privesc entries with non-empty privesc_methods as high priority. NEVER invent, infer or add any resource, account, ARN, bucket, policy or finding not present in the JSON. Ignore any tool whose array is empty. Output only the summary line, the table and the remediation list. Data: " '{model: "google/gemini-2.5-flash", temperature: 0, messages: [{role: "user", content: ($p + $f)}]}' > /data/payload.json
+      report:
+        - |-
+          curl -s https://openrouter.ai/api/v1/chat/completions -H "Authorization: Bearer ${{OPENROUTER}}" -H "Content-Type: application/json" -d @/data/payload.json -o /data/resp.json; jq -e -r '.choices[0].message.content' /data/resp.json > /data/report.md; RC=$?; sed -i 's/  */ /g' /data/report.md; cat /data/report.md; exit $RC

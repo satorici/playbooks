@@ -5,7 +5,7 @@ settings:
   timeout: 300
   author:
     - https://github.com/satorici
-  example: satori run satori://osint/breach-news.yml -d COMPANY="Acme Corp" -d DOMAIN="acme.com" -d WINDOW="90d" -d OPENROUTER=$OPENROUTER --report --output
+  example: satori run satori://osint/breach-news.yml -d COMPANY="Acme Corp" -d DOMAIN="acme.com" -d OPENROUTER=$OPENROUTER --report --output
   redacted:
     - OPENROUTER
 
@@ -23,7 +23,7 @@ breach-news:
       - |
         COMPANY="${{COMPANY}}"
         DOMAIN="${{DOMAIN}}"
-        echo "=== Breach News check: $COMPANY ($DOMAIN) — last ${{WINDOW}} ==="
+        echo "=== Breach News check: $COMPANY ($DOMAIN) — last 90d ==="
         echo ""
 
         # 1) Pull Google News RSS filtered by the compromise lexicon.
@@ -33,7 +33,7 @@ breach-news:
 
         company = """${{COMPANY}}""".strip()
         domain  = """${{DOMAIN}}""".strip()
-        window  = """${{WINDOW}}""".strip() or "365d"
+        window  = "90d"
 
         lexicon = '(hack OR hacked OR ransomware OR breach OR "data leak" OR phishing OR compromised OR exposed OR "stolen data" OR cyberattack OR leaked)'
         company_q = f'"{company}"'
@@ -69,7 +69,7 @@ breach-news:
 
         # No lexicon-matching news at all -> nothing to score.
         if [ "${N:-0}" -eq 0 ]; then
-          echo "CLEAN: no compromise-related news found for $COMPANY in the last ${{WINDOW}}"
+          echo "CLEAN: no compromise-related news found for $COMPANY in the last 90d"
           exit 0
         fi
 
