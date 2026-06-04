@@ -2,6 +2,8 @@ settings:
   name: "Domain to GitHub account"
   description: "Find the most likely main GitHub org/account for a domain"
   image: debian:stable-slim
+  gallery:
+    - https://files.catbox.moe/poush8.png
   example: satori run satori://osint/domain-to-github.yml -d DOMAIN=satori.ci --report --output
 
 find_account:

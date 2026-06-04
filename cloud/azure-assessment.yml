@@ -1,0 +1,115 @@
+settings:
+  name: "Azure / Entra ID Assessment with AI (AzureHound attack paths + Maester) by Gemini"
+  description: "Read-only Azure / Entra ID hackability assessment focused on real exploitability (not compliance padding). Two complementary tools authenticate as an Entra service principal (app-only client secret): AzureHound (BloodHound collector) maps the tenant graph and surfaces privilege-escalation signal — who holds Global Administrator and other high-impact directory roles, and owners of privileged objects; Maester runs 280+ Entra ID security tests (EIDSCA, CIS M365, CISA SCuBA) — the account-takeover entry points: missing MFA, legacy authentication, dangerous app consent, weak Conditional Access. Both run in one PowerShell container; results are written under /data (captured by --files), merged, and correlated by Google Gemini Flash (via OpenRouter) into a report ranked by EXPLOITABILITY (attack paths and account-takeover first). The AI step is grounded: it summarizes only the merged findings JSON and never invents resources."
+  image: mcr.microsoft.com/powershell:latest
+  files: True
+  cpu: 2048
+  memory: 8192
+  author:
+    - https://github.com/SpecterOps/AzureHound
+    - https://github.com/maester365/maester
+  gallery:
+    - https://files.catbox.moe/example.png
+  example: satori run satori://cloud/azure-assessment.yml -d AZURE_CLIENT_ID=$AZURE_CLIENT_ID -d AZURE_CLIENT_SECRET=$AZURE_CLIENT_SECRET -d AZURE_TENANT_ID=$AZURE_TENANT_ID -d OPENROUTER=$OPENROUTER --files --report --output
+  redacted:
+    - AZURE_CLIENT_ID
+    - AZURE_CLIENT_SECRET
+    - AZURE_TENANT_ID
+    - OPENROUTER
+
+assess:
+  # Base image is mcr.microsoft.com/powershell (Debian + pwsh 7). Each command ends 0-exit so one
+  # failure does NOT abort install; logs go to /data for debugging via --files.
+  install:
+    - export DEBIAN_FRONTEND=noninteractive; apt-get update >/dev/null 2>&1; apt-get install -qy jq curl unzip ca-certificates >/dev/null 2>&1; mkdir -p /data/out /data/maester; echo install_base_done
+    - cd /data; curl -fsSL -o /data/ah.zip https://github.com/SpecterOps/AzureHound/releases/download/v2.12.1/AzureHound_v2.12.1_linux_amd64.zip > /data/dl.log 2>&1; echo "DL_RC=$?" >> /data/dl.log; unzip -o /data/ah.zip -d /data >> /data/dl.log 2>&1; chmod +x /data/azurehound 2>/dev/null; /data/azurehound --version >> /data/dl.log 2>&1; echo "VER_RC=$?" >> /data/dl.log; true
+    - |-
+      pwsh -NoProfile -Command '
+        $ErrorActionPreference = "Continue"; $ProgressPreference = "SilentlyContinue"
+        Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
+        try { Install-Module Pester -SkipPublisherCheck -Force -Scope CurrentUser -ErrorAction Stop; "Pester OK" } catch { "Pester FAIL: $_" }
+        try { Install-Module Microsoft.Graph.Authentication -Force -Scope CurrentUser -ErrorAction Stop; "Graph OK" } catch { "Graph FAIL: $_" }
+        try { Install-Module Maester -Force -Scope CurrentUser -ErrorAction Stop; "Maester OK" } catch { "Maester FAIL: $_" }
+      ' > /data/modules.log 2>&1; echo "MODULES_RC=$?" >> /data/modules.log; cat /data/modules.log
+
+  # ---- 1. AzureHound: collect tenant graph + attack-path signal (privileged role holders) ----
+  azurehound:
+    - /data/azurehound --app ${{AZURE_CLIENT_ID}} --secret ${{AZURE_CLIENT_SECRET}} --tenant ${{AZURE_TENANT_ID}} list -o /data/azurehound.json > /data/collect.log 2>&1; echo "COLLECT_RC=$?" >> /data/collect.log; { echo "--- ls -la /data ---"; ls -la /data; echo "--- head ---"; head -c 1500 /data/azurehound.json; } >> /data/collect.log 2>&1; true
+    - |-
+      set +f
+      jq '
+        "(?i)(Global Administrator|Privileged Role Administrator|Application Administrator|Cloud Application Administrator|Privileged Authentication Administrator|Authentication Administrator|User Administrator|Security Administrator|Hybrid Identity Administrator|Intune Administrator|Exchange Administrator|SharePoint Administrator|Conditional Access Administrator)" as $privre
+        | (reduce (.data[] | select(.kind=="AZRole") | .data) as $r ({}; .[$r.id // empty] = $r.displayName | .[$r.templateId // empty] = $r.displayName)) as $rolename
+        | [ .data[] | select(.kind=="AZRoleAssignment") | .data | (.roleAssignments // [])[]
+            | ($rolename[.roleDefinitionId] // .roleDefinitionId) as $rname
+            | {role: $rname, principalId: .principalId} ]
+        | map(select(.role | test($privre)))
+        | group_by(.role) | map({role: .[0].role, holders: ([.[].principalId] | unique | length), principalIds: ([.[].principalId] | unique)}) | sort_by(-.holders)
+      ' /data/azurehound.json > /data/out/privileged_roles.json 2>/dev/null || echo '[]' > /data/out/privileged_roles.json
+      jq '[.data[].kind] | group_by(.) | map({kind: .[0], count: length}) | sort_by(-.count)' /data/azurehound.json > /data/out/counts.json 2>/dev/null || echo '[]' > /data/out/counts.json
+      jq -n --slurpfile c /data/out/counts.json --slurpfile p /data/out/privileged_roles.json '{total_objects: ([$c[0][]?.count] | add // 0), counts_by_kind: ($c[0] // []), privileged_role_holders: ($p[0] // [])}' > /data/out/azurehound.json 2>/dev/null || echo '{}' > /data/out/azurehound.json
+      cat /data/out/azurehound.json
+    - "[ -s /data/out/azurehound.json ] || echo '{}' > /data/out/azurehound.json"
+
+  # ---- 2. Maester: run 280+ Entra ID security tests (account-takeover entry points) ----
+  maester:
+    - |-
+      AZURE_CLIENT_ID='${{AZURE_CLIENT_ID}}' AZURE_CLIENT_SECRET='${{AZURE_CLIENT_SECRET}}' AZURE_TENANT_ID='${{AZURE_TENANT_ID}}' pwsh -NoProfile -Command '
+        $ErrorActionPreference = "Stop"; $ProgressPreference = "SilentlyContinue"
+        Import-Module Microsoft.Graph.Authentication; Import-Module Maester
+        $sec = ConvertTo-SecureString $env:AZURE_CLIENT_SECRET -AsPlainText -Force
+        $cred = New-Object System.Management.Automation.PSCredential($env:AZURE_CLIENT_ID, $sec)
+        Connect-MgGraph -TenantId $env:AZURE_TENANT_ID -ClientSecretCredential $cred -NoWelcome
+        "Connected: $((Get-MgContext).AuthType) AppId=$((Get-MgContext).ClientId)"
+        $ErrorActionPreference = "Continue"
+        Install-MaesterTests -Path /data/maester-tests
+        Invoke-Maester -Path /data/maester-tests -OutputFolder /data/maester -OutputJsonFile /data/maester/results.json -NonInteractive -DisableTelemetry -NoLogo
+      ' > /data/maester_run.log 2>&1; echo "MAESTER_RC=$?" >> /data/maester_run.log; { echo "--- ls /data/maester ---"; ls -la /data/maester; echo "--- tail run.log ---"; tail -n 25 /data/maester_run.log; } >> /data/maester_run.log 2>&1; echo done
+    - |-
+      set +f
+      F=$(find /data/maester -name 'results.json' 2>/dev/null | head -1); [ -n "$F" ] || F=$(find /data/maester -name '*.json' 2>/dev/null | head -1)
+      if [ -n "$F" ]; then
+        jq '{result: .Result, total: (.TotalCount // (.Tests | length)), passed: (.PassedCount // 0), failed: (.FailedCount // 0), skipped: (.SkippedCount // 0), failed_tests: [.Tests[]? | select(.Result=="Failed") | {name: .Name, block: .Block, severity: .Severity}]}' "$F" > /data/out/maester.json 2>/dev/null || echo '{}' > /data/out/maester.json
+      else echo '{}' > /data/out/maester.json; fi
+      cat /data/out/maester.json
+    - "[ -s /data/out/maester.json ] || echo '{}' > /data/out/maester.json"
+
+  # ---- 3. Merge both sources ----
+  merge:
+    - |-
+      jq -n --slurpfile ah /data/out/azurehound.json --slurpfile mt /data/out/maester.json '{attack_paths: ($ah[0] // {}), entra_tests: ($mt[0] // {})}' > /data/out/merged.json; cat /data/out/merged.json
+
+  # ---- 4. Guard: fail if neither tool produced data (auth failed / perms missing) ----
+  verify_data:
+    assertReturnCode: 0
+    setSeverity: 1
+    check:
+      - |-
+        jq -e '((.attack_paths.total_objects // 0) > 0) or ((.entra_tests.total // 0) > 0)' /data/out/merged.json >/dev/null
+
+  # ---- 5. Exploitability assertions ----
+  findings:
+    privileged_role_holders:
+      setSeverity: 1
+      assertStdout: False
+      run:
+        - |-
+          jq -c '.attack_paths.privileged_role_holders[]?' /data/out/merged.json
+    entra_failed_tests:
+      setSeverity: 2
+      assertStdout: False
+      run:
+        - |-
+          jq -c '.entra_tests.failed_tests[]?' /data/out/merged.json
+
+  # ---- 6. AI correlation, ranked by EXPLOITABILITY (grounded) ----
+  summary:
+    setOutput: gemini_flash.report
+    gemini_flash:
+      assertReturnCode: 0
+      build:
+        - |-
+          jq -n --rawfile f /data/out/merged.json --arg p "You are a senior Azure / Entra ID red-team auditor. Using ONLY the JSON below produce a GitHub-flavored markdown report focused on REAL EXPLOITABILITY (how an attacker takes over this tenant), NOT compliance. Sources: attack_paths (AzureHound: privileged_role_holders = principals holding high-impact directory roles like Global Administrator, plus object counts) and entra_tests (Maester: failed_tests = Entra security controls that FAILED — account-takeover entry points such as missing MFA, legacy auth, risky app consent, weak Conditional Access). Output: (1) one executive line stating whether the tenant is realistically takeover-able and why; (2) a table of the TOP 15 risks with columns Risk | Severity | Source | Evidence, SORTED by exploitability — privilege/attack-path findings (who is Global Admin, privileged-object owners) and account-takeover entry points FIRST, weaker hygiene last. RULES: include ALL privileged_role_holders and ALL high/critical failed_tests; keep every Evidence cell UNDER 160 chars (use counts, do not list every item); do NOT pad cells with spaces; exactly one row per line. (3) a prioritized remediation list starting with the attack paths. NEVER invent any principal, role, test or finding not present in the JSON. Ignore empty sections. Output only the line, the table and the list. Data: " '{model: "google/gemini-2.5-flash", temperature: 0, messages: [{role: "user", content: ($p + $f)}]}' > /data/payload.json
+      report:
+        - |-
+          curl -s https://openrouter.ai/api/v1/chat/completions -H "Authorization: Bearer ${{OPENROUTER}}" -H "Content-Type: application/json" -d @/data/payload.json -o /data/resp.json; jq -e -r '.choices[0].message.content' /data/resp.json > /data/report.md; RC=$?; sed -i 's/  */ /g' /data/report.md; cat /data/report.md; exit $RC
