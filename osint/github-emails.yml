@@ -1,0 +1,47 @@
+settings:
+  name: "Domain to GitHub emails"
+  description: "Given only a DOMAIN, resolves its most likely GitHub org (via domain-to-github) and harvests committer/author emails from that org public repositories. Highlights on-target emails matching the domain. No API key required; runs unauthenticated using the Satori container IP."
+  image: debian:stable-slim
+  author:
+    - https://github.com/satorici
+  gallery:
+    - https://files.catbox.moe/poush8.png
+  example: satori run satori://osint/github-emails.yml -d DOMAIN=satori-ci.com --report --output
+
+import:
+  - satori://osint/domain-to-github.yml
+
+harvest_emails:
+  install:
+    - export DEBIAN_FRONTEND=noninteractive; apt-get update -qq && apt-get install -qy --no-install-recommends curl jq ca-certificates >/dev/null 2>&1
+
+  run:
+    - |
+      DOMAIN="${{DOMAIN}}"
+      ORG="$(cat /tmp/satori/out/github-org 2>/dev/null)"
+      echo "### Resolved org from domain-to-github: '$ORG'  (domain: $DOMAIN)"
+      if [ -z "$ORG" ]; then echo "No org resolved, nothing to harvest"; exit 1; fi
+      API="https://api.github.com"
+      : > /tmp/all_emails.txt
+      REPOS="$(curl -s "$API/orgs/$ORG/repos?per_page=30&sort=pushed&type=public" | jq -r '.[]?.name' 2>/dev/null)"
+      echo "Public repos scanned (top 30 by push):"
+      echo "$REPOS" | tr '\n' ' '; echo
+      for R in $REPOS; do
+        curl -s "$API/repos/$ORG/$R/commits?per_page=100" \
+          | jq -r '.[]?.commit | (.author.email, .committer.email)' 2>/dev/null
+      done \
+        | grep -aiE '^[^@[:space:]]+@[^@[:space:]]+\.[a-z]{2,}$' \
+        | grep -aviE 'noreply|\.internal|\.local$|\.lan$|localhost|\.localdomain|\.ec2\.|example\.(com|org)' \
+        | tr 'A-Z' 'a-z' | sort -u > /tmp/all_emails.txt
+      echo ""
+      ESC="$(printf '%s' "$DOMAIN" | sed 's/[.]/\\./g')"
+      grep -iE "@$ESC$" /tmp/all_emails.txt > /tmp/target_emails.txt || true
+      echo "=== Emails matching @$DOMAIN ==="
+      cat /tmp/target_emails.txt
+      echo ""
+      echo "TOTAL @$DOMAIN: $(wc -l < /tmp/target_emails.txt | tr -d ' ')   (out of $(wc -l < /tmp/all_emails.txt | tr -d ' ') distinct commit emails scanned)"
+
+  resolved:
+    setOutput: harvest_emails.run
+    assertStdoutContains: "Emails matching @"
+    assertStdoutNotContains: "API rate limit exceeded"
