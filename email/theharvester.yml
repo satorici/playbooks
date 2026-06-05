@@ -11,7 +11,7 @@ settings:
 theHarvest:
   install:
     - command -v git >/dev/null 2>&1 || (export DEBIAN_FRONTEND=noninteractive; apt-get update -qq && apt-get install -qy --no-install-recommends git >/dev/null 2>&1)
-    - command -v theHarvester >/dev/null 2>&1 || pip install -q --break-system-packages --root-user-action=ignore git+https://github.com/laramies/theHarvester.git
+    - command -v theHarvester >/dev/null 2>&1 || pip3 install -q --break-system-packages --root-user-action=ignore git+https://github.com/laramies/theHarvester.git || python3 -m pip install -q --break-system-packages --root-user-action=ignore git+https://github.com/laramies/theHarvester.git
 
   test:
     assertStdoutContains: "@"
@@ -19,4 +19,4 @@ theHarvest:
       - |
         DOMAIN="${{DOMAIN}}"
         CORE="$(printf '%s' "${DOMAIN%%.*}" | tr -cd 'a-zA-Z0-9' | tr 'A-Z' 'a-z')"
-        theHarvester -d "$DOMAIN" -b baidu 2>/dev/null | grep -aoiE '[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}' | tr 'A-Z' 'a-z' | grep -iE "@[a-z0-9.-]*${CORE}[a-z0-9.-]*\.[a-z]{2,}$" | sort -u
+        for s in baidu brave certspotter crtsh duckduckgo hackertarget rapiddns urlscan yahoo; do theHarvester -d "$DOMAIN" -b "$s" 2>/dev/null; done | grep -aoiE '[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}' | tr 'A-Z' 'a-z' | grep -iE "@[a-z0-9.-]*${CORE}[a-z0-9.-]*\.[a-z]{2,}$" | sort -u

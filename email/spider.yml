@@ -29,8 +29,11 @@ spider:
         for sm in /sitemap.xml /sitemap_index.xml /sitemap-index.xml; do
           curl -sL -A "$UA" --max-time 15 "https://$DOMAIN$sm" 2>/dev/null | grep -oiE 'https?://[^< "]+' | grep -i "$DOMAIN"
         done >> /tmp/urls.txt
-        # 3) internal links from the homepage
-        curl -sL -A "$UA" --max-time 20 "https://$DOMAIN" 2>/dev/null > /tmp/home.html
+        # 3) internal links from the homepage (use whichever host returns more content; apex may 403)
+        curl -sL -A "$UA" --max-time 20 "https://www.$DOMAIN" > /tmp/home_www.html 2>/dev/null
+        curl -sL -A "$UA" --max-time 20 "https://$DOMAIN" > /tmp/home_apex.html 2>/dev/null
+        WB=$(wc -c < /tmp/home_www.html 2>/dev/null || echo 0); AB=$(wc -c < /tmp/home_apex.html 2>/dev/null || echo 0)
+        if [ "${WB:-0}" -ge "${AB:-0}" ]; then cp /tmp/home_www.html /tmp/home.html; else cp /tmp/home_apex.html /tmp/home.html; fi
         grep -oiE 'href="[^"]+"' /tmp/home.html | sed -e 's/href="//' -e 's/"$//' | while read -r u; do
           case "$u" in
             /*) echo "https://$DOMAIN$u" ;;
