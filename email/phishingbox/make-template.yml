@@ -1,0 +1,15 @@
+settings:
+  name: "PhishingBox: generate + create our AI phishing template"
+  description: "One-run harness: imports template-ai (spiders the DOMAIN and generates a brand-matched lure into /tmp/satori/out/tpl_*) and create-template (reads those artifacts and creates the template in PhishingBox). Runs both in the same container so the lure artifacts persist. TYPE defaults to none (click tracking only, no credential capture). Prints TEMPLATE_UUID for launch-campaign."
+  image: debian
+  timeout: 500
+  author:
+    - https://github.com/satorici
+  example: satori run satori://email/phishingbox/make-template.yml -d DOMAIN="satori-ci.com" -d OPENROUTER="$OPENROUTER" -d PHISHINGBOX="$PHISHINGBOX" -d TPL_DOMAIN="satori-ci.com" -d TPL_NAME="IT Security Notice" -d TPL_LANDING_ID="" -d TYPE="none" --report --output
+  redacted:
+    - OPENROUTER
+    - PHISHINGBOX
+
+import:
+  - satori://email/phishingbox/template-ai.yml
+  - satori://email/phishingbox/create-template.yml
