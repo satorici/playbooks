@@ -11,7 +11,7 @@ settings:
   author:
     - https://github.com/nccgroup
     - https://github.com/prowler-cloud/prowler
-  example: satori run satori://cloud/aws-assessment.yml -d AWS_ACCESS_KEY=$AWS_ACCESS_KEY -d AWS_SECRET_KEY=$AWS_SECRET_KEY -d OPENROUTER=$OPENROUTER --files --report --output
+  example: satori run satori://cloud/aws-assessment-ai.yml -d AWS_ACCESS_KEY=$AWS_ACCESS_KEY -d AWS_SECRET_KEY=$AWS_SECRET_KEY -d OPENROUTER=$OPENROUTER --files --report --output
   redacted:
     - AWS_ACCESS_KEY
     - AWS_SECRET_KEY

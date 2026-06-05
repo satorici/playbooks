@@ -1,0 +1,37 @@
+settings:
+  name: "Azure Prowler: CIS / compliance assessment (service principal)"
+  description: "Runs Prowler against Azure authenticating as an Entra service principal (--sp-env-auth, client secret), returning failed critical/high checks. Reduces the OCSF output to a compact findings JSON under /data/out/prowler.json (captured by --files) grouped by check, and surfaces the critical findings. Read-only. Prowler 5.x requires Python <3.13."
+  image: python:3.12
+  files: True
+  cpu: 2048
+  memory: 8192
+  author:
+    - https://github.com/prowler-cloud/prowler
+  example: satori run satori://cloud/azure-prowler.yml -d AZURE_CLIENT_ID=$AZURE_CLIENT_ID -d AZURE_CLIENT_SECRET=$AZURE_CLIENT_SECRET -d AZURE_TENANT_ID=$AZURE_TENANT_ID --files --report --output
+  redacted:
+    - AZURE_CLIENT_ID
+    - AZURE_CLIENT_SECRET
+    - AZURE_TENANT_ID
+
+prowler:
+  install:
+    - export DEBIAN_FRONTEND=noninteractive; apt-get update >/dev/null 2>&1; apt-get install -qy jq curl >/dev/null 2>&1; mkdir -p /data/out
+    - python3 -m venv /opt/pw; /opt/pw/bin/pip install -q prowler > /data/pw_pip.log 2>&1; echo "PW_RC=$?" >> /data/pw_pip.log
+
+  scan:
+    - export AZURE_CLIENT_ID=${{AZURE_CLIENT_ID}}; export AZURE_CLIENT_SECRET=${{AZURE_CLIENT_SECRET}}; export AZURE_TENANT_ID=${{AZURE_TENANT_ID}}; /opt/pw/bin/prowler azure --sp-env-auth --status FAIL --severity critical high -M json-ocsf -o /data/prowler --log-level ERROR > /data/prowler_run.log 2>&1; echo "PROWLER_RC=$?" >> /data/prowler_run.log; { echo "--- ls /data/prowler ---"; ls -laR /data/prowler; } >> /data/prowler_run.log 2>&1
+    - |-
+      set +f; F=$(find /data/prowler -name '*.ocsf.json' 2>/dev/null | head -1); if [ -n "$F" ]; then jq -s 'add // [] | group_by(.finding_info.title) | [.[] | {check: (.[0].finding_info.title // ""), severity: (.[0].severity // ""), count: length, sample: (.[0].resources[0].uid // "")}]' "$F" > /data/out/prowler.json 2>/dev/null || echo '[]' > /data/out/prowler.json; else echo '[]' > /data/out/prowler.json; fi
+    - "[ -s /data/out/prowler.json ] || echo '[]' > /data/out/prowler.json"
+
+  verify_data:
+    assertReturnCode: 0
+    setSeverity: 1
+    check:
+      - jq -e 'length > 0' /data/out/prowler.json >/dev/null
+
+  findings:
+    setSeverity: 1
+    assertStdout: False
+    run:
+      - jq -c '.[] | select(.severity == "Critical" or .severity == "critical")' /data/out/prowler.json

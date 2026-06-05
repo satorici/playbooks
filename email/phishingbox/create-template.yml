@@ -1,0 +1,57 @@
+settings:
+  name: "PhishingBox: create phishing email template"
+  description: "Creates a phishing email template via api/v2/template/create with a single default localization (subject + HTML body + from/reply-to). Categories are integer IDs from api/v2/template/categories. Requires TPL_DOMAIN to be a CNAME already configured in the PhishingBox account (used for the hook link). The created template can then be used when building a test in the portal (the API does not create/launch tests)."
+  image: debian:stable-slim
+  author:
+    - https://github.com/satorici
+  example: satori run satori://email/phishingbox/create-template.yml -d PHISHINGBOX="$PHISHINGBOX" -d TPL_NAME="IT Password Reset" -d TPL_DOMAIN="track.yourcname.com" -d TPL_SUBJECT="Action required: reset your password" -d FROM_EMAIL="it@yourcname.com" -d FROM_NAME="IT Helpdesk" -d TPL_BODY="<p>Please <a href='%LINK%'>reset your password</a>.</p>" --report --output
+  redacted:
+    - PHISHINGBOX
+
+phishingbox:
+  install:
+    - export DEBIAN_FRONTEND=noninteractive; apt-get update -qq && apt-get install -qy --no-install-recommends curl jq ca-certificates >/dev/null 2>&1
+
+  create_template:
+    assertReturnCode: 0
+    assertStdoutContains: "TEMPLATE_UUID="
+    assertStdoutNotContains: "Invalid API user token"
+    run:
+      - |
+        TOKEN="${{PHISHINGBOX}}"
+        HOST="${{PB_HOST}}"; [ -z "$HOST" ] && HOST="portal.pbx-sec.com"
+        NAME="${{TPL_NAME}}"
+        DOMAIN="${{TPL_DOMAIN}}"
+        TYPE="${{TPL_TYPE}}";       [ -z "$TYPE" ] && TYPE="none"
+        DESC="${{TPL_DESCRIPTION}}"; [ -z "$DESC" ] && DESC="Created via Satori playbook"
+        LOCALE="${{TPL_LOCALE}}";    [ -z "$LOCALE" ] && LOCALE="en"
+        CATS="${{TPL_CATEGORIES}}";  [ -z "$CATS" ] && CATS="18"
+        SUBJECT="${{TPL_SUBJECT}}"
+        BODY="${{TPL_BODY}}"
+        FROM_EMAIL="${{FROM_EMAIL}}"
+        FROM_NAME="${{FROM_NAME}}"
+        REPLYTO="${{REPLYTO_EMAIL}}"; [ -z "$REPLYTO" ] && REPLYTO="$FROM_EMAIL"
+        BASE="https://$HOST/api/v2"
+        AUTH="api-token: $TOKEN"
+        CT="content-type: application/json"
+
+        # categories: comma-separated -> JSON array of integers
+        CATS_JSON="$(printf '%s' "$CATS" | tr ',' '\n' | grep -aE '^[0-9]+$' | jq -s '.')"
+
+        PAYLOAD="$(jq -n \
+          --arg type "$TYPE" --arg name "$NAME" --arg domain "$DOMAIN" --arg desc "$DESC" \
+          --argjson cats "$CATS_JSON" \
+          --arg locale "$LOCALE" --arg from_email "$FROM_EMAIL" --arg from_name "$FROM_NAME" \
+          --arg replyto "$REPLYTO" --arg subject "$SUBJECT" --arg body "$BODY" \
+          '{type:$type, name:$name, domain:$domain, description:$desc, template_type:"phishing",
+            categories:$cats,
+            localizations:[{locale:$locale, default:true, from_email:$from_email, from_name:$from_name,
+                            replyto_email:$replyto, subject:$subject, body:$body}]}')"
+        echo "template/create payload (body redacted):"; echo "$PAYLOAD" | jq '(.localizations[0].body) |= "[redacted]"' 2>/dev/null
+
+        RESP="$(curl -s -X POST "$BASE/template/create" -H "$AUTH" -H "$CT" --data "$PAYLOAD")"
+        echo "template/create response: $RESP"
+        TID="$(echo "$RESP" | jq -r '(.data.id // .data.uuid // .data.template.id // .id // empty)')"
+        if [ -z "$TID" ]; then echo "Could not create template (see response above)"; exit 1; fi
+        echo "TEMPLATE_UUID=$TID"
+        echo "DONE template=$TID name=$NAME type=$TYPE locale=$LOCALE categories=$CATS"

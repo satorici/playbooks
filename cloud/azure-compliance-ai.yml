@@ -1,0 +1,62 @@
+settings:
+  name: "Azure compliance & posture (ScoutSuite + Prowler) with AI by Gemini"
+  description: "Read-only Azure / Entra ID compliance & posture assessment. Imports two tools - azure-scoutsuite (Azure/Entra posture: flagged misconfigurations) and azure-prowler (CIS/compliance: failed critical/high checks) - each authenticating as an Entra service principal and writing a compact findings JSON under /data. This playbook merges them and Google Gemini Flash (via OpenRouter) correlates them into a prioritized report. The AI step is grounded: it summarizes only the merged findings JSON and never invents resources."
+  image: python:3.12
+  files: True
+  cpu: 2048
+  memory: 8192
+  author:
+    - https://github.com/nccgroup
+    - https://github.com/prowler-cloud/prowler
+  example: satori run satori://cloud/azure-compliance-ai.yml -d AZURE_CLIENT_ID=$AZURE_CLIENT_ID -d AZURE_CLIENT_SECRET=$AZURE_CLIENT_SECRET -d AZURE_TENANT_ID=$AZURE_TENANT_ID -d OPENROUTER=$OPENROUTER --output --test correlate:summary:gemini_flash:report:stdout 2>/dev/null | glow -w 200
+  redacted:
+    - AZURE_CLIENT_ID
+    - AZURE_CLIENT_SECRET
+    - AZURE_TENANT_ID
+    - OPENROUTER
+
+import:
+  - satori://cloud/azure-scoutsuite.yml
+  - satori://cloud/azure-prowler.yml
+
+correlate:
+  # azure-scoutsuite writes /data/out/scoutsuite.json ; azure-prowler writes /data/out/prowler.json
+  merge:
+    - |-
+      mkdir -p /data/out
+      jq -n --slurpfile ss /data/out/scoutsuite.json --slurpfile pw /data/out/prowler.json '{scoutsuite: ($ss[0] // []), prowler: ($pw[0] // [])}' > /data/out/merged.json; cat /data/out/merged.json
+
+  # Guard: fail if neither tool produced data (auth failed / perms missing)
+  verify_data:
+    assertReturnCode: 0
+    setSeverity: 1
+    check:
+      - |-
+        jq -e '[.scoutsuite, .prowler] | map(length) | add > 0' /data/out/merged.json >/dev/null
+
+  # Assertions on real findings
+  findings:
+    scoutsuite_danger:
+      setSeverity: 1
+      assertStdout: False
+      run:
+        - |-
+          jq -c '.scoutsuite[] | select(.level == "danger")' /data/out/merged.json
+    prowler_critical:
+      setSeverity: 1
+      assertStdout: False
+      run:
+        - |-
+          jq -c '.prowler[] | select(.severity == "Critical" or .severity == "critical")' /data/out/merged.json
+
+  # AI correlation (grounded)
+  summary:
+    setOutput: gemini_flash.report
+    gemini_flash:
+      assertReturnCode: 0
+      build:
+        - |-
+          jq -n --rawfile f /data/out/merged.json --arg p "You are a senior Azure / Entra ID security auditor. Using ONLY the JSON below (tools: scoutsuite=Azure/Entra posture, prowler=CIS/compliance), output a GitHub-flavored markdown report: (1) one executive summary line; (2) a table of the TOP 15 correlated risks with columns Risk | Severity | Sources | Evidence, sorted by severity (Critical first). COVERAGE RULES: every non-empty tool MUST be represented; you MUST include ALL Critical-severity findings and the highest-severity findings from EACH tool (never report only one tool's findings); when two tools flag the same issue, merge into one row and list both in Sources. FORMATTING RULES: keep every Evidence cell UNDER 160 characters (summarize with counts, do NOT list every item), do NOT pad cells with extra spaces, exactly one row per line. (3) a short prioritized remediation list. NEVER invent, infer or add any resource, tenant, policy or finding not present in the JSON. Ignore any tool whose array is empty. Output only the summary line, the table and the remediation list. Data: " '{model: "google/gemini-2.5-flash", temperature: 0, messages: [{role: "user", content: ($p + $f)}]}' > /data/payload.json
+      report:
+        - |-
+          curl -s https://openrouter.ai/api/v1/chat/completions -H "Authorization: Bearer ${{OPENROUTER}}" -H "Content-Type: application/json" -d @/data/payload.json -o /data/resp.json; jq -e -r '.choices[0].message.content' /data/resp.json > /data/report.md; RC=$?; sed -i 's/  */ /g' /data/report.md; cat /data/report.md; exit $RC

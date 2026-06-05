@@ -1,0 +1,37 @@
+settings:
+  name: "Azure ScoutSuite: read-only Azure / Entra ID posture audit"
+  description: "Runs ScoutSuite against Azure / Entra ID authenticating as an Entra service principal (client secret), across all subscriptions. Extracts the flagged findings (service, level, description, count) to /data/out/scoutsuite.json (captured by --files) and surfaces the danger-level findings. Read-only, agentless."
+  image: python:3.12
+  files: True
+  cpu: 2048
+  memory: 4096
+  author:
+    - https://github.com/nccgroup
+  example: satori run satori://cloud/azure-scoutsuite.yml -d AZURE_CLIENT_ID=$AZURE_CLIENT_ID -d AZURE_CLIENT_SECRET=$AZURE_CLIENT_SECRET -d AZURE_TENANT_ID=$AZURE_TENANT_ID --files --report --output
+  redacted:
+    - AZURE_CLIENT_ID
+    - AZURE_CLIENT_SECRET
+    - AZURE_TENANT_ID
+
+scoutsuite:
+  install:
+    - export DEBIAN_FRONTEND=noninteractive; apt-get update >/dev/null 2>&1; apt-get install -qy jq curl >/dev/null 2>&1; mkdir -p /data/out
+    - python3 -m venv /opt/ss; /opt/ss/bin/pip install -q scoutsuite > /data/ss_pip.log 2>&1; echo "SS_RC=$?" >> /data/ss_pip.log
+
+  scan:
+    - cd /data; /opt/ss/bin/scout azure -s --tenant ${{AZURE_TENANT_ID}} --client-id ${{AZURE_CLIENT_ID}} --client-secret ${{AZURE_CLIENT_SECRET}} --all-subscriptions --no-browser > /data/ss_run.log 2>&1; echo "SS_SCAN_RC=$?" >> /data/ss_run.log
+    - |-
+      set +f; tail -n +2 /data/scoutsuite-report/scoutsuite-results/scoutsuite_results_azure-*.js | jq -c '[.services | to_entries[] | .key as $svc | (.value.findings // {}) | to_entries[] | .value | select(.flagged_items > 0) | {service: $svc, level: .level, finding: .description, flagged: .flagged_items}]' > /data/out/scoutsuite.json 2>/dev/null || echo '[]' > /data/out/scoutsuite.json
+    - "[ -s /data/out/scoutsuite.json ] || echo '[]' > /data/out/scoutsuite.json"
+
+  verify_data:
+    assertReturnCode: 0
+    setSeverity: 1
+    check:
+      - jq -e 'length > 0' /data/out/scoutsuite.json >/dev/null
+
+  findings:
+    setSeverity: 1
+    assertStdout: False
+    run:
+      - jq -c '.[] | select(.level == "danger")' /data/out/scoutsuite.json

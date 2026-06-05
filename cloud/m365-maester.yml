@@ -1,0 +1,89 @@
+settings:
+  name: "Microsoft 365 / Entra ID Security Assessment with Maester"
+  description: "Runs Maester (https://github.com/maester365/maester) — a PowerShell/Pester framework with 280+ Microsoft 365 / Entra ID security tests (EIDSCA, CISA SCuBA, CIS M365). Authenticates to Microsoft Graph as an Entra service principal (app-only, client secret), installs the Maester/Pester/Microsoft.Graph modules, runs the full Entra ID test suite and writes JSON/HTML/Markdown results under /data (captured by --files). Tests requiring Exchange Online / Teams / SharePoint / Intune permissions are skipped when those scopes are not granted to the service principal."
+  image: mcr.microsoft.com/powershell:latest
+  files: True
+  cpu: 2048
+  memory: 8192
+  author:
+    - https://github.com/maester365/maester
+  example: satori run satori://cloud/m365-maester.yml -d AZURE_CLIENT_ID=$AZURE_CLIENT_ID -d AZURE_CLIENT_SECRET=$AZURE_CLIENT_SECRET -d AZURE_TENANT_ID=$AZURE_TENANT_ID --files --report --output
+  redacted:
+    - AZURE_CLIENT_ID
+    - AZURE_CLIENT_SECRET
+    - AZURE_TENANT_ID
+
+assess:
+  # ---- 0. Base tools (jq for parsing results). Each command ends 0-exit so one failure does not abort install. ----
+  install:
+    - export DEBIAN_FRONTEND=noninteractive; apt-get update >/dev/null 2>&1; apt-get install -qy jq curl >/dev/null 2>&1; mkdir -p /data/maester; echo "install_base_done"
+
+  # ---- 1. Install PowerShell modules (Pester, Maester, Microsoft.Graph.Authentication). Logged to /data. ----
+  modules:
+    - |-
+      pwsh -NoProfile -Command '
+        $ErrorActionPreference = "Continue"
+        $ProgressPreference = "SilentlyContinue"
+        Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
+        try { Install-Module Pester -SkipPublisherCheck -Force -Scope CurrentUser -ErrorAction Stop; "Pester OK" } catch { "Pester FAIL: $_" }
+        try { Install-Module Microsoft.Graph.Authentication -Force -Scope CurrentUser -ErrorAction Stop; "Graph OK" } catch { "Graph FAIL: $_" }
+        try { Install-Module Maester -Force -Scope CurrentUser -ErrorAction Stop; "Maester OK" } catch { "Maester FAIL: $_" }
+        Get-Module -ListAvailable Maester,Pester,Microsoft.Graph.Authentication | Select-Object Name,Version | Format-Table -AutoSize | Out-String
+      ' > /data/modules.log 2>&1; echo "MODULES_RC=$?" >> /data/modules.log; cat /data/modules.log
+
+  # ---- 2. Authenticate (app-only client secret) + run Maester full suite. Writes JSON/HTML/MD under /data/maester. ----
+  run_maester:
+    - |-
+      AZURE_CLIENT_ID='${{AZURE_CLIENT_ID}}' AZURE_CLIENT_SECRET='${{AZURE_CLIENT_SECRET}}' AZURE_TENANT_ID='${{AZURE_TENANT_ID}}' pwsh -NoProfile -Command '
+        $ErrorActionPreference = "Stop"
+        $ProgressPreference = "SilentlyContinue"
+        Import-Module Microsoft.Graph.Authentication
+        Import-Module Maester
+        $sec = ConvertTo-SecureString $env:AZURE_CLIENT_SECRET -AsPlainText -Force
+        $cred = New-Object System.Management.Automation.PSCredential($env:AZURE_CLIENT_ID, $sec)
+        Connect-MgGraph -TenantId $env:AZURE_TENANT_ID -ClientSecretCredential $cred -NoWelcome
+        $ctx = Get-MgContext
+        "Connected as AppId=$($ctx.ClientId) Tenant=$($ctx.TenantId) AuthType=$($ctx.AuthType)"
+        "Scopes: $($ctx.Scopes -join ", ")"
+        $ErrorActionPreference = "Continue"
+        # Maester ships its 280+ test .ps1 files inside the module; copy them out to a folder to run.
+        Install-MaesterTests -Path /data/maester-tests
+        Invoke-Maester -Path /data/maester-tests -OutputFolder /data/maester -OutputFolderFileName results -OutputJsonFile /data/maester/results.json -NonInteractive -DisableTelemetry -NoLogo -Verbosity Detailed
+      ' > /data/maester_run.log 2>&1; echo "MAESTER_RC=$?" >> /data/maester_run.log
+    - |-
+      { echo "--- ls -laR /data/maester ---"; ls -laR /data/maester; echo "--- tail maester_run.log ---"; tail -n 40 /data/maester_run.log; } >> /data/maester_run.log 2>&1; echo done
+    # Build a compact summary JSON from the Maester results for assertions + reporting.
+    - |-
+      set +f
+      F=$(find /data/maester -name 'results.json' 2>/dev/null | head -1)
+      [ -n "$F" ] || F=$(find /data/maester -name '*.json' 2>/dev/null | head -1)
+      if [ -n "$F" ]; then
+        jq '{result: .Result, total: (.TotalCount // (.Tests | length)), passed: (.PassedCount // 0), failed: (.FailedCount // 0), skipped: (.SkippedCount // 0), notrun: ([.Tests[]? | select(.Result=="NotRun" or .Result=="Error")] | length), failed_tests: [.Tests[]? | select(.Result=="Failed") | {name: .Name, block: .Block, severity: .Severity}], categories: ([.Tests[]? | .Block] | group_by(.) | map({block: .[0], count: length})) }' "$F" > /data/summary.json 2>/dev/null || echo '{}' > /data/summary.json
+      else
+        echo '{}' > /data/summary.json
+      fi
+      cat /data/summary.json
+
+  # ---- 3. Guard: Maester must have produced results (auth + execution worked). ----
+  verify_results:
+    assertReturnCode: 0
+    setSeverity: 1
+    check:
+      - |-
+        jq -e '(.total // 0) > 0' /data/summary.json >/dev/null
+
+  # ---- 4. Report the counts (always visible in --output). ----
+  counts:
+    assertReturnCode: 0
+    show:
+      - |-
+        jq -r '"Maester result: \(.result // "n/a") | total=\(.total // 0) passed=\(.passed // 0) failed=\(.failed // 0) skipped=\(.skipped // 0)"' /data/summary.json
+
+  # ---- 5. Findings assertion: surface failed tests (does not hard-fail the whole run on expected misconfigs). ----
+  findings:
+    failed_tests:
+      setSeverity: 2
+      assertStdout: False
+      run:
+        - |-
+          jq -c '.failed_tests[]?' /data/summary.json

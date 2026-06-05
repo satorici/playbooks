@@ -1,0 +1,91 @@
+settings:
+  name: "Azure Attack Paths with AzureHound (Entra ID / Azure BloodHound collection)"
+  description: "Collects the Entra ID / Azure tenant graph with AzureHound (the BloodHound data collector) authenticating as an Entra service principal via client secret, and writes the full typed JSON (identities, roles, role assignments, apps, service principals, ownerships, ARM resources) to /data/azurehound.json. A jq analysis layer then summarizes the collection (object counts by kind) and surfaces attack-path-relevant signals without needing neo4j/BloodHound: principals holding privileged directory roles (Global Administrator, Privileged Role Administrator, Application Administrator, etc.), counts of apps / service principals, and owners of privileged objects. All outputs are written under /data (captured by --files)."
+  image: debian
+  files: True
+  cpu: 1024
+  memory: 2048
+  author:
+    - https://github.com/SpecterOps/AzureHound
+  gallery:
+    - https://files.catbox.moe/example.png
+  example: satori run satori://cloud/azurehound.yml -d AZURE_CLIENT_ID=$AZURE_CLIENT_ID -d AZURE_CLIENT_SECRET=$AZURE_CLIENT_SECRET -d AZURE_TENANT_ID=$AZURE_TENANT_ID -d AZURE_SUBSCRIPTION_ID=$AZURE_SUBSCRIPTION_ID --files --report --output
+  redacted:
+    - AZURE_CLIENT_ID
+    - AZURE_CLIENT_SECRET
+    - AZURE_TENANT_ID
+    - AZURE_SUBSCRIPTION_ID
+
+attackpaths:
+  # AzureHound is a single static Go binary. Each command ends with a 0-exit (echo / mkdir / true)
+  # so a single failure does NOT abort the whole step; logs go to /data for debugging via --files.
+  install:
+    - export DEBIAN_FRONTEND=noninteractive; apt-get update >/dev/null 2>&1; apt-get install -qy jq curl unzip ca-certificates >/dev/null 2>&1; mkdir -p /data/out; echo ok
+    - cd /data; curl -fsSL -o /data/ah.zip https://github.com/SpecterOps/AzureHound/releases/download/v2.12.1/AzureHound_v2.12.1_linux_amd64.zip > /data/dl.log 2>&1; echo "DL_RC=$?" >> /data/dl.log; unzip -o /data/ah.zip -d /data >> /data/dl.log 2>&1; chmod +x /data/azurehound 2>/dev/null; /data/azurehound --version >> /data/dl.log 2>&1; echo "VER_RC=$?" >> /data/dl.log; true
+
+  # ---- 1. Collect the tenant graph as the service principal (client-secret auth) ----
+  # Flags (verified against AzureHound v2 config): --app=client-id  --secret=client-secret  --tenant=tenant
+  # Output is {"data":[{"kind":"AZ...","data":{...}}, ...], "meta":{...}}
+  collect:
+    - /data/azurehound --app ${{AZURE_CLIENT_ID}} --secret ${{AZURE_CLIENT_SECRET}} --tenant ${{AZURE_TENANT_ID}} list -o /data/azurehound.json > /data/collect.log 2>&1; echo "COLLECT_RC=$?" >> /data/collect.log; { echo "--- ls -laR /data ---"; ls -laR /data; echo "--- head azurehound.json ---"; head -c 2000 /data/azurehound.json; } >> /data/collect.log 2>&1; true
+
+  # ---- 2. Object counts by kind ----
+  counts:
+    - |-
+      set +f; jq '[.data[].kind] | group_by(.) | map({kind: .[0], count: length}) | sort_by(-.count)' /data/azurehound.json > /data/out/counts.json 2>/data/out/counts.err || echo '[]' > /data/out/counts.json
+    - "[ -s /data/out/counts.json ] || echo '[]' > /data/out/counts.json"
+
+  # ---- 3. Privileged directory-role holders ----
+  # AzureHound emits one AZRoleAssignment object per directory role; the ACTUAL members are in
+  # .data.roleAssignments[] (each has .principalId + .roleDefinitionId). The roleDefinitionId is
+  # the directory-role template GUID, which equals AZRole.data.id / .templateId, so we build a
+  # GUID->displayName map from the AZRole objects and resolve each holder's role name. We then
+  # keep only the high-impact Entra admin roles (by displayName regex). Roles with no active
+  # holders are dropped (no .roleAssignments entries), so this reports REAL privileged principals.
+  privileged_roles:
+    - |-
+      set +f
+      jq '
+        "(?i)(Global Administrator|Privileged Role Administrator|Application Administrator|Cloud Application Administrator|Privileged Authentication Administrator|Authentication Administrator|User Administrator|Helpdesk Administrator|Password Administrator|Security Administrator|Hybrid Identity Administrator|Intune Administrator|Exchange Administrator|SharePoint Administrator|Directory Synchronization|Domain Name Administrator|Partner Tier2 Support|Conditional Access Administrator)" as $privre
+        # map: directory role id / templateId -> displayName
+        | (reduce (.data[] | select(.kind=="AZRole") | .data) as $r ({}; .[$r.id // empty] = $r.displayName | .[$r.templateId // empty] = $r.displayName)) as $rolename
+        | [ .data[] | select(.kind=="AZRoleAssignment") | .data | (.roleAssignments // [])[]
+            | ($rolename[.roleDefinitionId] // .roleDefinitionId) as $rname
+            | {role: $rname, principalId: .principalId, scope: (.directoryScopeId // "/")}
+          ]
+        | map(select(.role | test($privre)))
+        | group_by(.role)
+        | map({role: .[0].role, holders: ([.[].principalId] | unique | length), principalIds: ([.[].principalId] | unique)})
+        | sort_by(-.holders)
+      ' /data/azurehound.json > /data/out/privileged_roles.json 2>/data/out/privroles.err || echo '[]' > /data/out/privileged_roles.json
+    - "[ -s /data/out/privileged_roles.json ] || echo '[]' > /data/out/privileged_roles.json"
+
+  # ---- 4. Owners of privileged objects (app / SP / group ownerships are escalation-relevant) ----
+  ownerships:
+    - |-
+      set +f; jq '[.data[] | select(.kind=="AZAppOwner" or .kind=="AZServicePrincipalOwner" or .kind=="AZGroupOwner")] | group_by(.kind) | map({kind: .[0].kind, count: length})' /data/azurehound.json > /data/out/ownerships.json 2>/data/out/own.err || echo '[]' > /data/out/ownerships.json
+    - "[ -s /data/out/ownerships.json ] || echo '[]' > /data/out/ownerships.json"
+
+  # ---- 5. Merge summary ----
+  merge:
+    - |-
+      jq -n --slurpfile c /data/out/counts.json --slurpfile p /data/out/privileged_roles.json --slurpfile o /data/out/ownerships.json \
+        '{total_objects: ([$c[0][]?.count] | add // 0), counts_by_kind: ($c[0] // []), privileged_role_holders: ($p[0] // []), privileged_object_owners: ($o[0] // [])}' \
+        > /data/out/summary.json; cat /data/out/summary.json
+
+  # ---- 6. Guard: fail if AzureHound collected nothing (auth failed / perms missing) ----
+  verify_data:
+    assertReturnCode: 0
+    setSeverity: 1
+    check:
+      - |-
+        jq -e '.total_objects > 0' /data/out/summary.json >/dev/null
+
+  # ---- 7. Attack-path assertion: surface any holders of privileged directory roles ----
+  findings:
+    privileged_role_holders:
+      setSeverity: 2
+      assertStdout: False
+      run:
+        - |-
+          jq -c '.privileged_role_holders[]' /data/out/summary.json

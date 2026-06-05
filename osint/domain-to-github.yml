@@ -2,6 +2,8 @@ settings:
   name: "Domain to GitHub account"
   description: "Find the most likely main GitHub org/account for a domain"
   image: debian:stable-slim
+  author:
+    - https://github.com/satorici
   gallery:
     - https://files.catbox.moe/poush8.png
   example: satori run satori://osint/domain-to-github.yml -d DOMAIN=satori.ci --report --output
@@ -14,7 +16,7 @@ find_account:
     - |
       DOMAIN="${{DOMAIN}}"
       CORE="${DOMAIN%%.*}"
-      FLAT="$(echo "$DOMAIN" | tr -d '.')"
+      FLAT="$(echo "$CORE" | tr -cd 'a-zA-Z0-9')"
       if [ -n "$GITHUB_TOKEN" ]; then
         gh(){ curl -s -H "Authorization: Bearer $GITHUB_TOKEN" -H "Accept: application/vnd.github+json" "$@"; }
       else
@@ -23,7 +25,7 @@ find_account:
       norm(){ echo "$1" | sed -E 's#https?://##; s#^www\.##; s#/.*$##' | tr 'A-Z' 'a-z'; }
 
       echo "### Resolving '$DOMAIN' (core='$CORE')"
-      CANDS="$( { gh "https://api.github.com/search/users?q=${CORE}&per_page=20" | jq -r '.items[]?.login' 2>/dev/null; echo "$CORE"; echo "$FLAT"; } | sort -u )"
+      CANDS="$( { gh "https://api.github.com/search/users?q=${CORE}&per_page=20" | jq -r '.items[]?.login' 2>/dev/null; gh "https://api.github.com/search/users?q=${FLAT}&per_page=20" | jq -r '.items[]?.login' 2>/dev/null; echo "$CORE"; echo "$FLAT"; } | sort -u )"
       BEST=""; BEST_SCORE=-1
 
       printf "%-22s %-14s %-7s %s\n" "LOGIN" "TYPE" "SCORE" "WEBSITE"
@@ -52,6 +54,8 @@ find_account:
       sort -t"$(printf '\t')" -k1,1 -k2,2 "$ROWS" | cut -f3-
       rm -f "$ROWS"
       echo "BEST_MATCH=${BEST} (score=${BEST_SCORE}) https://github.com/${BEST}"
+      # Producer artifact: clean, machine-readable result for downstream/imported playbooks
+      mkdir -p /tmp/satori/out && printf '%s\n' "$BEST" > /tmp/satori/out/github-org
 
   resolved:
     setOutput: find_account.run

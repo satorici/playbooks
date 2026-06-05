@@ -1,0 +1,47 @@
+settings:
+  name: "Site email spider: extract emails by crawling a website"
+  description: "Lightweight crawler that fetches a target website (homepage internal links + common pages like /contact /privacy /terms + sitemap) and extracts email addresses with grep. Filters results by the domain core label so it keeps the organisation emails (e.g. both satori.ci and satori-ci.com) while dropping theme/placeholder junk (example.com, wordpress@, etc.). No API key, unauthenticated. Builds a phishing-exercise target roster from a company public site."
+  image: debian:stable-slim
+  timeout: 300
+  author:
+    - https://github.com/satorici
+  example: satori run satori://email/spider.yml -d DOMAIN="satori.ci" --report --output
+
+spider:
+  install:
+    - export DEBIAN_FRONTEND=noninteractive; apt-get update -qq && apt-get install -qy --no-install-recommends curl ca-certificates >/dev/null 2>&1
+
+  crawl:
+    assertStdoutContains: "@"
+    run:
+      - |
+        DOMAIN="${{DOMAIN}}"
+        CORE="$(printf '%s' "${DOMAIN%%.*}" | tr -cd 'a-zA-Z0-9' | tr 'A-Z' 'a-z')"
+        UA="Mozilla/5.0 (compatible; SatoriRecon/1.0)"
+
+        : > /tmp/urls.txt
+        # 1) common pages on apex and www
+        for p in "" /contact /contact-us /about /about-us /team /company /careers /privacy /privacy-policy /terms /terms-of-service /aup /legal /support /security /imprint /impressum; do
+          echo "https://$DOMAIN$p" >> /tmp/urls.txt
+          echo "https://www.$DOMAIN$p" >> /tmp/urls.txt
+        done
+        # 2) sitemap entries
+        for sm in /sitemap.xml /sitemap_index.xml /sitemap-index.xml; do
+          curl -sL -A "$UA" --max-time 15 "https://$DOMAIN$sm" 2>/dev/null | grep -oiE 'https?://[^< "]+' | grep -i "$DOMAIN"
+        done >> /tmp/urls.txt
+        # 3) internal links from the homepage
+        curl -sL -A "$UA" --max-time 20 "https://$DOMAIN" 2>/dev/null > /tmp/home.html
+        grep -oiE 'href="[^"]+"' /tmp/home.html | sed -e 's/href="//' -e 's/"$//' | while read -r u; do
+          case "$u" in
+            /*) echo "https://$DOMAIN$u" ;;
+            https://$DOMAIN*|http://$DOMAIN*|https://www.$DOMAIN*) echo "$u" ;;
+          esac
+        done >> /tmp/urls.txt
+
+        # dedup, cap, fetch everything
+        grep -iE '^https?://' /tmp/urls.txt | sort -u | head -60 > /tmp/urls2.txt
+        : > /tmp/pages.txt
+        while read -r u; do curl -sL -A "$UA" --max-time 12 "$u" 2>/dev/null >> /tmp/pages.txt; done < /tmp/urls2.txt
+
+        # extract emails, keep only the ones on the org domain (core label), output addresses only
+        grep -aoiE '[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}' /tmp/pages.txt | tr 'A-Z' 'a-z' | grep -iE "@[a-z0-9.-]*${CORE}[a-z0-9.-]*\.[a-z]{2,}$" | sort -u

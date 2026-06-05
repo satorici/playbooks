@@ -1,0 +1,51 @@
+settings:
+  name: "Domain to GitHub emails"
+  description: "Given only a DOMAIN, resolves its most likely GitHub org and harvests committer/author emails from the org public repositories, printing ONLY the email addresses on the organisation domain (one per line). Self-contained (resolves the org inline, no imports). No API key required; runs unauthenticated using the Satori container IP."
+  image: debian:stable-slim
+  author:
+    - https://github.com/satorici
+  gallery:
+    - https://files.catbox.moe/poush8.png
+  example: satori run satori://email/github.yml -d DOMAIN=satori-ci.com --report --output
+
+github:
+  install:
+    - export DEBIAN_FRONTEND=noninteractive; apt-get update -qq && apt-get install -qy --no-install-recommends curl jq ca-certificates >/dev/null 2>&1
+
+  harvest:
+    assertStdoutContains: "@"
+    run:
+      - |
+        DOMAIN="${{DOMAIN}}"
+        CORE="${DOMAIN%%.*}"
+        FLAT="$(echo "$CORE" | tr -cd 'a-zA-Z0-9')"
+        CY="$(echo "$FLAT" | tr 'A-Z' 'a-z')"
+        API="https://api.github.com"
+        gh(){ curl -s -H "Accept: application/vnd.github+json" "$@"; }
+        norm(){ echo "$1" | sed -E 's#https?://##; s#^www\.##; s#/.*$##' | tr 'A-Z' 'a-z'; }
+
+        # resolve the most likely GitHub org for the domain
+        CANDS="$( { gh "$API/search/users?q=${CORE}&per_page=20" | jq -r '.items[]?.login' 2>/dev/null; gh "$API/search/users?q=${FLAT}&per_page=20" | jq -r '.items[]?.login' 2>/dev/null; echo "$CORE"; echo "$FLAT"; } | sort -u )"
+        BEST=""; BEST_SCORE=-1
+        for L in $CANDS; do
+          info="$(gh "$API/users/${L}")"
+          [ "$(echo "$info" | jq -r '.login // empty' 2>/dev/null)" = "" ] && continue
+          type="$(echo "$info" | jq -r '.type' 2>/dev/null)"
+          blog="$(echo "$info" | jq -r '.blog // ""' 2>/dev/null)"
+          foll="$(echo "$info" | jq -r '.followers // 0' 2>/dev/null)"
+          nblog="$(norm "$blog")"; llog="$(echo "$L" | tr 'A-Z' 'a-z')"
+          score=0
+          [ "$nblog" = "$DOMAIN" ] && score=$((score+100))
+          echo "$nblog" | grep -qi "$CORE" && score=$((score+30))
+          { [ "$llog" = "$CORE" ] || [ "$llog" = "$FLAT" ]; } && score=$((score+40))
+          [ "$type" = "Organization" ] && score=$((score+10))
+          score=$((score + foll/100))
+          [ "$score" -gt "$BEST_SCORE" ] && { BEST_SCORE=$score; BEST="$L"; }
+        done
+        [ -z "$BEST" ] && exit 0
+        ORG="$BEST"
+
+        # harvest commit emails, print ONLY the ones on the org domain
+        for R in $(gh "$API/orgs/$ORG/repos?per_page=30&sort=pushed&type=public" | jq -r '.[]?.name' 2>/dev/null); do
+          gh "$API/repos/$ORG/$R/commits?per_page=100" | jq -r '.[]?.commit | (.author.email, .committer.email)' 2>/dev/null
+        done | tr 'A-Z' 'a-z' | grep -iE "@[a-z0-9.-]*${CY}[a-z0-9.-]*\.[a-z]{2,}$" | sort -u

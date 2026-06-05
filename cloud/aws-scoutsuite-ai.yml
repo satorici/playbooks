@@ -1,0 +1,56 @@
+settings:
+  name: "Scoutsuite + AI: cloud audit summarized by Gemini Flash"
+  description: "Runs ScoutSuite (read-only) against AWS, verifies the scan actually produced data, asserts on flagged danger/warning findings, and uses Google Gemini Flash (via OpenRouter) to summarize the real findings into a markdown table. The AI step is grounded: it summarizes only the extracted findings JSON and is instructed never to invent resources."
+  image: debian
+  files: True
+  author:
+    - https://github.com/nccgroup
+  example: satori run satori://cloud/aws-scoutsuite-ai.yml -d AWS_ACCESS_KEY=$AWS_ACCESS_KEY -d AWS_SECRET_KEY=$AWS_SECRET_KEY -d OPENROUTER=$OPENROUTER --files --report --output
+  redacted:
+    - AWS_ACCESS_KEY
+    - AWS_SECRET_KEY
+    - OPENROUTER
+
+scout:
+  install:
+    - apt-get update >>/dev/null; apt-get install -qy python3 python3-pip jq curl >>/dev/null
+    - pip3 install scoutsuite -q --disable-pip-version-check --break-system-packages
+
+  run:
+    - cd /tmp; scout aws --no-browser --access-key-id ${{AWS_ACCESS_KEY}} --secret-access-key ${{AWS_SECRET_KEY}}
+
+  extract:
+    - |-
+      set +f; tail -n +2 /tmp/scoutsuite-report/scoutsuite-results/scoutsuite_results_aws-*.js | jq -c '[.services | to_entries[] | .key as $svc | (.value.findings // {}) | to_entries[] | .value | select(.flagged_items > 0) | {service: $svc, level: .level, finding: .description, flagged: .flagged_items}]' > /tmp/findings.json
+
+  verify_scan:
+    assertReturnCode: 0
+    setSeverity: 1
+    check:
+      - |-
+        set +f; tail -n +2 /tmp/scoutsuite-report/scoutsuite-results/scoutsuite_results_aws-*.js | jq -e '(.services | length) > 0 and ([.services[].findings[]?] | length) > 0' >/dev/null
+
+  analysis:
+    danger:
+      setSeverity: 1
+      assertStdout: False
+      run:
+        - |-
+          jq -c '.[] | select(.level == "danger")' /tmp/findings.json
+    warning:
+      setSeverity: 3
+      assertStdout: False
+      run:
+        - |-
+          jq -c '.[] | select(.level == "warning")' /tmp/findings.json
+
+  summary:
+    setOutput: gemini_flash.report
+    gemini_flash:
+      assertReturnCode: 0
+      build:
+        - |-
+          jq -n --rawfile f /tmp/findings.json --arg p "You are a cloud security analyst. Using ONLY the JSON array of ScoutSuite findings provided below, produce a markdown table with columns: Service, Severity, Finding, Flagged items, sorted by severity (danger first). Do NOT invent, infer or add any resource, account, ARN, bucket or finding that is not present in the JSON. If the array is empty output exactly: No flagged findings. After the table add one line with an overall risk assessment. Output only the table and that line. Findings: " '{model: "google/gemini-2.5-flash", temperature: 0, messages: [{role: "user", content: ($p + $f)}]}' > /tmp/payload.json
+      report:
+        - |-
+          curl -s https://openrouter.ai/api/v1/chat/completions -H "Authorization: Bearer ${{OPENROUTER}}" -H "Content-Type: application/json" -d @/tmp/payload.json -o /tmp/resp.json; jq -e -r '.choices[0].message.content' /tmp/resp.json

@@ -1,11 +1,11 @@
 settings:
-  name: "Scoutsuite: Multi-cloud security-auditing tool"
+  name: "AWS ScoutSuite: cloud security-auditing tool"
   description: "ScoutSuite is a multi-cloud security auditing tool that identifies and analyze potential misconfigurations and vulnerabilities across various cloud environments, including AWS, Azure, GCP, and more. It uses read-only credentials to collect configuration data, then generates a comprehensive report highlighting key security findings and suggesting remediation steps. Built for simplicity and scalability, ScoutSuite offers an agentless approach that allows security teams to efficiently evaluate their cloud infrastructure without the complexity of additional software or persistent agents. Its web-based interactive reports provide a clear overview of risk areas, enabling faster and more informed decision-making to strengthen overall cloud security posture."
   image: debian
   files: True
   author:
     - https://github.com/nccgroup
-  example: satori run satori://cloud/scoutsuite.yml -d AWS_ACCESS_KEY=TBC -d AWS_SECRET_KEY=TBC --files --report --output
+  example: satori run satori://cloud/aws-scoutsuite.yml -d AWS_ACCESS_KEY=TBC -d AWS_SECRET_KEY=TBC --files --report --output
   redacted:
     - AWS_ACCESS_KEY
     - AWS_SECRET_KEY

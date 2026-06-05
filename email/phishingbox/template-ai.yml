@@ -1,0 +1,207 @@
+settings:
+  name: "AI phishing template generator (authorized simulation)"
+  description: "For AUTHORIZED phishing-simulation / security-awareness exercises only. Spiders the target organization public website (text + brand assets: logo, theme color, palette), builds a recon context, and asks an LLM (via OpenRouter) to dynamically pick the most credible lure angle for that specific company and generate a brand-matched phishing email (subject + self-contained HTML body with the company logo/colors and a single hook link). Writes artifacts (subject/body/from) for chaining into create-template, and emits a base64 preview of the body. Impersonates the target DOMAIN itself (sender at @DOMAIN)."
+  image: debian
+  timeout: 400
+  author:
+    - https://github.com/satorici
+  example: satori run satori://email/phishingbox/template-ai.yml -d DOMAIN="quorumcyber.com" -d OPENROUTER="$OPENROUTER" --output
+  # satori run ./email/phishingbox/template-ai.yml -d DOMAIN="quorumcyber.com" -d OPENROUTER="$OPENROUTER" --output > /tmp/r.txt; awk '/^BODY_B64_START$/{f=1;next}/^BODY_B64_END$/{f=0}f' /tmp/r.txt | tr -d ' ' | base64 -d > /tmp/p.html && open /tmp/p.html
+  redacted:
+    - OPENROUTER
+
+ai_phish:
+  install:
+    - export DEBIAN_FRONTEND=noninteractive; apt-get update -qq && apt-get install -qy --no-install-recommends curl jq lynx file ca-certificates >/dev/null 2>&1
+
+  spider:
+    run:
+      - |
+        DOMAIN="${{DOMAIN}}"
+        UA="Mozilla/5.0 (compatible; SatoriRecon/1.0)"
+        : > /tmp/recon.txt
+        echo "### Recon for $DOMAIN" >> /tmp/recon.txt
+
+        curl -sL -A "$UA" --max-time 25 "https://www.$DOMAIN" > /tmp/home_www.html 2>/dev/null
+        curl -sL -A "$UA" --max-time 25 "https://$DOMAIN" > /tmp/home_root.html 2>/dev/null
+        WB=$(wc -c < /tmp/home_www.html 2>/dev/null || echo 0); RB=$(wc -c < /tmp/home_root.html 2>/dev/null || echo 0)
+        if [ "${WB:-0}" -ge "${RB:-0}" ]; then cp /tmp/home_www.html /tmp/home.html; else cp /tmp/home_root.html /tmp/home.html; fi
+
+        for U in "https://$DOMAIN" "https://www.$DOMAIN" "https://$DOMAIN/about" "https://$DOMAIN/about-us" "https://$DOMAIN/company" "https://$DOMAIN/careers" "https://$DOMAIN/contact" "https://$DOMAIN/login"; do
+          TXT="$(curl -sL -A "$UA" --max-time 20 "$U" 2>/dev/null | lynx -stdin -dump -nolist -width=130 2>/dev/null)"
+          if [ -n "$TXT" ]; then
+            echo "" >> /tmp/recon.txt
+            echo "----- $U -----" >> /tmp/recon.txt
+            printf '%s\n' "$TXT" | sed -e 's/[[:space:]]\{2,\}/ /g' | grep -avE '^\s*$' >> /tmp/recon.txt
+          fi
+        done
+        head -c 7000 /tmp/recon.txt > /tmp/recon_capped.txt && mv /tmp/recon_capped.txt /tmp/recon.txt
+
+        # --- brand assets (double-quoted attributes assumed) ---
+        absurl() {
+          u="$1"; [ -z "$u" ] && return
+          case "$u" in
+            http://*|https://*) echo "$u";;
+            //*) echo "https:$u";;
+            /*) echo "https://$DOMAIN$u";;
+            *) echo "https://$DOMAIN/$u";;
+          esac
+        }
+        THEME="$(grep -oiE '<meta[^>]*theme-color[^>]*>' /tmp/home.html | grep -oiE '#[0-9a-fA-F]{3,8}' | head -1)"
+        # logo candidates in priority order: <img logo/brand>, og:image, twitter:image, apple-touch-icon, icon
+        : > /tmp/cands.txt
+        grep -oiE '<img[^>]*(logo|brand)[^>]*>' /tmp/home.html | grep -oiE '(src|data-src|data-lazy-src)="[^"]+"' | sed -E -e 's/^[a-zA-Z-]+="//' -e 's/"$//' >> /tmp/cands.txt
+        grep -oiE '<meta[^>]*og:image[^>]*>' /tmp/home.html | grep -oiE 'content="[^"]+"' | sed -e 's/content="//' -e 's/"$//' >> /tmp/cands.txt
+        grep -oiE '<meta[^>]*twitter:image[^>]*>' /tmp/home.html | grep -oiE 'content="[^"]+"' | sed -e 's/content="//' -e 's/"$//' >> /tmp/cands.txt
+        grep -oiE '<link[^>]*apple-touch-icon[^>]*>' /tmp/home.html | grep -oiE 'href="[^"]+"' | sed -e 's/href="//' -e 's/"$//' >> /tmp/cands.txt
+        grep -oiE '<link[^>]*rel="[^"]*icon[^"]*"[^>]*>' /tmp/home.html | grep -oiE 'href="[^"]+"' | sed -e 's/href="//' -e 's/"$//' >> /tmp/cands.txt
+        # keep only the first candidate that actually resolves to a 200 image
+        LOGO_OK=""
+        while IFS= read -r cand; do
+          [ -z "$cand" ] && continue
+          full="$(absurl "$cand")"; [ -z "$full" ] && continue
+          curl -sL -A "$UA" --max-time 12 "$full" -o /tmp/cand.img 2>/dev/null || continue
+          [ -s /tmp/cand.img ] || continue
+          finfo="$(file -b /tmp/cand.img 2>/dev/null)"
+          case "$finfo" in
+            *SVG*) LOGO_OK="$full"; cp /tmp/cand.img /tmp/logo.img; break;;
+            PNG\ image*|JPEG\ image*|GIF\ image*|*Web/P*)
+              dims="$(printf '%s' "$finfo" | grep -oiE '[0-9]+ ?x ?[0-9]+' | head -1 | tr -d ' ')"
+              w="${dims%x*}"; hh="${dims#*x}"
+              # accept only logo-sized images: not a banner/og:image (e.g. 1200x630) and not a tiny favicon (e.g. 32x32)
+              if [ -n "$w" ] && [ -n "$hh" ] && [ "$w" -ge 64 ] && [ "$w" -le 600 ] && [ "$hh" -le 400 ]; then LOGO_OK="$full"; cp /tmp/cand.img /tmp/logo.img; break; fi
+              ;;
+          esac
+        done < /tmp/cands.txt
+        echo "logo validation: ${LOGO_OK:-no logo-sized image found among $(wc -l < /tmp/cands.txt | tr -d ' ') candidates}"
+        : > /tmp/colors.txt
+        grep -oiE '#[0-9a-fA-F]{6}' /tmp/home.html >> /tmp/colors.txt 2>/dev/null
+        for C in $(grep -oiE '<link[^>]*stylesheet[^>]*>' /tmp/home.html | grep -oiE 'href="[^"]+"' | sed -e 's/href="//' -e 's/"$//' | head -3); do
+          curl -sL -A "$UA" --max-time 12 "$(absurl "$C")" 2>/dev/null | grep -oiE '#[0-9a-fA-F]{6}' >> /tmp/colors.txt
+        done
+        GREY='#(ffffff|000000|fefefe|fafafa|f8f8f8|f5f5f5|f0f0f0|eeeeee|e5e5e5|e0e0e0|cccccc|dddddd|bbbbbb|aaaaaa|999999|888888|777777|666666|555555|444444|333333|222222|111111)'
+        COLORS="$(tr 'A-Z' 'a-z' < /tmp/colors.txt | grep -viE "$GREY" | sort | uniq -c | sort -rn | awk '{print $2}' | head -5 | tr '\n' ' ')"
+        # the logo itself is the most authoritative brand palette (parse hex fills from an SVG logo)
+        LOGO_COLORS=""
+        if [ -n "$LOGO_OK" ] && file -b /tmp/logo.img 2>/dev/null | grep -qi svg; then
+          LOGO_COLORS="$(grep -oiE '#[0-9a-fA-F]{6}' /tmp/logo.img | tr 'A-Z' 'a-z' | grep -viE "$GREY" | sort | uniq -c | sort -rn | awk '{print $2}' | head -3 | tr '\n' ' ')"
+        fi
+        # brand_colors leads with logo colors (deduped), then site CSS colors
+        BRANDCOLORS="$(printf '%s %s' "$LOGO_COLORS" "$COLORS" | tr ' ' '\n' | awk 'NF && !seen[$0]++' | head -6 | tr '\n' ' ')"
+
+        # choose a header background so the logo never blends in: dark header for light/reverse logos, white otherwise
+        lum() { h="${1#\#}"; [ "${#h}" -eq 6 ] || { echo 255; return; }; r=$((0x$(printf %s "$h" | cut -c1-2))); g=$((0x$(printf %s "$h" | cut -c3-4))); b=$((0x$(printf %s "$h" | cut -c5-6))); echo $(((299*r + 587*g + 114*b) / 1000)); }
+        HEADER_BG="#ffffff"; LOGO_TONE="dark"
+        if [ -n "$LOGO_OK" ]; then
+          LIGHT=0
+          case "$LOGO_OK" in *reverse*|*white*|*inverse*|*light*|*-rev*|*_rev*) LIGHT=1;; esac
+          # a logo whose dominant fill is white (e.g. white wordmark + colored icon) is a reverse logo and needs a dark header
+          if [ "$LIGHT" -eq 0 ] && file -b /tmp/logo.img 2>/dev/null | grep -qi svg; then
+            WF=$(grep -oiE 'fill="?(white|#fff(fff)?)' /tmp/logo.img | wc -l | tr -d ' ')
+            CF=$(grep -oiE 'fill="?#[0-9a-fA-F]{6}' /tmp/logo.img | grep -viE 'ffffff' | wc -l | tr -d ' ')
+            [ "${WF:-0}" -ge 1 ] && [ "${WF:-0}" -ge "${CF:-0}" ] && LIGHT=1
+          fi
+          if [ "$LIGHT" -eq 0 ] && [ -n "$LOGO_COLORS" ]; then
+            SUM=0; N=0
+            for c in $LOGO_COLORS; do SUM=$((SUM + $(lum "$c"))); N=$((N + 1)); done
+            [ "$N" -gt 0 ] && [ $((SUM / N)) -gt 180 ] && LIGHT=1
+          fi
+          if [ "$LIGHT" -eq 1 ]; then
+            LOGO_TONE="light"
+            DARK="$(for c in $LOGO_COLORS $BRANDCOLORS; do [ -n "$c" ] && echo "$(lum "$c") $c"; done | sort -n | awk 'NR==1{print $2}')"
+            if [ -n "$DARK" ] && [ "$(lum "$DARK")" -le 100 ]; then HEADER_BG="$DARK"; else HEADER_BG="#111827"; fi
+          fi
+        fi
+        {
+          echo ""
+          echo "----- BRAND ASSETS -----"
+          [ -n "$LOGO_OK" ] && echo "logo_url: $LOGO_OK"
+          [ -n "$LOGO_COLORS" ] && echo "logo_colors: $LOGO_COLORS"
+          [ -n "$THEME" ]  && echo "theme_color: $THEME"
+          [ -n "$BRANDCOLORS" ] && echo "brand_colors: $BRANDCOLORS"
+          [ -n "$LOGO_OK" ] && echo "logo_tone: $LOGO_TONE"
+          echo "header_bg: $HEADER_BG"
+        } >> /tmp/recon.txt
+
+        echo "Recon bytes: $(wc -c < /tmp/recon.txt)"
+        echo "--- brand assets ---"; sed -n '/BRAND ASSETS/,$p' /tmp/recon.txt
+
+  generate:
+    assertStdoutContains: "GENERATED_OK"
+    run:
+      - |
+        DOMAIN="${{DOMAIN}}"
+        MODEL="google/gemini-2.5-flash"
+        KEY="${{OPENROUTER}}"
+        CTX="$(cat /tmp/recon.txt 2>/dev/null)"
+        YEAR="$(date +%Y)"
+        DEADLINE="$(date -d '+3 days' '+%A, %B %-d, %Y' 2>/dev/null || date '+%Y-%m-%d')"
+
+        SYS="You produce ONE email for an AUTHORIZED phishing-simulation / security-awareness exercise run by the organization that owns the target domain (sanctioned red-team testing in PhishingBox). Craft the single most credible phishing lure email tailored to THIS company using the provided context.
+        Rules:
+        - Produce EXACTLY ONE email. Do NOT offer multiple options, ideas, alternatives, analysis, commentary, preamble, or closing remarks.
+        - Choose the lure angle that best fits this company (IT/security alert, password/MFA reset, shared document, HR/payroll, VPN, invoice, helpdesk, etc.). Do not default blindly to password reset.
+        - Impersonate a plausible internal sender; the from_email MUST be at @$DOMAIN. Reference the company by name and its real products/services from the context.
+        - Give a realistic, low-pressure reason to click ONE link. Set a concrete deadline of $DEADLINE (about three days away). Keep the tone professional and routine; AVOID aggressive scare tactics such as 24-hour ultimatums, threats of account suspension, or warnings about being unable to work.
+        - Brand match: keep a white email body background. Place the logo at the top inside a header whose background is EXACTLY the header_bg value from BRAND ASSETS (it was chosen to contrast the logo so it never blends in: white for dark logos, dark for light/reverse logos). Use the primary brand color (first of logo_colors, else theme_color, else first of brand_colors) ONLY for the call-to-action button and thin accents (a divider line or link color) - do not tint the area behind the logo with anything other than header_bg. Clean corporate layout, inline CSS; the body is a COMPLETE self-contained HTML document. If AND ONLY IF a logo_url is present, place it via <img src=\"THE EXACT logo_url\" style=\"width:160px;height:auto;display:block;margin:0 auto\"> copied verbatim on header_bg - the logo MUST be small (about 150-180px wide), never full-width or a background. NEVER invent or guess an image URL; if no logo_url, use a text header with the company name in the brand color.
+        - The CTA MUST be an HTML anchor whose href is exactly %LINK%.
+        - For any copyright or date reference, use the year $YEAR. Never hardcode an older year.
+        OUTPUT FORMAT: reply with ONLY the block below. It MUST start with @@LURE@@ and end with @@END@@. No JSON, no markdown, no code fences, no text before or after. Follow this exact shape (Acme values are placeholders to replace):
+        @@LURE@@
+        MFA re-enrollment
+        @@RATIONALE@@
+        Security-focused firm; an MFA reset notice is highly believable.
+        @@FROM_NAME@@
+        Acme IT Security
+        @@FROM_EMAIL@@
+        it-security@acme.com
+        @@SUBJECT@@
+        Action required: re-enroll your MFA
+        @@BODY@@
+        <!DOCTYPE html><html><body><div style=\"background:#0a3d62;padding:16px;color:#fff\">Acme</div><p>Dear team, please <a href=\"%LINK%\">re-enroll now</a>.</p></body></html>
+        @@END@@"
+
+        USR="Target domain: $DOMAIN
+
+        Company context (for tailoring the lure):
+        $CTX"
+
+        PAYLOAD="$(jq -n --arg m "$MODEL" --arg s "$SYS" --arg u "$USR" \
+          '{model:$m, temperature:0.4, messages:[{role:"system",content:$s},{role:"user",content:$u}]}')"
+
+        if [ -z "$KEY" ]; then echo "error: OPENROUTER API key is empty. Run with -d OPENROUTER=\"\$OPENROUTER\" and make sure the env var is set in your shell."; exit 1; fi
+
+        get1() { awk -v t="$1" 'index($0,"@@" t "@@"){getline; print; exit}' /tmp/llm.txt; }
+        mkdir -p /tmp/satori/out
+        OKGEN=0; ATT=0
+        while [ "$ATT" -lt 3 ]; do
+          ATT=$((ATT+1))
+          RESP="$(curl -s https://openrouter.ai/api/v1/chat/completions -H "Authorization: Bearer $KEY" -H "Content-Type: application/json" --data "$PAYLOAD")"
+          CONTENT="$(printf '%s' "$RESP" | jq -r '.choices[0].message.content // empty')"
+          printf '%s' "$CONTENT" > /tmp/llm.txt
+          awk '/@@BODY@@/{f=1;next} /@@END@@/{f=0} f' /tmp/llm.txt > /tmp/satori/out/tpl_body
+          if [ -s /tmp/satori/out/tpl_body ] && grep -q '%LINK%' /tmp/satori/out/tpl_body; then OKGEN=1; break; fi
+          echo "attempt $ATT: model did not return the delimited template, retrying..."
+        done
+        if [ "$OKGEN" != 1 ]; then echo "error: generation failed after $ATT attempts"; echo "last API response:"; printf '%s' "$RESP" | head -c 800; exit 1; fi
+
+        # normalize any stale copyright/date year to the current year
+        sed -i -E "s/(©|&copy;|&#169;|[Cc]opyright)([[:space:]]*)((19|20)[0-9]{2})/\1\2$YEAR/g" /tmp/satori/out/tpl_body
+
+        get1 LURE       > /tmp/satori/out/tpl_lure
+        get1 FROM_NAME  > /tmp/satori/out/tpl_from_name
+        get1 FROM_EMAIL > /tmp/satori/out/tpl_from_email
+        get1 SUBJECT    > /tmp/satori/out/tpl_subject
+        get1 RATIONALE  > /tmp/satori/out/tpl_rationale
+
+        echo "=== Generated phishing template for $DOMAIN ==="
+        echo "LURE_ANGLE: $(cat /tmp/satori/out/tpl_lure)"
+        echo "RATIONALE: $(cat /tmp/satori/out/tpl_rationale)"
+        echo "FROM: $(cat /tmp/satori/out/tpl_from_name) <$(cat /tmp/satori/out/tpl_from_email)>"
+        echo "SUBJECT: $(cat /tmp/satori/out/tpl_subject)"
+        echo "BODY bytes: $(wc -c < /tmp/satori/out/tpl_body)"
+        echo "GENERATED_OK angle=$(cat /tmp/satori/out/tpl_lure)"
+
+  preview:
+    run:
+      - echo BODY_B64_START; base64 /tmp/satori/out/tpl_body; echo BODY_B64_END

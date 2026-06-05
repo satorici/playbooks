@@ -10,7 +10,7 @@ settings:
   redacted:
     - AWS_ACCESS_KEY
     - AWS_SECRET_KEY
-  example: satori run satori://cloud/prowler.yml -d AWS_ACCESS_KEY=key -d AWS_SECRET_KEY=secret --report --output
+  example: satori run satori://cloud/aws-prowler.yml -d AWS_ACCESS_KEY=key -d AWS_SECRET_KEY=secret --report --output
 
 prowler:
   install:

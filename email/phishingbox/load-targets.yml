@@ -1,0 +1,55 @@
+settings:
+  name: "PhishingBox: create group and load targets"
+  description: "Creates a PhishingBox group (api/v2/group/create) and bulk-loads recipients into it (api/v2/target/addBatch), parsing first/last name from {first}.{last}@domain email patterns. Verifies the loaded targets (api/v2/group/targets). Feeds a phishing exercise whose test is then created/launched from the PhishingBox portal (the API does not create or launch tests). Emails are passed via -d EMAILS or read from a shared artifact written by an upstream harvester."
+  image: debian:stable-slim
+  author:
+    - https://github.com/satorici
+  example: satori run satori://email/phishingbox/load-targets.yml -d PHISHINGBOX="$PHISHINGBOX" -d GROUP_NAME="Satori Exercise" -d EMAILS="andrius.korsakas@quorumcyber.com,jacob.connell@quorumcyber.com" --report --output
+  redacted:
+    - PHISHINGBOX
+
+phishingbox:
+  install:
+    - export DEBIAN_FRONTEND=noninteractive; apt-get update -qq && apt-get install -qy --no-install-recommends curl jq ca-certificates >/dev/null 2>&1
+
+  load_targets:
+    assertReturnCode: 0
+    assertStdoutContains: "GROUP_UUID="
+    assertStdoutNotContains: "Invalid API user token"
+    run:
+      - |
+        TOKEN="${{PHISHINGBOX}}"
+        HOST="${{PB_HOST}}"; [ -z "$HOST" ] && HOST="portal.pbx-sec.com"
+        GROUP_NAME="${{GROUP_NAME}}"
+        EMAILS_IN="${{EMAILS}}"
+        BASE="https://$HOST/api/v2"
+        AUTH="api-token: $TOKEN"
+        CT="content-type: application/json"
+
+        # 1) Collect emails: from -d EMAILS (comma/space/newline) or an upstream artifact file
+        { printf '%s\n' "$EMAILS_IN" | tr ', ' '\n\n'; cat /tmp/satori/out/emails 2>/dev/null; } \
+          | grep -aiE '^[^@[:space:]]+@[^@[:space:]]+\.[a-z]{2,}$' | tr 'A-Z' 'a-z' | sort -u > /tmp/pb_emails.txt
+        N=$(wc -l < /tmp/pb_emails.txt | tr -d ' ')
+        echo "Emails to load: $N"
+        cat /tmp/pb_emails.txt
+        if [ "$N" -eq 0 ]; then echo "No emails to load"; exit 1; fi
+
+        # 2) Create the group
+        GRESP="$(curl -s -X POST "$BASE/group/create" -H "$AUTH" -H "$CT" --data "$(jq -n --arg n "$GROUP_NAME" '{name:$n}')")"
+        echo "group/create response: $GRESP"
+        GID="$(echo "$GRESP" | jq -r '(.data.id // .data.uuid // .data.group.id // .data.group_id // .id // empty)')"
+        if [ -z "$GID" ]; then echo "Could not parse group UUID from response"; exit 1; fi
+        echo "GROUP_UUID=$GID"
+
+        # 3) Build targets[] (parse {first}.{last} from local-part) and addBatch
+        TARGETS="$(jq -R 'select(length>0) | (.|split("@")[0]) as $lp | {email:., first_name:($lp|split(".")[0]), last_name:($lp|split(".")[1] // "")}' /tmp/pb_emails.txt | jq -s '.')"
+        PAYLOAD="$(jq -n --arg id "$GID" --argjson t "$TARGETS" '{id:$id, targets:$t}')"
+        echo "addBatch payload: $PAYLOAD"
+        ARESP="$(curl -s -X POST "$BASE/target/addBatch" -H "$AUTH" -H "$CT" --data "$PAYLOAD")"
+        echo "target/addBatch response: $ARESP"
+
+        # 4) Verify what landed in the group
+        echo "=== group/targets ==="
+        curl -s -X GET "$BASE/group/targets" -H "$AUTH" -H "$CT" --data "$(jq -n --arg id "$GID" '{id:$id}')" \
+          | jq -r '.data.targets[]? | "  \(.email)  \(.first_name // "") \(.last_name // "")"' 2>/dev/null || echo "(could not list)"
+        echo "DONE group=$GID name=$GROUP_NAME loaded=$N"

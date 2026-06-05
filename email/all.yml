@@ -1,0 +1,19 @@
+settings:
+  name: "All email sources: harvest a domain's emails"
+  description: "Framework entrypoint for automated self-phishing campaigns. Discovers a target organisation's email addresses by running every email-harvesting source - theHarvester (search-engine/OSINT), GitHub commit emails, and website spidering - then unions and de-duplicates their outputs into one clean roster of addresses on the organisation domain. Each imported source prints only the matching emails; the final step merges them. Output: email addresses only, one per line."
+  image: debian:stable-slim
+  timeout: 800
+  author:
+    - https://github.com/satorici
+  example: satori run satori://email/all.yml -d DOMAIN="satori.ci" --report --output
+
+import:
+  - satori://email/theharvester.yml
+  - satori://email/github.yml
+  - satori://email/spider.yml
+
+combine:
+  assertStdoutContains: "@"
+  run:
+    - |
+      printf '%s\n%s\n%s\n' "${{import.0.theHarvest.test.run.stdout}}" "${{import.1.github.harvest.run.stdout}}" "${{import.2.spider.crawl.run.stdout}}" | awk 'NF' | sort -u

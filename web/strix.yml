@@ -6,7 +6,9 @@ settings:
   cpu: 4096
   memory: 8192
   files: true
-  example: satori run satori://web/strix.yml -d HOST="https://target.com" -d MODE="deep" -d OPENROUTER=$OPENROUTER --report --output --files
+  example: satori run satori://web/strix.yml -d HOST="https://target.com" -d MODE="deep" -d OPENROUTER=$OPENROUTER --output --test strix:run:stdout
+  gallery:
+    - https://files.catbox.moe/byf8jh.png
   redacted:
     - OPENROUTER
 
@@ -24,6 +26,8 @@ strix:
       export STRIX_TELEMETRY=0
       export STRIX_TARGET="${{HOST}}"
       export STRIX_SCAN_MODE="${{MODE}}"
+      # No TTY in the container -> rich/click default to 80 cols. Widen Strix's panel output.
+      export COLUMNS=200
       # Make the image npm-global tools (agent-browser) reachable
       export PATH="/home/pentester/.npm-global/bin:/home/pentester/go/bin:/home/pentester/.local/bin:$PATH"
       # Run from the runner CWD (captured dir) so artifacts are retrievable with --files.

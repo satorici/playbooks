@@ -341,12 +341,20 @@ playbooks/
 | `satori://container/iac/tfsec.yml` — **tfsec: Security scanner for Terraform code** | tfsec uses static analysis of your terraform code to spot potential security issues. Along with basic rule checking, tfsec also checks for sensitive information in terraf |
 | `satori://container/trivy.yml` — **Trivy: Vulnerability Scanner** | Scans filesystems and container images for vulnerabilities |
 
-### Cloud Security (2 playbooks)
+### Cloud Security (10 playbooks)
 
 | Playbook | Description |
 |---|---|
-| `satori://cloud/prowler.yml` — **Prowler: AWS Security Best Practices Assessment Tool** | Prowler is an open-source security tool to perform AWS security best practices assessments, audits, incident response, continuous monitoring, hardening and forensics read |
-| `satori://cloud/scoutsuite.yml` — **Scoutsuite: Multi-cloud security-auditing tool** | ScoutSuite is a multi-cloud security auditing tool that identifies and analyze potential misconfigurations and vulnerabilities across various cloud environments, includin |
+| `satori://cloud/aws-prowler.yml` — **Prowler (AWS)** | AWS security best-practices assessment (CIS, PCI-DSS, ISO27001, SOC2, etc.) |
+| `satori://cloud/aws-scoutsuite.yml` — **ScoutSuite (AWS)** | AWS misconfiguration/posture audit |
+| `satori://cloud/aws-scoutsuite-ai.yml` — **ScoutSuite (AWS) + AI** | ScoutSuite AWS audit summarized by Gemini Flash |
+| `satori://cloud/aws-assessment-ai.yml` — **AWS multi-tool + AI** | ScoutSuite + Prowler + IAM privesc + Cloudsplaining + GuardDuty/SecurityHub/Access Analyzer, correlated by Gemini |
+| `satori://cloud/azure-scoutsuite.yml` — **ScoutSuite (Azure)** | Azure/Entra posture audit via service principal |
+| `satori://cloud/azure-prowler.yml` — **Prowler (Azure)** | Azure CIS/compliance via service principal |
+| `satori://cloud/azurehound.yml` — **AzureHound** | Entra/Azure tenant graph + privileged-role / attack-path signal |
+| `satori://cloud/m365-maester.yml` — **Maester** | 280+ Microsoft 365 / Entra ID security tests |
+| `satori://cloud/azure-compliance-ai.yml` — **Azure compliance + AI** | Imports azure-scoutsuite + azure-prowler; Gemini correlation |
+| `satori://cloud/azure-exploitability-ai.yml` — **Azure exploitability + AI** | Imports azurehound + m365-maester; Gemini exploitability-ranked report |
 
 ### Monitoring (4 playbooks)
 
