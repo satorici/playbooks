@@ -33,6 +33,8 @@ phishingbox:
         FROM_EMAIL="$(cat /tmp/satori/out/tpl_from_email 2>/dev/null)"
         FROM_NAME="$(cat /tmp/satori/out/tpl_from_name 2>/dev/null)"
         if [ -z "$BODY" ] || [ -z "$SUBJECT" ]; then echo "No lure found - run template-ai first (expects /tmp/satori/out/tpl_subject and tpl_body)"; exit 1; fi
+        # WAF safety net: the create API blocks inline style= and full-document HTML - strip them
+        BODY="$(printf '%s' "$BODY" | sed -e 's/ style="[^"]*"//g' -e 's/<!DOCTYPE[^>]*>//Ig' -e 's#</\{0,1\}html[^>]*>##Ig' -e 's#</\{0,1\}body[^>]*>##Ig' -e 's#</\{0,1\}head[^>]*>##Ig' -e 's#<meta[^>]*>##Ig' -e 's#<title[^>]*>[^<]*</title>##Ig')"
         [ -z "$NAME" ] && NAME="$(cat /tmp/satori/out/tpl_lure 2>/dev/null)"; [ -z "$NAME" ] && NAME="Security notice for $DOMAIN"
         [ -z "$FROM_EMAIL" ] && FROM_EMAIL="it-security@$DOMAIN"
         REPLYTO="$FROM_EMAIL"
