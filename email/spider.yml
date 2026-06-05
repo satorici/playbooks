@@ -46,5 +46,12 @@ spider:
         : > /tmp/pages.txt
         while read -r u; do curl -sL -A "$UA" --max-time 12 "$u" 2>/dev/null >> /tmp/pages.txt; done < /tmp/urls2.txt
 
-        # extract emails, keep only the ones on the org domain (core label), output addresses only
-        grep -aoiE '[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}' /tmp/pages.txt | tr 'A-Z' 'a-z' | grep -iE "@[a-z0-9.-]*${CORE}[a-z0-9.-]*\.[a-z]{2,}$" | sort -u
+        # extract emails: plain text + Cloudflare-obfuscated (data-cfemail, decoded with the cfemail XOR), org-domain only
+        {
+          grep -aoiE '[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}' /tmp/pages.txt
+          grep -aoiE 'data-cfemail="[0-9a-fA-F]+"' /tmp/pages.txt | sed -E 's/.*"([0-9a-fA-F]+)".*/\1/' | sort -u | while IFS= read -r h; do
+            key=$((0x$(printf %s "$h" | cut -c1-2))); out=""; i=3; len=${#h}
+            while [ "$i" -le "$len" ]; do b=$(printf %s "$h" | cut -c${i}-$((i+1))); out="$out$(printf "\\$(printf "%03o" $((0x$b ^ key)))")"; i=$((i+2)); done
+            printf '%s\n' "$out"
+          done
+        } | tr 'A-Z' 'a-z' | grep -iE "@[a-z0-9.-]*${CORE}[a-z0-9.-]*\.[a-z]{2,}$" | sort -u
