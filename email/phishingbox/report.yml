@@ -1,0 +1,50 @@
+settings:
+  name: "PhishingBox: campaign results / success metrics"
+  description: "Measures a phishing campaign's success: pulls api/v2/campaign/actions for a CAMPAIGN_ID and reports the tracked actions - how many targets opened the email and how many clicked the link (page-load), broken down by type and listed per target. Use it to monitor a running or finished campaign launched by launch-campaign."
+  image: debian:stable-slim
+  author:
+    - https://github.com/satorici
+  example: satori run satori://email/phishingbox/report.yml -d PHISHINGBOX="$PHISHINGBOX" -d CAMPAIGN_ID="<campaign-uuid>" --report --output
+  redacted:
+    - PHISHINGBOX
+
+phishingbox:
+  install:
+    - export DEBIAN_FRONTEND=noninteractive; apt-get update -qq && apt-get install -qy --no-install-recommends curl jq ca-certificates >/dev/null 2>&1
+
+  report:
+    assertReturnCode: 0
+    run:
+      - |
+        TOKEN="${{PHISHINGBOX}}"
+        CID="${{CAMPAIGN_ID}}"
+        BASE="https://portal.pbx-sec.com/api/v2"
+        AUTH="api-token: $TOKEN"; CT="content-type: application/json"
+
+        # paginate campaign/actions (100 per page)
+        : > /tmp/actions.ndjson
+        off=0
+        while : ; do
+          page="$(curl -s -X GET "$BASE/campaign/actions" -H "$AUTH" -H "$CT" --data "{\"id\":\"$CID\",\"limit\":100,\"offset\":$off}")"
+          n="$(echo "$page" | jq -r '.data.actions | length' 2>/dev/null)"
+          [ -z "$n" ] || [ "$n" = "null" ] || [ "$n" -eq 0 ] && { echo "$page" | jq -c '.data.actions[]?' >> /tmp/actions.ndjson 2>/dev/null; break; }
+          echo "$page" | jq -c '.data.actions[]?' >> /tmp/actions.ndjson 2>/dev/null
+          [ "$n" -lt 100 ] && break
+          off=$((off+100))
+        done
+
+        jq -s -r '
+          def who: (.target_email // .email // .recipient // (.target.email?) // .target_name // .name // "unknown");
+          . as $a
+          | "=== Campaign results ===",
+            "Total actions tracked: \($a|length)",
+            "",
+            "By action type:",
+            ( ($a | group_by(.type) | map("  \(.[0].type): \(length)  (\([.[]|who]|unique|length) unique targets)") | .[]) // "  (none yet)" ),
+            "",
+            "Opened:  \([ $a[] | select((.type//"")|ascii_downcase|test("open")) | who ] | unique | length) target(s)",
+            "Clicked: \([ $a[] | select((.type//"")|ascii_downcase|test("page-load|click")) | who ] | unique | length) target(s)",
+            "",
+            "Targets who clicked:",
+            (([ $a[] | select((.type//"")|ascii_downcase|test("page-load|click")) | who ] | unique | .[] | "  - " + .) // "  (none yet)")
+        ' /tmp/actions.ndjson

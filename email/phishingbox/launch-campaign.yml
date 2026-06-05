@@ -1,12 +1,21 @@
 settings:
   name: "PhishingBox: create & launch a phishing campaign"
-  description: "Creates and schedules a phishing campaign in PhishingBox (api/v2/campaign/create) against one or more groups using one or more phishing templates. This is the launch step: with SEND_TYPE=immediate and DATE_STARTED in the present, PhishingBox SENDS the phishing emails to the targets and tracks their actions (opened, page-load/click, etc.). The target domain must be authorized on the account (domain/authorize). Prints CAMPAIGN_UUID for monitoring (campaign/actions, target/actions)."
+  description: "Creates and schedules a phishing campaign in PhishingBox (api/v2/campaign/create) against one or more groups using one or more phishing templates. This is the launch step: with SEND_TYPE=immediate and DATE_STARTED in the present, PhishingBox SENDS the phishing emails to the targets and tracks their actions (opened, page-load/click, etc.). PhishingBox only delivers inside a send window: BUSINESS_DAYS (comma list of 3-letter days) between SEND_START and SEND_END in the account timezone; DATE_STARTED must fall on an enabled day or the API returns 412. Defaults mimic office hours (mon-fri 08:00-17:00); pass all 7 days + 00:00:00-23:59:59 to send right now. The target domain must be authorized on the account (domain/authorize). Prints CAMPAIGN_UUID for monitoring (campaign/actions, see report.yml)."
   image: debian:stable-slim
   author:
     - https://github.com/satorici
   example: satori run satori://email/phishingbox/launch-campaign.yml -d PHISHINGBOX="$PHISHINGBOX" -d CAMPAIGN_NAME="Satori click test" -d GROUP_IDS="<group-uuid>" -d TEMPLATE_IDS="<template-uuid>" -d DATE_STARTED="2026-06-10 09:00:00" -d SEND_TYPE="scheduled" --report --output
   redacted:
     - PHISHINGBOX
+
+# send window (account timezone). Defaults = office hours mon-fri 08:00-17:00.
+# To send immediately regardless of day/hour: -d BUSINESS_DAYS="sun,mon,tue,wed,thu,fri,sat" -d SEND_START="00:00:00" -d SEND_END="23:59:59"
+BUSINESS_DAYS:
+  - - "mon,tue,wed,thu,fri"
+SEND_START:
+  - - "08:00:00"
+SEND_END:
+  - - "17:00:00"
 
 phishingbox:
   install:
@@ -23,15 +32,23 @@ phishingbox:
         TEMPLATE_IDS="${{TEMPLATE_IDS}}"
         DATE_STARTED="${{DATE_STARTED}}"
         SEND_TYPE="${{SEND_TYPE}}"
+        BUSINESS_DAYS="${{BUSINESS_DAYS}}"
+        SEND_START="${{SEND_START}}"
+        SEND_END="${{SEND_END}}"
         HOST="portal.pbx-sec.com"
         BASE="https://$HOST/api/v2"; AUTH="api-token: $TOKEN"; CT="content-type: application/json"
 
         GROUPS_JSON="$(printf '%s' "$GROUP_IDS" | tr ', ' '\n\n' | grep -aE '.' | jq -R . | jq -s '.')"
         TEMPLATES_JSON="$(printf '%s' "$TEMPLATE_IDS" | tr ', ' '\n\n' | grep -aE '.' | jq -R . | jq -s '.')"
+        # business_days: comma list of 3-letter day names -> JSON array (the API requires the array form)
+        DAYS_JSON="$(printf '%s' "$BUSINESS_DAYS" | tr ', ' '\n\n' | grep -aE '.' | jq -R 'ascii_downcase | .[0:3]' | jq -s '.')"
 
         PAYLOAD="$(jq -n --arg name "$NAME" --arg ds "$DATE_STARTED" --arg st "$SEND_TYPE" \
           --argjson groups "$GROUPS_JSON" --argjson templates "$TEMPLATES_JSON" \
-          '{name:$name, date_started:$ds, send_type:$st, groups:$groups, templates:$templates, emails_per_target:1, email_rate_limit:1000}')"
+          --argjson days "$DAYS_JSON" --arg bds "$SEND_START" --arg bde "$SEND_END" \
+          '{name:$name, date_started:$ds, send_type:$st, groups:$groups, templates:$templates,
+            business_days:$days, business_day_start:$bds, business_day_end:$bde,
+            emails_per_target:1, email_rate_limit:1000}')"
         echo "campaign/create payload: $PAYLOAD"
 
         RESP="$(curl -s -X POST "$BASE/campaign/create" -H "$AUTH" -H "$CT" --data "$PAYLOAD")"
