@@ -1,0 +1,42 @@
+settings:
+  name: "PhishingBox: create & launch a phishing campaign"
+  description: "Creates and schedules a phishing campaign in PhishingBox (api/v2/campaign/create) against one or more groups using one or more phishing templates. This is the launch step: with SEND_TYPE=immediate and DATE_STARTED in the present, PhishingBox SENDS the phishing emails to the targets and tracks their actions (opened, page-load/click, etc.). The target domain must be authorized on the account (domain/authorize). Prints CAMPAIGN_UUID for monitoring (campaign/actions, target/actions)."
+  image: debian:stable-slim
+  author:
+    - https://github.com/satorici
+  example: satori run satori://email/phishingbox/launch-campaign.yml -d PHISHINGBOX="$PHISHINGBOX" -d CAMPAIGN_NAME="Satori click test" -d GROUP_IDS="<group-uuid>" -d TEMPLATE_IDS="<template-uuid>" -d DATE_STARTED="2026-06-10 09:00:00" -d SEND_TYPE="scheduled" --report --output
+  redacted:
+    - PHISHINGBOX
+
+phishingbox:
+  install:
+    - export DEBIAN_FRONTEND=noninteractive; apt-get update -qq && apt-get install -qy --no-install-recommends curl jq ca-certificates >/dev/null 2>&1
+
+  launch:
+    assertStdoutContains: "CAMPAIGN_UUID="
+    assertStdoutNotContains: "Invalid API user token"
+    run:
+      - |
+        TOKEN="${{PHISHINGBOX}}"
+        NAME="${{CAMPAIGN_NAME}}"
+        GROUP_IDS="${{GROUP_IDS}}"
+        TEMPLATE_IDS="${{TEMPLATE_IDS}}"
+        DATE_STARTED="${{DATE_STARTED}}"
+        SEND_TYPE="${{SEND_TYPE}}"
+        HOST="portal.pbx-sec.com"
+        BASE="https://$HOST/api/v2"; AUTH="api-token: $TOKEN"; CT="content-type: application/json"
+
+        GROUPS_JSON="$(printf '%s' "$GROUP_IDS" | tr ', ' '\n\n' | grep -aE '.' | jq -R . | jq -s '.')"
+        TEMPLATES_JSON="$(printf '%s' "$TEMPLATE_IDS" | tr ', ' '\n\n' | grep -aE '.' | jq -R . | jq -s '.')"
+
+        PAYLOAD="$(jq -n --arg name "$NAME" --arg ds "$DATE_STARTED" --arg st "$SEND_TYPE" \
+          --argjson groups "$GROUPS_JSON" --argjson templates "$TEMPLATES_JSON" \
+          '{name:$name, date_started:$ds, send_type:$st, groups:$groups, templates:$templates, emails_per_target:1, email_rate_limit:1000}')"
+        echo "campaign/create payload: $PAYLOAD"
+
+        RESP="$(curl -s -X POST "$BASE/campaign/create" -H "$AUTH" -H "$CT" --data "$PAYLOAD")"
+        echo "campaign/create response: $RESP"
+        CID="$(echo "$RESP" | jq -r '(.data.id // .data.uuid // .data.campaign.id // .id // empty)')"
+        if [ -z "$CID" ]; then echo "Could not create campaign (see response above)"; exit 1; fi
+        echo "CAMPAIGN_UUID=$CID"
+        echo "DONE campaign=$CID name=$NAME groups=$GROUP_IDS templates=$TEMPLATE_IDS send_type=$SEND_TYPE start=$DATE_STARTED"
