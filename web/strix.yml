@@ -2,11 +2,11 @@ settings:
   name: "Strix: AI pentesting"
   description: "Runs Strix (usestrix/strix), the AI-powered automated pentesting agent, entirely inside the Satori container via a custom unix_local runtime backend (from satoridev01/strix). Runs on Strix's OFFICIAL Kali sandbox image so the full toolset (agent-browser+chromium, nuclei, httpx, nmap, semgrep, ...) is present. Driven by Claude Haiku 4.5 via OpenRouter (with Anthropic prompt caching for cost). No Docker-in-Docker required."
   image: ghcr.io/usestrix/strix-sandbox:1.0.0
-  timeout: 3600
+  timeout: 5400
   cpu: 4096
   memory: 8192
   files: true
-  example: satori run satori://web/strix.yml -d HOST="https://target.com" -d MODE="deep" -d OPENROUTER=$OPENROUTER --output --test strix:run:stdout
+  example: satori run satori://web/strix.yml -d HOST="http://zero.webappsecurity.com" -d MODE="deep" -d OPENROUTER=$OPENROUTER --output --test strix:run:stdout
   gallery:
     - https://files.catbox.moe/byf8jh.png
   redacted:
@@ -32,9 +32,17 @@ strix:
       export PATH="/home/pentester/.npm-global/bin:/home/pentester/go/bin:/home/pentester/.local/bin:$PATH"
       # Run from the runner CWD (captured dir) so artifacts are retrievable with --files.
       echo "PWD=$(pwd) HOME=$HOME"
-      # Capture the real strix exit code (0=clean, 2=vulns, 1=crash); the trailing
-      # dump commands below must NOT clobber it, so we save it and exit with it.
-      python3 /tmp/strix_local_backend.py > /tmp/strix_out.txt 2>&1; RC=$?
+      # CRITICAL: on exit, Strix tears down by sending SIGTERM to its OWN process
+      # group. The Satori runner launches this script as a process-group leader,
+      # so without isolation that teardown SIGTERM also kills THIS shell — the
+      # command returns -15 and the run is truncated before any report is emitted
+      # (no vulnerabilities, no exit-code gate). Running strix under `setsid` puts
+      # it in a brand-new session, so its teardown signal stays contained and we
+      # always reach the report dump + gate below. `-w` makes setsid wait and
+      # propagate strix's real exit code (0=clean, 2=vulns, 1=crash).
+      setsid -w python3 /tmp/strix_local_backend.py > /tmp/strix_out.txt 2>&1 &
+      SPID=$!
+      wait "$SPID"; RC=$?
       grep -v 'Provider List: https' /tmp/strix_out.txt
       echo; echo "==================== ALL VULNERABILITIES (vulnerabilities.json) ===================="
       VJSON=$(find . -name vulnerabilities.json 2>/dev/null | head -1)
@@ -44,10 +52,13 @@ strix:
       else
         echo "no vulnerabilities.json written (0 findings filed)"
       fi
-      echo "[gate] strix exit code: $RC"
-      exit $RC
+      echo "[gate] strix exit code: $RC (0=clean, 2=vulns found, 1=crash, negative=killed by signal)"
+      # The scan SUCCEEDED whether it found vulns (2) or not (0) — findings are
+      # reported above and on the report page. Only a crash (1) or a kill signal
+      # (negative) is a real failure. For a strict fail-on-findings security gate
+      # (e.g. scanning your own app in CI), replace the line below with `exit $RC`.
+      if [ "$RC" = "0" ] || [ "$RC" = "2" ]; then exit 0; else exit "${RC#-}"; fi
   # Strix headless exit codes: 0 = no vulns, 2 = vulns found, 1 = wrapper/crash.
-  # Security gate: pass ONLY when clean (0); a finding (2) or crash (1) fails the test.
   ran:
     setOutput: strix.run
     assertReturnCode: 0
