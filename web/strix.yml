@@ -6,7 +6,7 @@ settings:
   cpu: 4096
   memory: 8192
   files: true
-  example: satori run satori://web/strix.yml -d HOST="http://zero.webappsecurity.com" -d MODE="deep" -d OPENROUTER=$OPENROUTER --output --test strix:run:stdout
+  example: satori run satori://web/strix.yml -d HOST="http://zero.webappsecurity.com" -d MODE="quick" -d OPENROUTER=$OPENROUTER --output --test strix:run:stdout
   gallery:
     - https://files.catbox.moe/byf8jh.png
   redacted:
