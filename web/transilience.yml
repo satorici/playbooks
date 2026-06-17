@@ -1,0 +1,65 @@
+settings:
+  name: "Transilience CommunityTools - Claude Code Pentest"
+  description: "Runs an autonomous web-app penetration test by driving the Claude Code CLI headlessly inside the container with the transilienceai/communitytools security skills (/pentest: recon -> injection/XSS/SSRF/auth -> validation -> CVSS report). Claude Code talks to OpenRouter via its native Anthropic Skin (ANTHROPIC_BASE_URL=https://openrouter.ai/api), so no proxy is needed. Driven by claude-haiku-4.5."
+  image: kalilinux/kali-rolling
+  author:
+    - https://github.com/satoridev01
+  gallery:
+    - https://files.catbox.moe/byf8jh.png
+  example: satori run satori://web/transilience.yml -d HOST="http://zero.webappsecurity.com" -d OPENROUTER=$OPENROUTER --output
+  timeout: 3600
+  cpu: 4096
+  memory: 8192
+  files: true
+  redacted:
+    - OPENROUTER
+
+pentest:
+  install:
+    - apt-get update -qy >/dev/null 2>&1
+    - DEBIAN_FRONTEND=noninteractive apt-get install -qy --no-install-recommends git curl ca-certificates nodejs npm python3 python3-pip chromium nmap sqlmap >/dev/null 2>&1
+    # Claude Code CLI + Playwright MCP for browser-driven web testing
+    - npm install -g @anthropic-ai/claude-code @playwright/mcp >/dev/null 2>&1
+    # The transilienceai security skills (MIT). The 'projects/pentest' dir ships the .claude/ skill symlinks.
+    - git clone --depth 1 https://github.com/transilienceai/communitytools.git /opt/communitytools >/dev/null 2>&1
+
+  run:
+    - |
+      # --- OpenRouter via the Claude Code native Anthropic Skin (no proxy) ---
+      export ANTHROPIC_BASE_URL="https://openrouter.ai/api"
+      export ANTHROPIC_AUTH_TOKEN="${{OPENROUTER}}"
+      export ANTHROPIC_MODEL="anthropic/claude-haiku-4.5"
+      export ANTHROPIC_SMALL_FAST_MODEL="anthropic/claude-haiku-4.5"
+      export DISABLE_TELEMETRY=1 DISABLE_AUTOUPDATER=1 DISABLE_ERROR_REPORTING=1
+      # Satori containers run as root; Claude Code refuses --dangerously-skip-permissions
+      # as root unless it detects a sandbox. We are already inside an ephemeral container.
+      export IS_SANDBOX=1
+      export CHROME_BIN=/usr/bin/chromium PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium
+      # Run from the repo root: its .claude/skills symlink exposes ALL the security skills.
+      # These are Claude Code *skills* (model-invoked), not slash commands, so we drive
+      # them with a natural-language prompt and name the skills to force their use.
+      cd /opt/communitytools
+      echo "PWD=$(pwd)  claude=$(claude --version 2>/dev/null)"
+      # Headless, autonomous. JSON output so we always capture the result + diagnostics
+      # even when the final assistant message is empty.
+      claude -p "Use your pentest-engagement, reconnaissance, injection, client-side, server-side and authentication skills to perform a full web application penetration test against ${{HOST}}. Enumerate the attack surface, test for the OWASP Top 10, validate each finding, then write your findings to findings.md and print the full report as your final message with CVSS scores." \
+        --dangerously-skip-permissions \
+        --max-turns 200 \
+        --output-format json > /tmp/pentest.json 2>/tmp/pentest.err
+      RC=$?
+      echo "==================== CLAUDE RESULT ===================="
+      jq -r '.result // "(empty result)"' /tmp/pentest.json 2>/dev/null || cat /tmp/pentest.json
+      echo "==================== RUN STATS ===================="
+      jq -r '"success=\(.subtype)  is_error=\(.is_error)  turns=\(.num_turns)  cost_usd=\(.total_cost_usd)"' /tmp/pentest.json 2>/dev/null
+      echo "==================== STDERR (tail) ===================="
+      tail -20 /tmp/pentest.err
+      echo "==================== FINDINGS (findings.md) ===================="
+      # Only the report the agent was told to write (avoid dumping repo skill templates).
+      for f in /opt/communitytools/findings.md /opt/communitytools/reports/*.md "$HOME"/findings.md; do
+        [ -f "$f" ] && { echo "----- $f -----"; cat "$f"; }
+      done
+      echo "[gate] claude exit code: $RC"
+      exit $RC
+  ran:
+    setOutput: pentest.run
+    assertReturnCode: 0
