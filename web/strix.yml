@@ -1,6 +1,6 @@
 settings:
   name: "Strix: AI pentesting"
-  description: "Runs Strix (usestrix/strix), the AI-powered automated pentesting agent, entirely inside the Satori container via a custom unix_local runtime backend (from satoridev01/strix). Runs on Strix's OFFICIAL Kali sandbox image so the full toolset (agent-browser+chromium, nuclei, httpx, nmap, semgrep, ...) is present. Driven by Claude Haiku 4.5 via OpenRouter (with Anthropic prompt caching for cost). No Docker-in-Docker required."
+  description: "Runs Strix (usestrix/strix), the AI-powered automated pentesting agent, entirely inside the Satori container via a custom unix_local runtime backend (from satoridev01/strix). Runs on Strix's OFFICIAL Kali sandbox image so the full toolset (agent-browser+chromium, nuclei, httpx, nmap, semgrep, ...) is present. Driven by Gemini 2.5 Flash via OpenRouter (1M-token context to avoid mid-scan context-overflow crashes). No Docker-in-Docker required."
   image: ghcr.io/usestrix/strix-sandbox:1.0.0
   timeout: 5400
   cpu: 4096
@@ -21,7 +21,7 @@ strix:
 
   run:
     - |
-      export STRIX_LLM="openrouter/anthropic/claude-haiku-4.5"
+      export STRIX_LLM="openrouter/google/gemini-2.5-flash"
       export LLM_API_KEY="${{OPENROUTER}}"
       export STRIX_TELEMETRY=0
       export STRIX_TARGET="${{HOST}}"
