@@ -21,7 +21,7 @@ MODEL:
 pentest:
   install:
     - apt-get update -qy >/dev/null 2>&1
-    - DEBIAN_FRONTEND=noninteractive apt-get install -qy --no-install-recommends git curl ca-certificates nodejs npm python3 python3-pip chromium nmap sqlmap >/dev/null 2>&1
+    - DEBIAN_FRONTEND=noninteractive apt-get install -qy --no-install-recommends git curl ca-certificates jq nodejs npm python3 python3-pip chromium nmap sqlmap >/dev/null 2>&1
     # Claude Code CLI + Playwright MCP for browser-driven web testing
     - npm install -g @anthropic-ai/claude-code @playwright/mcp >/dev/null 2>&1
     # The transilienceai security skills (MIT). The 'projects/pentest' dir ships the .claude/ skill symlinks.
@@ -65,10 +65,13 @@ pentest:
       jq -r '"success=\(.subtype)  is_error=\(.is_error)  turns=\(.num_turns)  cost_usd=\(.total_cost_usd)"' /tmp/pentest.json 2>/dev/null
       echo "==================== STDERR (tail) ===================="
       tail -20 /tmp/pentest.err
-      echo "==================== FINDINGS (findings.md) ===================="
-      # Only the report the agent was told to write (avoid dumping repo skill templates).
-      for f in /opt/communitytools/findings.md /opt/communitytools/reports/*.md "$HOME"/findings.md; do
-        [ -f "$f" ] && { echo "----- $f -----"; cat "$f"; }
+      echo "==================== FINDINGS REPORT ===================="
+      # The skills write deliverables under OUTPUT_DIR/<run>/ (findings.md, *PENTEST_REPORT*.md).
+      # Search there (and HOME/cwd) but skip the repo skill templates.
+      find /opt/communitytools/OUTPUT_DIR "$HOME" /opt/communitytools -maxdepth 3 -type f \
+        \( -name 'findings.md' -o -iname '*pentest*report*.md' -o -name 'CVSS_SCORES_SUMMARY.txt' \) \
+        2>/dev/null | grep -vE '/(skills|formats|projects|docs|papers|mcp|benchmarks)/' | sort -u | while read f; do
+        echo "----- $f -----"; cat "$f"; echo
       done
       echo "[gate] claude exit code: $RC"
       exit $RC
