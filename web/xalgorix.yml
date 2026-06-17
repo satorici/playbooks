@@ -4,7 +4,7 @@ settings:
   image: golang
   files: true
   timeout: 3600
-  example: satori run satori://web/xalgorix.yml -d TARGET="http://zero.webappsecurity.com" -d MODEL="openrouter/anthropic/claude-sonnet-4.5" -d OPENROUTER="$OPENROUTER" --output
+  example: satori run satori://web/xalgorix.yml -d HOST="http://zero.webappsecurity.com" -d MODEL="openrouter/anthropic/claude-sonnet-4.5" -d OPENROUTER="$OPENROUTER" --output
   cpu: 4096
   memory: 8192
   redacted:
@@ -17,4 +17,4 @@ xalgorix:
     - go install -v github.com/xalgord/xalgorix/v4/cmd/xalgorix@latest 2>/dev/null
 
   run:
-    - export XALGORIX_LLM=${{MODEL}} XALGORIX_API_KEY=${{OPENROUTER}} XALGORIX_API_BASE=https://openrouter.ai/api/v1 && xalgorix --target ${{TARGET}}
+    - export XALGORIX_LLM=${{MODEL}} XALGORIX_API_KEY=${{OPENROUTER}} XALGORIX_API_BASE=https://openrouter.ai/api/v1 XALGORIX_DATA_DIR=/data && xalgorix --target ${{HOST}}
