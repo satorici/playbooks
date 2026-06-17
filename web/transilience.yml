@@ -7,12 +7,16 @@ settings:
   gallery:
     - https://files.catbox.moe/byf8jh.png
   example: satori run satori://web/transilience.yml -d HOST="http://zero.webappsecurity.com" -d OPENROUTER=$OPENROUTER --output
-  timeout: 3600
+  timeout: 4800
   cpu: 4096
   memory: 8192
   files: true
   redacted:
     - OPENROUTER
+
+# OpenRouter model id (Anthropic Skin). Override with -d MODEL="anthropic/claude-sonnet-4.6".
+MODEL:
+  - - "anthropic/claude-haiku-4.5"
 
 pentest:
   install:
@@ -25,11 +29,15 @@ pentest:
 
   run:
     - |
+      # Fail fast with a clear message if the OpenRouter key was not supplied.
+      if [ -z "${{OPENROUTER}}" ]; then
+        echo "ERROR: OPENROUTER is empty. Run with: -d OPENROUTER=\$OPENROUTER"; exit 1
+      fi
       # --- OpenRouter via the Claude Code native Anthropic Skin (no proxy) ---
       export ANTHROPIC_BASE_URL="https://openrouter.ai/api"
       export ANTHROPIC_AUTH_TOKEN="${{OPENROUTER}}"
-      export ANTHROPIC_MODEL="anthropic/claude-haiku-4.5"
-      export ANTHROPIC_SMALL_FAST_MODEL="anthropic/claude-haiku-4.5"
+      export ANTHROPIC_MODEL="${{MODEL}}"
+      export ANTHROPIC_SMALL_FAST_MODEL="${{MODEL}}"
       export DISABLE_TELEMETRY=1 DISABLE_AUTOUPDATER=1 DISABLE_ERROR_REPORTING=1
       # Satori containers run as root; Claude Code refuses --dangerously-skip-permissions
       # as root unless it detects a sandbox. We are already inside an ephemeral container.
@@ -42,11 +50,15 @@ pentest:
       echo "PWD=$(pwd)  claude=$(claude --version 2>/dev/null)"
       # Headless, autonomous. JSON output so we always capture the result + diagnostics
       # even when the final assistant message is empty.
-      claude -p "Use your pentest-engagement, reconnaissance, injection, client-side, server-side and authentication skills to perform a full web application penetration test against ${{HOST}}. Enumerate the attack surface, test for the OWASP Top 10, validate each finding, then write your findings to findings.md and print the full report as your final message with CVSS scores." \
+      # Bound the agent BELOW the Satori timeout (SIGINT @ 60m) so it can flush its
+      # report and we can still dump diagnostics; --max-turns caps runaway loops.
+      timeout --signal=INT 3600 \
+        claude -p "Use your pentest-engagement, reconnaissance, injection, client-side, server-side and authentication skills to perform a full web application penetration test against ${{HOST}}. Enumerate the attack surface, test for the OWASP Top 10, validate each finding, then write your findings to findings.md and print the full report as your final message with CVSS scores." \
         --dangerously-skip-permissions \
-        --max-turns 200 \
+        --max-turns 60 \
         --output-format json > /tmp/pentest.json 2>/tmp/pentest.err
       RC=$?
+      [ "$RC" = "124" ] && echo "WARN: claude hit the 60-min agent cap (killed by timeout)"
       echo "==================== CLAUDE RESULT ===================="
       jq -r '.result // "(empty result)"' /tmp/pentest.json 2>/dev/null || cat /tmp/pentest.json
       echo "==================== RUN STATS ===================="
