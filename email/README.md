@@ -17,8 +17,10 @@ Playbooks for email address discovery and OSINT gathering from domains, GitHub r
 
 | Playbook | Tool | Description |
 |----------|------|-------------|
+| [email-security.yml](email-security.yml) | Email Security | Checks email authentication and anti-spoofing configuration by querying SPF, DMARC, and DKIM DNS records, providing an overall email security score. |
 | [gauplus-nuclei.yml](gauplus-nuclei.yml) | Gauplus+Nuclei | Get the URLs of a domain and search for email addresses |
 | [gitsome.yml](gitsome.yml) | gitSome | Gets emails associated with a GitHub account |
+| [hunter.yml](hunter.yml) | Hunter.io | Discovers professional email addresses associated with a domain using Hunter.io's database; returns addresses, sources, and confidence scores. Requires a Hunter.io API key. |
 | [gitxray-repo.yml](gitxray-repo.yml) | Gitxray | Get GitHub repository's emails |
 | [gitxray-user.yml](gitxray-user.yml) | Gitxray | Get GitHub contributors' emails |
 
@@ -37,7 +39,10 @@ Playbooks under [phishingbox/](phishingbox/) drive an authorized self-phishing e
 |----------|-------------|
 | [phishingbox/template-ai.yml](phishingbox/template-ai.yml) | Spiders the target site and generates a brand-matched phishing email (lure + logo + colors) with an LLM (OpenRouter). |
 | [phishingbox/create-template.yml](phishingbox/create-template.yml) | Creates a phishing email template in PhishingBox (api/v2/template/create). |
+| [phishingbox/make-template.yml](phishingbox/make-template.yml) | One-run harness that imports template-ai (spiders the domain and generates a brand-matched lure) and create-template (creates the template in PhishingBox). |
 | [phishingbox/load-targets.yml](phishingbox/load-targets.yml) | Creates a PhishingBox group and bulk-loads recipients (api/v2/group/create + target/addBatch). |
+| [phishingbox/launch-campaign.yml](phishingbox/launch-campaign.yml) | Creates and schedules a phishing campaign against one or more groups using one or more templates (authorized simulation). |
+| [phishingbox/report.yml](phishingbox/report.yml) | Measures a phishing campaign's success: reports how many targets opened the email and clicked the link, broken down by type and per target. |
 
 ## Usage
 

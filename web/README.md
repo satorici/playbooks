@@ -13,6 +13,7 @@ Playbooks for web application security scanning, vulnerability detection, techno
 | [corstest.yml](corstest.yml) | CORSTest | Identifies misconfigurations in Cross-Origin Resource Sharing (CORS) implementations |
 | [corsy.yml](corsy.yml) | Corsy | Scans for CORS misconfigurations including origin reflection, wildcard values, and various bypass techniques |
 | [dalfox.yml](dalfox.yml) | Dalfox | XSS scanner that detects and exploits Cross-Site Scripting vulnerabilities using reflection-based detection and DOM analysis |
+| [hsts-preload.yml](hsts-preload.yml) | HSTS Preload | Checks if a domain is registered on the HSTS Preload List hardcoded into Chrome, Firefox, Safari, and Edge, preventing SSL stripping on the first visit |
 | [httpx.yml](httpx.yml) | httpx | Performs multiple web probes to identify and analyze web server configurations and diagnose potential vulnerabilities |
 | [katana.yml](katana.yml) | Katana | Web crawling and spidering tool with headless browsing, JavaScript execution, and automatic form filling |
 | [lotus.yml](lotus.yml) | Lotus | Web security scanner written in Rust that automates DAST using Lua scripts |
@@ -20,7 +21,10 @@ Playbooks for web application security scanning, vulnerability detection, techno
 | [nuclei.yml](nuclei.yml) | Nuclei | Template-based vulnerability scanner that detects CVEs, misconfigurations, and exposed sensitive data |
 | [parth.yml](parth.yml) | Parth | Identifies potentially vulnerable HTTP parameter names commonly associated with file inclusion, open redirect, and SSRF |
 | [ppmap.yml](ppmap.yml) | Ppmap | Scans for client-side Prototype Pollution vulnerabilities and exploits them to achieve XSS |
+| [security-txt.yml](security-txt.yml) | Security.txt | Checks if a domain publishes a security.txt file (RFC 9116) at /.well-known/security.txt, advertising security contacts and a vulnerability disclosure policy |
 | [sqlmap.yml](sqlmap.yml) | sqlmap | Automates the detection and exploitation of SQL injection vulnerabilities in web applications |
+| [strix.yml](strix.yml) | Strix | AI-powered autonomous pentesting agent that runs the full Kali toolset in-container, driven by Claude Sonnet 4.5 via OpenRouter, filing confirmed vulnerabilities |
+| [transilience.yml](transilience.yml) | Transilience | Autonomous web-app pentest driving the Claude Code CLI headlessly with transilienceai/communitytools skills (recon → injection/XSS/SSRF/auth → CVSS report) via OpenRouter |
 | [twa.yml](twa.yml) | TWA | Tiny Web Auditor that checks web security headers and configurations for missing or misconfigured policies |
 | [uro.yml](uro.yml) | uro | Extracts and deduplicates URLs by normalizing and filtering them based on predefined rules |
 | [wafw00f.yml](wafw00f.yml) | WAFW00F | Identifies and fingerprints Web Application Firewall (WAF) products protecting a website |
@@ -28,6 +32,7 @@ Playbooks for web application security scanning, vulnerability detection, techno
 | [wappalyzer.yml](wappalyzer.yml) | Wappalyzer | Identifies technologies on websites including CMS platforms, frameworks, analytics tools, and more |
 | [webanalyze.yml](webanalyze.yml) | WebAnalyze | Go port of Wappalyzer for performant technology detection across large lists of web hosts |
 | [wpscan.yml](wpscan.yml) | WPScan | WordPress security scanner for known vulnerabilities, outdated plugins/themes, and weak passwords |
+| [xalgorix.yml](xalgorix.yml) | Xalgorix | Autonomous LLM-driven pentesting agent run against a target via OpenRouter |
 | [zap.yml](zap.yml) | OWASP ZAP | Dynamic Application Security Testing scanner that finds XSS, SQL injection, CSRF, and misconfigurations |
 | [zgrab2.yml](zgrab2.yml) | ZGrab2 | Fast, modular application-layer network scanner for large Internet-wide surveys with detailed handshake transcripts |
 
@@ -52,6 +57,7 @@ Playbooks for web application security scanning, vulnerability detection, techno
 
 | Playbook | Tool | Description |
 |----------|------|-------------|
+| [tls/ssllabs.yml](tls/ssllabs.yml) | Qualys SSL Labs | Assesses SSL/TLS configuration quality via the Qualys SSL Labs API; reports grade, certificate details, protocol support, and known vulnerabilities (BEAST, POODLE, Heartbleed) |
 | [tls/sslscan.yml](tls/sslscan.yml) | SSLScan | Identifies SSL/TLS security issues by reporting protocol versions, cipher suites, key exchanges, and certificates |
 | [tls/testssl.yml](tls/testssl.yml) | TestSSL | Checks TLS/SSL ciphers and protocols for security flaws on any port |
 | [tls/tlsx.yml](tls/tlsx.yml) | TLSX | TLS data collection and analysis tool with fingerprinting, cipher enumeration, and misconfiguration detection |
@@ -75,4 +81,12 @@ satori run satori://web/sqlmap.yml -d URL="http://testphp.vulnweb.com/listproduc
 
 ```bash
 satori run satori://web/tls/sslscan.yml -d HOST="satori.ci:443" --report --output
+```
+
+```bash
+satori run satori://web/strix.yml -d HOST="http://zero.webappsecurity.com" -d MODE="quick" -d OPENROUTER=$OPENROUTER --output
+```
+
+```bash
+satori run satori://web/transilience.yml -d HOST="http://zero.webappsecurity.com" -d MODEL="anthropic/claude-sonnet-4.6" -d OPENROUTER=$OPENROUTER --output
 ```

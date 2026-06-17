@@ -15,6 +15,7 @@ Playbooks for network port scanning, banner grabbing, service enumeration, and h
 | [naabu.yml](naabu.yml) | Naabu | Port scanning tool written in Go that enumerates valid ports for hosts using fast SYN/CONNECT/UDP scans |
 | [nmap.yml](nmap.yml) | Nmap | Open-source tool used to scan IP addresses and ports in a network and detect installed applications and vulnerabilities |
 | [rustscan.yml](rustscan.yml) | RustScan | Modern port scanner that rapidly scans all 65,535 ports in approximately 3 seconds with scripting engine support |
+| [shodan.yml](shodan.yml) | Shodan | Queries the Shodan API to identify exposed services, open ports, software versions, and known CVEs on the target's infrastructure and subdomains. Requires SHODAN_API_KEY |
 | [smap.yml](smap.yml) | Smap | Port scanner built with Shodan's free API, functioning as a faster alternative to Nmap |
 | [ssh-audit.yml](ssh-audit.yml) | ssh-audit | Analyzes SSH server configurations to identify weak algorithms, outdated protocols, and security misconfigurations |
 | [sshamble.yml](sshamble.yml) | SSHamble | SSH security testing tool that identifies misconfigurations, weak credentials, and unexpected exposures |

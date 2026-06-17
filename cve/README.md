@@ -12,6 +12,7 @@ Playbooks for detecting and validating specific Common Vulnerabilities and Expos
 | [CVE-2025-61882.yml](CVE-2025-61882.yml) | Nuclei | Oracle E-Business Suite unauthenticated RCE (CVSS 9.8) |
 | [CVE-2025-61884.yml](CVE-2025-61884.yml) | Nuclei | Oracle E-Business Suite Configurator Runtime UI data exposure, versions 12.2.3-12.2.14 (CVSS 7.5) |
 | [CVE-2025-7775.yml](CVE-2025-7775.yml) | Custom Python PoC | Citrix NetScaler ADC/Gateway API endpoint RCE — educational PoC for training and detection validation (CVSS 9.8) |
+| [cisa-kev.yml](cisa-kev.yml) | CISA KEV: Check CVEs against actively exploited list | Cross-references CVE IDs against the CISA Known Exploited Vulnerabilities (KEV) catalog to identify critical-priority vulnerabilities that are actively exploited in the wild |
 | [search.yml](search.yml) | ThreatTracer | Identifies CVE details by querying vulnerability databases with CVE identifiers |
 
 ## Usage

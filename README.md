@@ -67,12 +67,13 @@ playbooks/
 
 ## Playbook Catalog
 
-### OSINT (16 playbooks)
+### OSINT (18 playbooks)
 
 | Playbook | Description |
 |---|---|
 | `satori://osint/otx.yml` — **AlienVault OTX: Threat-intel pulse exposure** | Checks whether a domain is named in any AlienVault OTX threat-intelligence pulse (tracked IOC sets, malware campaigns, incident reports). A match means the domain has bee |
 | `satori://osint/blocklist-check.yml` — **Blocklist Check: Phishing & malware feed exposure** | Alerts a domain owner if their domain or subdomains appear on public phishing/malware blocklists (URLhaus, OpenPhish, Phishunt, PhishStats). A hit means the domain is lik |
+| `satori://osint/breach-news.yml` — **Breach News: Compromise mentions scored by an LLM** | Searches Google News for a company alongside a compromise lexicon (hack, ransomware, breach, data leak, phishing, exposed, stolen data) and asks an OpenRouter LLM (Gemini 2.5 Flash) to judge whether headlines credibly indicate a compromise. |
 | `satori://osint/bug-bounty.yml` — **Bug Bounty: Program discovery across platforms** | Checks if a company has a public bug bounty or vulnerability disclosure program on HackerOne, Bugcrowd, Intigriti, or via security.txt. Having a bug bounty program indica |
 | `satori://osint/crt.yml` — **Certificate Transparency Monitor: Lookalike cert issuance** | Detects phishing infrastructure at provisioning time by watching Certificate Transparency logs (crt.sh) for newly issued certificates whose hostname contains your brand k |
 | `satori://osint/cert-org-search.yml` — **Certificate Transparency: Organization domain discovery** | Searches crt.sh certificate transparency logs by Organization name (not domain) to discover all domains with SSL certificates issued to a specific company. CA-validated o |
@@ -83,6 +84,7 @@ playbooks/
 | `satori://osint/job-board-recon.yml` — **Job Board Recon: Security hiring gap analysis** | Identifies security team gaps by searching for open security-related hiring positions via the Adzuna Jobs API. Requires ADZUNA_ID and ADZUNA_KEY. |
 | `satori://osint/linkedin-company.yml` — **LinkedIn Company Intelligence: Profile, hiring, and competitors** | Enriches company data via Proxycurl (nubela.co, LinkedIn data) and Adzuna Jobs API. Returns company profile, specialties, funding history, and open security roles. |
 | `satori://osint/ransomware-check.yml` — **Ransomware Check: Ransomware victim history** | Checks if a company or domain has been published as a ransomware victim, using the ransomware.live v2 API which indexes victims across ~100 ransomware leak sites (live, f |
+| `satori://osint/rbl-check.yml` — **RBL Check: IP reputation (spam / botnet C2)** | Resolves the organisation's own IPs (domain A records + each MX host) and checks them against IP reputation blocklists (Spamhaus ZEN, Barracuda, SORBS, SpamCop) and the abuse.ch Feodo Tracker for active botnet C2. |
 | `satori://osint/sec-subsidiaries.yml` — **SEC EDGAR: Subsidiary discovery from public filings** | Searches SEC EDGAR full-text search for Exhibit 21 (subsidiary listings) and 8-K (acquisition announcements) to discover legally disclosed subsidiaries. US public compani |
 | `satori://osint/thecompaniesapi.yml` — **TheCompaniesAPI Lookup** | Query TheCompaniesAPI for company info by hostname/domain |
 | `satori://osint/typosquat.yml` — **Typosquat Detection: Lookalike / impersonation domains** | Detects attacker-registered lookalike domains impersonating your brand (typosquats, homoglyphs, TLD swaps, bitsquats). Uses dnstwist to generate permutations, keeps only  |
@@ -129,7 +131,7 @@ playbooks/
 | `satori://dns/tko-subs.yml` — **tko-subs: detect and takeover subdomains with dead DNS records** | tko-subs detects and exploits subdomain takeover vulnerabilities by scanning for misconfigured DNS records that point to external services no longer in use. It helps iden |
 | `satori://dns/whois-check.yml` — **WHOIS: Domain registration and expiry check** | Checks domain WHOIS data including registration date, expiry date, registrar, and domain status. Expired or soon-to-expire domains are a strong signal of company distress |
 
-### Web Security (40 playbooks)
+### Web Security (42 playbooks)
 
 | Playbook | Description |
 |---|---|
@@ -157,9 +159,10 @@ playbooks/
 | `satori://web/passive/socialhunter.yml` — **Socialhunter: crawls the given URL and finds broken social media links that can be hijacked** | socialhunter crawls a given website to identify broken social media links that could be hijacked, potentially allowing attackers to conduct phishing attacks or damage a c |
 | `satori://web/sqlmap.yml` — **sqlmap: automates the process of detecting and exploiting SQL injection flaws** | sqlmap automates the detection and exploitation of SQL injection vulnerabilities in web applications. It identifies injection points, extracts database information, and s |
 | `satori://web/tls/sslscan.yml` — **SSLScan: Identify security issues related to SSL/TLS/HTTPS services** | It reports the protocol versions, cipher suites, key exchanges, signature algorithms, and certificates in use. |
-| `satori://web/strix.yml` — **Strix: AI-powered automated pentesting** | Autonomous AI pentest agent (usestrix/strix) driven by Claude Haiku 4.5 via OpenRouter. Runs the full Kali toolset (agent-browser, nuclei, httpx, sqlmap, ...) directly inside the Satori container — no Docker-in-Docker — and files confirmed vulnerabilities (SQLi, XSS, IDOR, CSRF, XXE, race conditions). Requires OPENROUTER. |
+| `satori://web/strix.yml` — **Strix: AI-powered automated pentesting** | Autonomous AI pentest agent (usestrix/strix) driven by Claude Sonnet 4.5 via OpenRouter. Runs the full Kali toolset (agent-browser, nuclei, httpx, sqlmap, ...) directly inside the Satori container — no Docker-in-Docker — and files confirmed vulnerabilities (SQLi, XSS, IDOR, CSRF, XXE, race conditions). Requires OPENROUTER. |
 | `satori://web/tls/testssl.yml` — **TestSSL: Checks TLS/SSL ciphers and protocols for security flaws** | Check a server's service on any port for the support of TLS/SSL ciphers, protocols as well as some cryptographic flaws. |
 | `satori://web/tls/tlsx.yml` — **TLSX: TLS grabber** | TLSX is a command-line tool designed for comprehensive TLS data collection and analysis. It supports multiple connection modes, customizable cipher suites, and SNI config |
+| `satori://web/transilience.yml` — **Transilience: AI-powered automated pentesting** | Autonomous web-app pentest driving the Claude Code CLI headlessly with the transilienceai/communitytools security skills (recon → injection/XSS/SSRF/auth → CVSS report). Model selectable via -d MODEL over OpenRouter. Requires OPENROUTER. |
 | `satori://web/twa.yml` — **TWA: Tiny Web Auditor** | twa audits web security headers and configurations. It checks for issues such as HTTP redirects to HTTP, missing security headers, and the absence of Content-Security-Pol |
 | `satori://web/tools/urldedupe.yml` — **Urldedupe: deduplicates a list of similar URLs** | Pass in a list of URLs with newlines, and get back a list of deduplicated (unique) URL and query string combination |
 | `satori://web/passive/urlhunter.yml` — **Urlhunter: search URLs that are exposed via shortener services (bit.ly, goo.gl)** | Tool for searching URLs exposed through URL shortener services by analyzing collections of previously brute-forced and published shortened URLs. It allows users to filter |
@@ -172,12 +175,15 @@ playbooks/
 | `satori://web/webanalyze.yml` — **WebAnalyze: a port of Wappalyzer in Go to be performant and allows to test huge lists of web hosts** | Webanalyze detects and identifies technologies used by websites by analyzing their responses and matching them against fingerprints from the Wappalyzer database. It suppo |
 | `satori://web/tools/webscreenshot.yml` — **Webscreenshot: screenshot a list of websites** | webscreenshot captures screenshots of multiple websites by rendering them using headless web browsers. It supports bulk URL input and can take screenshots in parallel, ma |
 | `satori://web/wpscan.yml` — **WPScan: WordPress security scanner** | WPScan scans WordPress installations for known vulnerabilities, outdated plugins and themes, weak passwords, and security misconfigurations. It enumerates users, plugins, |
+| `satori://web/xalgorix.yml` — **Xalgorix: AI-powered automated pentesting** | Autonomous LLM-driven pentesting agent (xalgord/xalgorix) run against a target, model selectable via -d MODEL over OpenRouter. Requires OPENROUTER. |
 | `satori://web/zgrab2.yml` — **ZGrab: network scanner** | ZGrab is a fast, modular application-layer network scanner designed for completing large Internet-wide surveys. ZGrab is built to work with ZMap (ZMap identifies L4 respo |
 
-### Email (9 playbooks)
+### Email (18 playbooks)
 
 | Playbook | Description |
 |---|---|
+| `satori://email/all.yml` — **All email sources: harvest a domain's emails** | Framework entrypoint that discovers a target organisation's email addresses by running every harvesting source (theHarvester, GitHub commit emails, and website spidering). |
+| `satori://email/github.yml` — **Domain to GitHub emails** | Given only a domain, resolves its most likely GitHub org and harvests committer/author emails from the org's public repositories, printing only addresses on the org domain. |
 | `satori://email/email-security.yml` — **Email Security: SPF, DMARC, and DKIM assessment** | Checks email authentication and anti-spoofing configuration by querying SPF, DMARC, and DKIM DNS records. Assesses strictness levels and provides an overall email securit |
 | `satori://email/gauplus-nuclei.yml` — **Gauplus+Nuclei: Get the urls of a domain and search for email addresses** | Extracts URLs from a domain using Gauplus and searches for email addresses with Nuclei. Retrieves historical and indexed URLs, then scans them for email patterns using pr |
 | `satori://email/gitsome.yml` — **gitSome: gets emails associated with a Github account** | gitSome is an OSINT tool that extracts email addresses and other information from various GitHub sources. It can target user accounts, organizations, or specific domains  |
@@ -186,7 +192,14 @@ playbooks/
 | `satori://email/gitxray-repo.yml` — **Gitxray: Get Github repository's emails** | Gitxray (short for Git X-Ray) is a multifaceted security tool designed for use on GitHub repositories. It serves various use cases, including OSINT, forensics, and securi |
 | `satori://email/auth/gitxray-repo.yml` — **Gitxray: Get Github repository's emails authenticated** | Gitxray (short for Git X-Ray) is a multifaceted security tool designed for use on GitHub repositories. It serves various use cases, including OSINT, forensics, and securi |
 | `satori://email/hunter.yml` — **Hunter.io: Email discovery and pattern identification** | Discovers professional email addresses associated with a domain using Hunter.io's database. Returns email addresses, their sources, confidence scores, and the organisatio |
+| `satori://email/spider.yml` — **Site email spider: extract emails by crawling a website** | Lightweight crawler that fetches a website (homepage, /contact, /privacy, /terms, sitemap) and extracts email addresses, filtered to the organisation's domain. |
 | `satori://email/theharvester.yml` — **theHarvester: Get e-mails, subdomains and names** | theHarvester collects OSINT (Open-Source Intelligence) data from public sources to gather emails, subdomains, IPs, and other information related to a target domain. It qu |
+| `satori://email/phishingbox/template-ai.yml` — **PhishingBox: AI phishing template generator (authorized simulation)** | For authorized phishing-simulation exercises only: spiders the target's public site (text + brand assets) and asks an LLM via OpenRouter to generate a brand-matched lure. |
+| `satori://email/phishingbox/create-template.yml` — **PhishingBox: create phishing email template** | Creates a phishing email template in PhishingBox from the AI-generated lure (subject, HTML body, from name/email). |
+| `satori://email/phishingbox/make-template.yml` — **PhishingBox: generate + create our AI phishing template** | One-run harness importing template-ai + create-template: generates a brand-matched lure and creates the template in PhishingBox in a single container. |
+| `satori://email/phishingbox/load-targets.yml` — **PhishingBox: create group and load targets** | Creates a PhishingBox group and bulk-loads recipients into it, parsing first/last name from {first}.{last}@domain email patterns. |
+| `satori://email/phishingbox/launch-campaign.yml` — **PhishingBox: create & launch a phishing campaign** | Creates and schedules a phishing campaign in PhishingBox against one or more groups using one or more templates (authorized simulation). |
+| `satori://email/phishingbox/report.yml` — **PhishingBox: campaign results / success metrics** | Measures a phishing campaign's success: reports how many targets opened the email and clicked the link, broken down by type and per target. |
 
 ### Network Scanning (19 playbooks)
 
@@ -365,7 +378,7 @@ playbooks/
 | `satori://monitor/ping.yml` — **Ping: ping packets reach a host** | This playbook checks for packet loss, running a ping command with four packets to a specified host, and verifying that the output contains that there is no packet loss. |
 | `satori://monitor/ssl-expiry.yml` — **SSL Expiry: Check SSL certificate expiration** | Checks the SSL certificate of a host and asserts that it is not expiring within 30 days. Reports the certificate issuer, validity dates, and days until expiration. |
 
-### LLM (13 playbooks)
+### LLM (12 playbooks)
 
 | Playbook | Description |
 |---|---|
@@ -381,7 +394,6 @@ playbooks/
 | `satori://llm/openrouter.yml` — **OpenRouter: Query referencing a local file** | Sends a prompt plus the contents of a local file to an OpenRouter model via its OpenAI-compatible API and returns the model's answer. |
 | `satori://llm/qwen.yml` — **Qwen: Query this LLM** | Queries Qwen with the provided input. Ensures the Ollama server runs correctly, pulls the specified model, and executes the query. |
 | `satori://llm/tools/repo-by-file.yml` — **Repo by file: Run a query to all files of a repository** | Queries a GitHub repository using Llama 3.2 with Ollama. Clones the specified repository, compiles its file contents into a prompt, and queries the Llama model with the p |
-| `satori://llm/xalgorix.yml` — **Xalgorix - LLM Pentesting** | Run xalgorix autonomous pentesting agent against a target |
 
 ### Malware Detection (4 playbooks)
 
