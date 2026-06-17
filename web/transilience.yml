@@ -53,27 +53,28 @@ pentest:
       # Bound the agent BELOW the Satori timeout (SIGINT @ 60m) so it can flush its
       # report and we can still dump diagnostics; --max-turns caps runaway loops.
       timeout --signal=INT 3600 \
-        claude -p "Use your pentest-engagement, reconnaissance, injection, client-side, server-side and authentication skills to perform a full web application penetration test against ${{HOST}}. Enumerate the attack surface, test for the OWASP Top 10, validate each finding, then write your findings to findings.md and print the full report as your final message with CVSS scores." \
+        claude -p "Use your pentest-engagement, reconnaissance, injection, client-side, server-side and authentication skills to perform a full web application penetration test against ${{HOST}}. Enumerate the attack surface, test for the OWASP Top 10, validate each finding, then write your findings to /data/findings.md (and any supporting report files under /data/) and print the full report as your final message with CVSS scores." \
         --dangerously-skip-permissions \
         --max-turns 60 \
         --output-format json > /tmp/pentest.json 2>/tmp/pentest.err
       RC=$?
       [ "$RC" = "124" ] && echo "WARN: claude hit the 60-min agent cap (killed by timeout)"
-      # Move the agent deliverables to the captured rundir (/data) so they are retrievable with --files.
+      # Persist artifacts to the captured rundir (/data) for --files. The agent on-disk
+      # output location is non-deterministic, so we ALWAYS save the report ourselves from
+      # the JSON result, then also copy any files the agent did write.
+      jq -r '.result // empty' /tmp/pentest.json > /data/pentest-report.md 2>/dev/null
+      cp /tmp/pentest.json /data/pentest-result.json 2>/dev/null
       cp -a /opt/communitytools/OUTPUT_DIR /data/ 2>/dev/null
+      cp /opt/communitytools/findings.md /data/ 2>/dev/null
       echo "==================== CLAUDE RESULT ===================="
       jq -r '.result // "(empty result)"' /tmp/pentest.json 2>/dev/null || cat /tmp/pentest.json
       echo "==================== RUN STATS ===================="
       jq -r '"success=\(.subtype)  is_error=\(.is_error)  turns=\(.num_turns)  cost_usd=\(.total_cost_usd)"' /tmp/pentest.json 2>/dev/null
       echo "==================== STDERR (tail) ===================="
       tail -20 /tmp/pentest.err
-      echo "==================== FINDINGS REPORT ===================="
-      # Deliverables now live under /data/OUTPUT_DIR/<run>/ (findings.md, *PENTEST_REPORT*.md).
-      find /data/OUTPUT_DIR -maxdepth 3 -type f \
-        \( -name 'findings.md' -o -iname '*pentest*report*.md' -o -name 'CVSS_SCORES_SUMMARY.txt' \) \
-        2>/dev/null | sort -u | while read f; do
-        echo "----- $f -----"; cat "$f"; echo
-      done
+      echo "==================== ARTIFACTS IN /data (retrievable with --files) ===================="
+      # pentest-report.md (always) + pentest-result.json + anything the agent wrote.
+      find /data -type f 2>/dev/null | sort
       echo "[gate] claude exit code: $RC"
       exit $RC
   ran:
