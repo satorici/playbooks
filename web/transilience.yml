@@ -1,22 +1,18 @@
 settings:
-  name: "Transilience CommunityTools - Claude Code Pentest"
-  description: "Runs an autonomous web-app penetration test by driving the Claude Code CLI headlessly inside the container with the transilienceai/communitytools security skills (/pentest: recon -> injection/XSS/SSRF/auth -> validation -> CVSS report). Claude Code talks to OpenRouter via its native Anthropic Skin (ANTHROPIC_BASE_URL=https://openrouter.ai/api), so no proxy is needed. Driven by claude-haiku-4.5."
+  name: "Transilience - LLM Pentesting"
+  description: "Runs an autonomous web-app penetration test by driving the Claude Code CLI headlessly inside the container with the transilienceai/communitytools security skills (/pentest: recon -> injection/XSS/SSRF/auth -> validation -> CVSS report). Claude Code talks to OpenRouter via its native Anthropic Skin (ANTHROPIC_BASE_URL=https://openrouter.ai/api), so no proxy is needed. Pick the model with -d MODEL (e.g. anthropic/claude-haiku-4.5 cheap, or anthropic/claude-sonnet-4.6 for higher coverage)."
   image: kalilinux/kali-rolling
   author:
     - https://github.com/satoridev01
   gallery:
     - https://files.catbox.moe/byf8jh.png
-  example: satori run satori://web/transilience.yml -d HOST="http://zero.webappsecurity.com" -d OPENROUTER=$OPENROUTER --output
+  example: satori run satori://web/transilience.yml -d HOST="http://zero.webappsecurity.com" -d MODEL="anthropic/claude-haiku-4.5" -d OPENROUTER=$OPENROUTER --output
   timeout: 4800
   cpu: 4096
   memory: 8192
   files: true
   redacted:
     - OPENROUTER
-
-# OpenRouter model id (Anthropic Skin). Override with -d MODEL="anthropic/claude-sonnet-4.6".
-MODEL:
-  - - "anthropic/claude-haiku-4.5"
 
 pentest:
   install:
@@ -67,7 +63,11 @@ pentest:
       cp -a /opt/communitytools/OUTPUT_DIR /data/ 2>/dev/null
       cp /opt/communitytools/findings.md /data/ 2>/dev/null
       echo "==================== CLAUDE RESULT ===================="
-      jq -r '.result // "(empty result)"' /tmp/pentest.json 2>/dev/null || cat /tmp/pentest.json
+      # Prefer the final assistant message; if empty, fall back to the agent written report.
+      RES=$(jq -r '.result // empty' /tmp/pentest.json 2>/dev/null)
+      if [ -n "$RES" ]; then echo "$RES"
+      elif [ -f /data/findings.md ]; then echo "(empty final message - showing /data/findings.md)"; cat /data/findings.md
+      else cat /tmp/pentest.json; fi
       echo "==================== RUN STATS ===================="
       jq -r '"success=\(.subtype)  is_error=\(.is_error)  turns=\(.num_turns)  cost_usd=\(.total_cost_usd)"' /tmp/pentest.json 2>/dev/null
       echo "==================== STDERR (tail) ===================="
