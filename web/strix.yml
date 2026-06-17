@@ -1,5 +1,5 @@
 settings:
-  name: "Strix: AI pentesting"
+  name: "Strix - LLM Pentesting"
   description: "Runs Strix (usestrix/strix), the AI-powered automated pentesting agent, entirely inside the Satori container via a custom unix_local runtime backend (from satoridev01/strix). Runs on Strix's OFFICIAL Kali sandbox image so the full toolset (agent-browser+chromium, nuclei, httpx, nmap, semgrep, ...) is present. Driven by Claude Sonnet 4.5 via OpenRouter (1M-token context to avoid mid-scan context-overflow crashes, with Anthropic prompt caching for cost). No Docker-in-Docker required."
   image: ghcr.io/usestrix/strix-sandbox:1.0.0
   timeout: 5400
