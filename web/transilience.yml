@@ -59,6 +59,8 @@ pentest:
         --output-format json > /tmp/pentest.json 2>/tmp/pentest.err
       RC=$?
       [ "$RC" = "124" ] && echo "WARN: claude hit the 60-min agent cap (killed by timeout)"
+      # Move the agent deliverables to the captured rundir (/data) so they are retrievable with --files.
+      cp -a /opt/communitytools/OUTPUT_DIR /data/ 2>/dev/null
       echo "==================== CLAUDE RESULT ===================="
       jq -r '.result // "(empty result)"' /tmp/pentest.json 2>/dev/null || cat /tmp/pentest.json
       echo "==================== RUN STATS ===================="
@@ -66,11 +68,10 @@ pentest:
       echo "==================== STDERR (tail) ===================="
       tail -20 /tmp/pentest.err
       echo "==================== FINDINGS REPORT ===================="
-      # The skills write deliverables under OUTPUT_DIR/<run>/ (findings.md, *PENTEST_REPORT*.md).
-      # Search there (and HOME/cwd) but skip the repo skill templates.
-      find /opt/communitytools/OUTPUT_DIR "$HOME" /opt/communitytools -maxdepth 3 -type f \
+      # Deliverables now live under /data/OUTPUT_DIR/<run>/ (findings.md, *PENTEST_REPORT*.md).
+      find /data/OUTPUT_DIR -maxdepth 3 -type f \
         \( -name 'findings.md' -o -iname '*pentest*report*.md' -o -name 'CVSS_SCORES_SUMMARY.txt' \) \
-        2>/dev/null | grep -vE '/(skills|formats|projects|docs|papers|mcp|benchmarks)/' | sort -u | while read f; do
+        2>/dev/null | sort -u | while read f; do
         echo "----- $f -----"; cat "$f"; echo
       done
       echo "[gate] claude exit code: $RC"
