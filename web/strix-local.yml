@@ -1,0 +1,64 @@
+settings:
+  name: "Strix - LLM Pentesting (default Docker backend, local model)"
+  description: "Strix (usestrix/strix) driven by the local LLM model"
+  timeout: 5400
+  files: false   # do not upload artifacts; the scan runs in a temp dir and findings print to stdout
+  example: satori local strix-local.yml -d MODEL="openai/qwen3.6-35b" -d HOST="http://zero.webappsecurity.com" --output --test strix:run:stdout
+
+strix:
+  install:
+    - pip install --break-system-packages --root-user-action=ignore -q -U strix-agent
+
+  run:
+    - |
+      export STRIX_LLM="${{MODEL}}"
+      export LLM_API_BASE="http://localhost:8000/v1"
+      export OPENAI_API_BASE="http://localhost:8000/v1"
+      export OPENAI_BASE_URL="http://localhost:8000/v1"
+      export LLM_API_KEY="sk-local"
+      export OPENAI_API_KEY="sk-local"
+      export STRIX_TELEMETRY=0
+      export OPENAI_AGENTS_DISABLE_TRACING=1
+      export COLUMNS=200
+      export STRIX_LLM_TIMEOUT=1800
+      export LLM_TIMEOUT=1800
+
+      TARGET="${{HOST}}"
+      WORKDIR=$(mktemp -d /tmp/strix.XXXXXX); cd "$WORKDIR"
+      echo "WORKDIR=$WORKDIR  MODEL=$STRIX_LLM @ $LLM_API_BASE  TARGET=$TARGET"
+      cat > sitecustomize.py <<'PYEOF'
+      import os
+      try:
+          from openai import AsyncOpenAI
+          from agents import set_default_openai_client
+          b = os.environ.get("LLM_API_BASE") or os.environ.get("OPENAI_BASE_URL")
+          k = os.environ.get("LLM_API_KEY") or os.environ.get("OPENAI_API_KEY") or "sk-local"
+          # Increase the timeout
+          t = float(os.environ.get("STRIX_LLM_TIMEOUT", "1800"))
+          if b:
+              set_default_openai_client(AsyncOpenAI(base_url=b, api_key=k, timeout=t, max_retries=5))
+      except Exception:
+          pass
+      PYEOF
+      export PYTHONPATH="$WORKDIR:${PYTHONPATH:-}"
+
+      # Preflight: local model and Docker must both be reachable.
+      curl -sf -m 10 "$LLM_API_BASE/models" >/dev/null || { echo "[fatal] LLM not reachable at $LLM_API_BASE"; exit 1; }
+      docker info >/dev/null 2>&1 || { echo "[fatal] docker daemon not reachable (socket access on pgx?)"; exit 1; }
+
+      strix -n --target "$TARGET" --scan-mode quick > /tmp/strix_out.txt 2>&1 && RC=0 || RC=$?
+      grep -v 'Provider List: https' /tmp/strix_out.txt
+      echo; echo "==================== ALL VULNERABILITIES (vulnerabilities.json) ===================="
+      VJSON=$(find . -name vulnerabilities.json 2>/dev/null | head -1)
+      if [ -n "$VJSON" ]; then
+        echo "count: $(jq 'length' "$VJSON")"
+        jq -r '.[] | "\n### [sev \(.severity // "?")] \(.title // .name // "untitled")  (\(.cvss_score // "?"))\n\(.description // "")"' "$VJSON" 2>/dev/null || cat "$VJSON"
+      else
+        echo "no vulnerabilities.json written (0 findings filed)"
+      fi
+      echo "[gate] strix exit code: $RC (0=clean, 2=vulns found, 1=crash, negative=killed by signal)"
+      # Scan succeeded whether it found vulns (2) or not (0). Only a crash (1) or kill (negative) is a real failure.
+      if [ "$RC" = "0" ] || [ "$RC" = "2" ]; then exit 0; else exit "${RC#-}"; fi
+  ran:
+    setOutput: strix.run
+    assertReturnCode: 0
