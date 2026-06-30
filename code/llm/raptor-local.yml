@@ -11,11 +11,10 @@ raptor:
   install:
     # Clone RAPTOR into /tmp (just source; no Python deps installed here).
     - test -d /tmp/raptor/.claude || git clone --depth 1 https://github.com/gadievron/raptor.git /tmp/raptor
-    # Trust this direct (non-bin/raptor) launch on Linux, mirroring what RAPTOR already does for direct
-    # callers on macOS: its sandbox pid1-shim otherwise refuses to spawn the per-finding `claude` calls
-    # (the env-based _RAPTOR_TRUSTED bypass is stripped by get_safe_env), so the LLM analysis silently
-    # does nothing. We patch our own /tmp clone. Idempotent.
-    - grep -q '_RAPTOR_TRUSTED") or True' /tmp/raptor/libexec/raptor-pid1-shim || sed -i 's|os.environ.get("_RAPTOR_TRUSTED")|os.environ.get("_RAPTOR_TRUSTED") or True|' /tmp/raptor/libexec/raptor-pid1-shim
+    # RAPTOR sandboxes the per-finding `claude` calls and rebuilds their env from an allowlist
+    # (get_safe_env), which drops ANTHROPIC_* — so the sandboxed claude loses our endpoint/model and the
+    # LLM analysis silently does nothing. Add those vars to the allowlist in our /tmp clone. Idempotent.
+    - grep -q '"ANTHROPIC_BASE_URL"' /tmp/raptor/core/config/__init__.py || sed -i 's/"_RAPTOR_TRUSTED", "CLAUDECODE",/"_RAPTOR_TRUSTED", "CLAUDECODE", "ANTHROPIC_BASE_URL", "ANTHROPIC_AUTH_TOKEN", "ANTHROPIC_MODEL", "ANTHROPIC_SMALL_FAST_MODEL", "CLAUDE_CODE_DISABLE_1M_CONTEXT", "API_TIMEOUT_MS",/' /tmp/raptor/core/config/__init__.py
     # uv: a single self-contained binary used to run RAPTOR in a throwaway env (nothing installed into system Python).
     - command -v uv >/dev/null 2>&1 || curl -LsSf https://astral.sh/uv/install.sh | sh
     # Semgrep as an ISOLATED uv tool (its own env) so RAPTOR finds it on PATH without clashing with RAPTOR deps
@@ -42,6 +41,9 @@ raptor:
       export API_TIMEOUT_MS=1800000
       # RAPTOR refuses agentic mode as root unless it detects a sandbox.
       export IS_SANDBOX=1
+      # Trust this direct launch so the RAPTOR pid1-shim spawns the per-finding claude calls (this marker
+      # is allowlisted by get_safe_env, so it survives into the sandbox; bin/raptor sets it the same way).
+      export _RAPTOR_TRUSTED=1
       # uv is in ~/.local/bin; the isolated semgrep binary is in /tmp/bin.
       export PATH="/tmp/bin:$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
 
