@@ -13,6 +13,8 @@ raptor:
     - grep -q '"ANTHROPIC_BASE_URL"' /tmp/raptor/core/config/__init__.py || sed -i 's/"_RAPTOR_TRUSTED", "CLAUDECODE",/"_RAPTOR_TRUSTED", "CLAUDECODE", "ANTHROPIC_BASE_URL", "ANTHROPIC_AUTH_TOKEN", "ANTHROPIC_MODEL", "ANTHROPIC_SMALL_FAST_MODEL", "CLAUDE_CODE_DISABLE_1M_CONTEXT", "API_TIMEOUT_MS",/' /tmp/raptor/core/config/__init__.py
     - mkdir -p "$HOME/.config/raptor" && printf '%s\n' '{"proxy_hosts":["localhost","127.0.0.1"]}' > "$HOME/.config/raptor/cc-dispatch-proxy-hosts.json"
     - grep -q 'NO_PROXY.*localhost' /tmp/raptor/core/sandbox/context.py || sed -i 's/"NO_PROXY":[ ]"",[ ]"no_proxy":[ ]"",/"NO_PROXY":"localhost,127.0.0.1", "no_proxy":"localhost,127.0.0.1",/' /tmp/raptor/core/sandbox/context.py
+    # The local model is free but claude prices it like a hosted one, so the default --max-budget-usd 1.00 aborts per-finding analysis (error_max_budget_usd); raise it. Idempotent.
+    - grep -q '"--max-budget-usd", "1000.00"' /tmp/raptor/core/llm/cc_adapter.py || sed -i 's/"--max-budget-usd", config.budget_usd,/"--max-budget-usd", "1000.00",/' /tmp/raptor/core/llm/cc_adapter.py
     - command -v uv >/dev/null 2>&1 || curl -LsSf https://astral.sh/uv/install.sh | sh
     - export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"; rm -rf /tmp/semgrep /tmp/bin && UV_TOOL_DIR=/tmp UV_TOOL_BIN_DIR=/tmp/bin uv tool install --force --python 3.12 -q semgrep
 
