@@ -11,9 +11,10 @@ raptor:
     - test -d /tmp/raptor/.claude || git clone --depth 1 https://github.com/gadievron/raptor.git /tmp/raptor
     # uv is a single self-contained binary (fine to keep in ~/.local/bin); used to run RAPTOR in a throwaway env.
     - command -v uv >/dev/null 2>&1 || curl -LsSf https://astral.sh/uv/install.sh | sh
-    # Semgrep in its OWN uv venv at /tmp/semgrep (isolated; NOT the host Python, and NOT mixed with
-    # RAPTOR deps — bundling it into RAPTOR env breaks its opentelemetry import). Recreated each run.
-    - export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"; rm -rf /tmp/semgrep && uv venv --python 3.12 /tmp/semgrep && uv pip install --python /tmp/semgrep/bin/python -q semgrep
+    # Semgrep as an ISOLATED uv tool (env in /tmp/semgrep, binary in /tmp/bin) so RAPTOR finds it on
+    # PATH. NOT the host Python, NOT mixed with RAPTOR deps (that breaks its opentelemetry import).
+    # rm -rf first so a stale env from a previous layout never trips `uv tool`.
+    - export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"; rm -rf /tmp/semgrep && UV_TOOL_DIR=/tmp UV_TOOL_BIN_DIR=/tmp/bin uv tool install --python 3.12 -q semgrep
 
   run:
     - |
@@ -31,8 +32,8 @@ raptor:
       export API_TIMEOUT_MS=1800000
       # RAPTOR refuses agentic mode as root unless it detects a sandbox.
       export IS_SANDBOX=1
-      # uv lives in ~/.local/bin; the isolated semgrep venv binary is at /tmp/semgrep/bin.
-      export PATH="/tmp/semgrep/bin:$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
+      # uv lives in ~/.local/bin; the isolated semgrep tool binary is in /tmp/bin.
+      export PATH="/tmp/bin:$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
 
       # Preflight: the local model must be reachable before we start.
       curl -sf -m 10 -o /dev/null "$ANTHROPIC_BASE_URL/v1/models" || { echo "[fatal] local model not reachable at $ANTHROPIC_BASE_URL (is vLLM up on pgx?)"; exit 1; }
