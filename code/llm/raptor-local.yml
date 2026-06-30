@@ -28,10 +28,11 @@ raptor:
       export ANTHROPIC_AUTH_TOKEN="local"
       export ANTHROPIC_MODEL="${{MODEL}}"
       export ANTHROPIC_SMALL_FAST_MODEL="${{MODEL}}"
-      export CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1
+      # The local model serves a finite context (not 1M) — keep Claude Code from requesting the 1M beta.
       export CLAUDE_CODE_DISABLE_1M_CONTEXT=1
-      export CLAUDE_AUTOCOMPACT_PCT_OVERRIDE=75
-      export DISABLE_TELEMETRY=1 DISABLE_AUTOUPDATER=1 DISABLE_ERROR_REPORTING=1
+      # Hygiene for a sandboxed/offline run: suppress Claude Code external calls (telemetry, updater, error
+      # reporting, other non-essential traffic) that the sandbox would block anyway and that add noise/latency.
+      export CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1 DISABLE_TELEMETRY=1 DISABLE_AUTOUPDATER=1 DISABLE_ERROR_REPORTING=1
       # A local model can be slow per call; widen the Claude Code request timeout to 30 min.
       export API_TIMEOUT_MS=1800000
       # RAPTOR refuses agentic mode as root unless it detects a sandbox.
@@ -39,17 +40,11 @@ raptor:
       # uv is in ~/.local/bin; the isolated semgrep binary is in /tmp/bin.
       export PATH="/tmp/bin:$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
 
-      # Preflight: the local model server must be reachable before we start.
-      curl -sf -m 10 -o /dev/null "$ANTHROPIC_BASE_URL/v1/models" || { echo "[fatal] local model not reachable at $ANTHROPIC_BASE_URL"; exit 1; }
-      # Satori cloned the target repo (via --repo) into the cwd. Point RAPTOR at it.
-      TARGET="$(pwd)"
-      OUT=/tmp/raptor-out
-      echo "Target: $TARGET  ($(find "$TARGET" -type f 2>/dev/null | wc -l) files)  MODE=agentic  MODEL=${{MODEL}}"
-      # Ephemeral execution: uv resolves RAPTOR deps into a throwaway env (uv cache); nothing installed into system Python.
-      cd /tmp/raptor
+      # Satori cloned the target repo (via --repo) into the cwd; RAPTOR analyses it.
+      TARGET="$(pwd)"; cd /tmp/raptor
       timeout --signal=INT 5100 \
         uv run --no-project --python 3.12 --with-requirements /tmp/raptor/requirements.txt \
-        python raptor.py agentic --repo "$TARGET" --out "$OUT" \
+        python raptor.py agentic --repo "$TARGET" --out /tmp/raptor-out \
         > /tmp/raptor.log 2>&1
       RC=$?
       [ "$RC" = "124" ] && echo "WARN: RAPTOR hit the run cap (killed by timeout)"
