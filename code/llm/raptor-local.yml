@@ -37,6 +37,9 @@ raptor:
       export API_TIMEOUT_MS=1800000
       # RAPTOR refuses agentic mode as root unless it detects a sandbox.
       export IS_SANDBOX=1
+      # We invoke raptor.py directly (not via bin/raptor), so trust the pid1 sandbox-dispatch shim —
+      # otherwise it refuses to launch the per-finding `claude` calls and the LLM analysis does nothing.
+      export _RAPTOR_TRUSTED=1
       # uv is in ~/.local/bin; the isolated semgrep binary is in /tmp/bin.
       export PATH="/tmp/bin:$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
 
