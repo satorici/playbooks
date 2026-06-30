@@ -4,7 +4,7 @@ settings:
   author:
     - https://github.com/gadievron
   timeout: 5400
-  files: false   # do not upload artifacts; findings print to stdout (validated findings + SARIF under /tmp)
+  files: false   # do not upload artifacts; findings print to stdout (validated findings under /tmp)
   example: satori local satori://code/llm/raptor-local.yml --repo OWASP/NodeGoat -d MODEL="qwen3.6-35b" --output
 
 raptor:
@@ -54,25 +54,34 @@ raptor:
       [ "$RC" = "124" ] && echo "WARN: RAPTOR hit the run cap (killed by timeout)"
       echo "==================== RAPTOR LOG ===================="
       cat /tmp/raptor.log
-      # RAPTOR prints OUTPUT_DIR=<path>; agentic also writes its own run dir there.
-      ODIR=$(grep -oE 'OUTPUT_DIR=.*' /tmp/raptor.log | tail -1 | cut -d= -f2-)
-      echo "==================== VALIDATED FINDINGS (agentic: validation/findings.json) ===================="
-      VF=0
-      for f in "$OUT/validation/findings.json" "$OUT/findings.json" "$ODIR/validation/findings.json" "$ODIR/findings.json"; do
-        [ -f "$f" ] || continue
-        VF=1; echo "--- $f ---"
-        jq -r '(.findings // .results // .)[]? | "[\(.severity // .level // "?")] \(.title // .rule // .id // "?")  @ \(.file // .path // .location // "?")\n  \(.description // .message // "")"' "$f" 2>/dev/null || cat "$f"
-      done
-      [ "$VF" = "0" ] && echo "(no findings.json — agentic filed no validated findings, or wrote elsewhere)"
-      echo "==================== SEMGREP (SARIF) ===================="
-      for s in $(find "$OUT" -name '*.sarif' 2>/dev/null); do
-        echo "--- $s ---"
-        jq -r '.runs[].results[]? | "[\(.level // "note")] \(.ruleId): \(.message.text)  @ \(.locations[0].physicalLocation.artifactLocation.uri // "?")"' "$s" 2>/dev/null
-      done
-      echo "==================== ARTIFACTS (en $OUT y $ODIR) ===================="
-      find "$OUT" "$ODIR" -type f 2>/dev/null | sort | head -80
+      echo "==================== ARTIFACTS ===================="
+      find /tmp/raptor-out /tmp/raptor/out -type f 2>/dev/null | sort | head -80
       echo "[gate] raptor exit code: $RC"
       exit $RC
   ran:
     setOutput: raptor.run
     assertReturnCode: 0
+
+# Clean cat of the validated findings (separate from the noisy RAPTOR log above).
+# Per-severity gates assert on findings.run.stdout (severity_assessment from the LLM validation).
+findings:
+  run:
+    - |
+      F=$(find /tmp/raptor-out /tmp/raptor/out -path '*/validation/findings.json' 2>/dev/null | head -1)
+      [ -z "$F" ] && F=$(find /tmp/raptor-out /tmp/raptor/out -name findings.json 2>/dev/null | head -1)
+      if [ -n "$F" ]; then cat "$F"; else echo "(no validation/findings.json - no validated findings filed)"; fi
+
+  critical:
+    setOutput: findings.run
+    setSeverity: 1
+    assertStdoutNotContains: '"severity_assessment": "critical"'
+
+  high:
+    setOutput: findings.run
+    setSeverity: 2
+    assertStdoutNotContains: '"severity_assessment": "high"'
+
+  medium:
+    setOutput: findings.run
+    setSeverity: 3
+    assertStdoutNotContains: '"severity_assessment": "medium"'
