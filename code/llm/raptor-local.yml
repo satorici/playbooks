@@ -16,7 +16,7 @@ raptor:
     # Semgrep as an ISOLATED uv tool (env in /tmp/semgrep, binary in /tmp/bin) so RAPTOR finds it on
     # PATH. NOT the host Python, NOT mixed with RAPTOR deps (that breaks its opentelemetry import).
     # rm -rf first so a stale env from a previous layout never trips `uv tool`.
-    - export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"; rm -rf /tmp/semgrep && UV_TOOL_DIR=/tmp UV_TOOL_BIN_DIR=/tmp/bin uv tool install --python 3.12 -q semgrep
+    - export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"; rm -rf /tmp/semgrep /tmp/bin && UV_TOOL_DIR=/tmp UV_TOOL_BIN_DIR=/tmp/bin uv tool install --force --python 3.12 -q semgrep
 
   run:
     - |
