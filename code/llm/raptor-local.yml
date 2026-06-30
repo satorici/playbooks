@@ -21,11 +21,9 @@ raptor:
   run:
     - |
       # --- LOCAL MODEL: route RAPTOR at the pgx vLLM via the `ollama` provider (OpenAI-compatible /v1).
-      # RAPTOR builds api_base as $OLLAMA_HOST/v1; a models.json (RAPTOR_CONFIG) sets it as the primary
-      # model. We deliberately do NOT set ANTHROPIC_API_KEY (that made RAPTOR default to claude-opus-4-6).
+      # RAPTOR builds api_base as $OLLAMA_HOST/v1; the model is selected on the CLI with
+      # --model ollama/<name> (no models.json file; no ANTHROPIC_API_KEY -> no claude-opus-4-6 default).
       export OLLAMA_HOST="http://localhost:8000"
-      printf '%s' '{"models":[{"provider":"ollama","model":"${{MODEL}}","timeout":1800,"max_context":262144}]}' > /tmp/raptor-models.json
-      export RAPTOR_CONFIG=/tmp/raptor-models.json
       export DISABLE_TELEMETRY=1 DISABLE_AUTOUPDATER=1 DISABLE_ERROR_REPORTING=1
       # RAPTOR refuses agentic mode as root unless it detects a sandbox.
       export IS_SANDBOX=1
@@ -43,7 +41,7 @@ raptor:
       cd /tmp/raptor
       timeout --signal=INT 5100 \
         uv run --no-project --python 3.12 --with-requirements /tmp/raptor/requirements.txt \
-        python raptor.py agentic --repo "$TARGET" --out "$OUT" \
+        python raptor.py agentic --repo "$TARGET" --out "$OUT" --model "ollama/${{MODEL}}" \
         > /tmp/raptor.log 2>&1
       RC=$?
       [ "$RC" = "124" ] && echo "WARN: RAPTOR hit the run cap (killed by timeout)"
