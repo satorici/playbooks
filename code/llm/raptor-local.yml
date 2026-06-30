@@ -86,6 +86,4 @@ report:
       R=/tmp/raptor-out/agentic-report.md
       [ -f "$R" ] || R=$(find /tmp/raptor-out -name '*report*.md' 2>/dev/null | head -1)
       if [ -n "$R" ] && [ -f "$R" ]; then cat "$R"; else echo "(no agentic-report.md written)"; fi
-  ran:
-    setOutput: report.run
-    assertReturnCode: 0
+  assertReturnCode: 0
