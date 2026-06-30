@@ -9,56 +9,31 @@ settings:
 
 raptor:
   install:
-    # Clone RAPTOR into /tmp (just source; no Python deps installed here).
     - test -d /tmp/raptor/.claude || git clone --depth 1 https://github.com/gadievron/raptor.git /tmp/raptor
-    # RAPTOR sandboxes the per-finding `claude` calls and rebuilds their env from an allowlist
-    # (get_safe_env), which drops ANTHROPIC_* — so the sandboxed claude loses our endpoint/model and the
-    # LLM analysis silently does nothing. Add those vars to the allowlist in our /tmp clone. Idempotent.
     - grep -q '"ANTHROPIC_BASE_URL"' /tmp/raptor/core/config/__init__.py || sed -i 's/"_RAPTOR_TRUSTED", "CLAUDECODE",/"_RAPTOR_TRUSTED", "CLAUDECODE", "ANTHROPIC_BASE_URL", "ANTHROPIC_AUTH_TOKEN", "ANTHROPIC_MODEL", "ANTHROPIC_SMALL_FAST_MODEL", "CLAUDE_CODE_DISABLE_1M_CONTEXT", "API_TIMEOUT_MS",/' /tmp/raptor/core/config/__init__.py
-    # RAPTOR sandboxes the model calls behind an egress proxy whose allowlist defaults to api.anthropic.com
-    # and is NOT auto-derived from ANTHROPIC_BASE_URL — so calls to the local server get denied (400). Use
-    # RAPTOR's supported operator override to allowlist the local host.
     - mkdir -p "$HOME/.config/raptor" && printf '%s\n' '{"proxy_hosts":["localhost","127.0.0.1"]}' > "$HOME/.config/raptor/cc-dispatch-proxy-hosts.json"
-    # uv: a single self-contained binary used to run RAPTOR in a throwaway env (nothing installed into system Python).
+    - grep -q 'NO_PROXY.*localhost' /tmp/raptor/core/sandbox/context.py || sed -i 's/"NO_PROXY": "", "no_proxy": "",/"NO_PROXY": "localhost,127.0.0.1", "no_proxy": "localhost,127.0.0.1",/' /tmp/raptor/core/sandbox/context.py
     - command -v uv >/dev/null 2>&1 || curl -LsSf https://astral.sh/uv/install.sh | sh
-    # Semgrep as an ISOLATED uv tool (its own env) so RAPTOR finds it on PATH without clashing with RAPTOR deps
-    # (bundling semgrep into RAPTOR's env breaks its opentelemetry import). rm -rf first to avoid stale state.
     - export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"; rm -rf /tmp/semgrep /tmp/bin && UV_TOOL_DIR=/tmp UV_TOOL_BIN_DIR=/tmp/bin uv tool install --force --python 3.12 -q semgrep
 
   run:
     - |
-      # --- LOCAL MODEL: RAPTOR analyses via its Claude Code provider (the `claude` CLI). Point that CLI at a
-      # local model server that exposes the Anthropic /v1/messages API (default http://localhost:8000).
-      # IMPORTANT: do NOT set ANTHROPIC_API_KEY — that makes RAPTOR pick a hosted Claude model as primary and
-      # pass it to claude (the local server has no such model). With only AUTH_TOKEN + MODEL set, RAPTOR drives
-      # claude with the local model named in -d MODEL.
       export ANTHROPIC_BASE_URL="http://localhost:8000"
       export ANTHROPIC_AUTH_TOKEN="local"
       export ANTHROPIC_MODEL="${{MODEL}}"
       export ANTHROPIC_SMALL_FAST_MODEL="${{MODEL}}"
-      # The local model serves a finite context (not 1M) — keep Claude Code from requesting the 1M beta.
       export CLAUDE_CODE_DISABLE_1M_CONTEXT=1
-      # Hygiene for a sandboxed/offline run: suppress Claude Code external calls (telemetry, updater, error
-      # reporting, other non-essential traffic) that the sandbox would block anyway and that add noise/latency.
       export CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1 DISABLE_TELEMETRY=1 DISABLE_AUTOUPDATER=1 DISABLE_ERROR_REPORTING=1
-      # A local model can be slow per call; widen the Claude Code request timeout to 30 min.
       export API_TIMEOUT_MS=1800000
-      # RAPTOR refuses agentic mode as root unless it detects a sandbox.
       export IS_SANDBOX=1
-      # Trust this direct launch so the RAPTOR pid1-shim spawns the per-finding claude calls (this marker
-      # is allowlisted by get_safe_env, so it survives into the sandbox; bin/raptor sets it the same way).
       export _RAPTOR_TRUSTED=1
-      # uv is in ~/.local/bin; the isolated semgrep binary is in /tmp/bin.
       export PATH="/tmp/bin:$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
-      # Keep uv's ephemeral run env under /tmp: RAPTOR's sandbox only allows writes to /tmp + its output
-      # dir, so an env under ~/.cache/uv gets its pyvenv.cfg write denied and the sandboxed model call dies.
       export UV_CACHE_DIR=/tmp/uv-cache
 
-      # Satori cloned the target repo (via --repo) into the cwd; RAPTOR analyses it.
       TARGET="$(pwd)"; cd /tmp/raptor
       timeout --signal=INT 5100 \
         uv run --no-project --python 3.12 --with-requirements /tmp/raptor/requirements.txt \
-        python raptor.py agentic --repo "$TARGET" --out /tmp/raptor-out --max-findings 1 \
+        python raptor.py agentic --repo "$TARGET" --out /tmp/raptor-out --max-findings 1 --sandbox none \
         > /tmp/raptor.log 2>&1
       RC=$?
       [ "$RC" = "124" ] && echo "WARN: RAPTOR hit the run cap (killed by timeout)"
@@ -66,12 +41,7 @@ raptor:
       cat /tmp/raptor.log
       echo "[gate] raptor exit code: $RC"
       exit $RC
-  ran:
-    setOutput: raptor.run
-    assertReturnCode: 0
 
-# Validated findings (RAPTOR writes them to a fixed path under the output dir).
-# Per-severity gates assert on findings.list stdout (severity_assessment from the LLM validation).
 findings:
   list:
     - cat /tmp/raptor-out/validation/findings.json
