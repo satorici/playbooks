@@ -58,32 +58,29 @@ raptor:
 # Clean cat of the validated findings (separate from the noisy RAPTOR log above).
 # Per-severity gates assert on findings.run.stdout (severity_assessment from the LLM validation).
 findings:
-  run:
+  list:
     - |
       F=$(find /tmp/raptor-out /tmp/raptor/out -path '*/validation/findings.json' 2>/dev/null | head -1)
       [ -z "$F" ] && F=$(find /tmp/raptor-out /tmp/raptor/out -name findings.json 2>/dev/null | head -1)
       if [ -n "$F" ]; then cat "$F"; else echo "(no validation/findings.json - no validated findings filed)"; fi
 
   critical:
-    setOutput: findings.run
+    setOutput: findings.list
     setSeverity: 1
     assertStdoutNotContains: '"severity_assessment": "critical"'
 
   high:
-    setOutput: findings.run
+    setOutput: findings.list
     setSeverity: 2
     assertStdoutNotContains: '"severity_assessment": "high"'
 
   medium:
-    setOutput: findings.run
+    setOutput: findings.list
     setSeverity: 3
     assertStdoutNotContains: '"severity_assessment": "medium"'
 
-# Human-readable agentic report (scan + LLM analysis summary). Its stdout is exposed for reference.
-report:
-  run:
+  report:
     - |
       R=/tmp/raptor-out/agentic-report.md
       [ -f "$R" ] || R=$(find /tmp/raptor-out -name '*report*.md' 2>/dev/null | head -1)
       if [ -n "$R" ] && [ -f "$R" ]; then cat "$R"; else echo "(no agentic-report.md written)"; fi
-  assertReturnCode: 0
