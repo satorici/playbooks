@@ -1,6 +1,6 @@
 settings:
   name: "RAPTOR - LLM Security Research (local model)"
-  description: "Local-model variant of code/llm/raptor.yml. Runs RAPTOR (gadievron/raptor) in AGENTIC mode against SOURCE CODE: Semgrep static analysis + LLM-driven exploitability validation, PoC and patch writing, with its LLM dispatcher pointed at the LOCAL vLLM on pgx (ANTHROPIC_BASE_URL=http://localhost:8000, the Anthropic /v1/messages API). Pass the code with Satori's native --repo <git-url>. Launched with `satori local` ON pgx; RAPTOR runs via `uv run` (throwaway env), semgrep is isolated in /tmp/semgrep, nothing is installed into the host Python. Mode is hardcoded to agentic on purpose — for static-only Semgrep use code/semgrep.yml. Pick the model with -d MODEL."
+  description: "Runs RAPTOR (gadievron/raptor) in AGENTIC mode against SOURCE CODE: Semgrep static analysis plus LLM-driven exploitability validation, proof-of-concept generation and patch writing, powered by a LOCAL model. Choose the model with -d MODEL."
   timeout: 5400
   files: false   # do not upload artifacts; findings print to stdout (validated findings + SARIF under /tmp)
   example: satori local satori://code/llm/raptor-local.yml --repo OWASP/NodeGoat -d MODEL="qwen3.6-35b" --output
