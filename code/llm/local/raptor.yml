@@ -5,7 +5,7 @@ settings:
     - https://github.com/gadievron
   timeout: 5400
   files: false   # findings and report print to stdout as separate test steps below
-  example: satori local satori://code/llm/raptor-local.yml --repo OWASP/NodeGoat -d MODEL="qwen3.6-35b" --output
+  example: satori local satori://code/llm/local/raptor.yml --repo OWASP/NodeGoat -d MODEL="qwen3.6-35b" --output
 
 raptor:
   install:

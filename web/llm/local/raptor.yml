@@ -5,7 +5,7 @@ settings:
     - https://github.com/gadievron
   timeout: 5400
   files: false   # do not upload artifacts; findings print to stdout (scan files land under /tmp/raptor/out)
-  example: satori local satori://web/llm/raptor-local.yml -d HOST="http://zero.webappsecurity.com" -d MODEL="qwen3.6-35b" --output
+  example: satori local satori://web/llm/local/raptor.yml -d HOST="http://zero.webappsecurity.com" -d MODEL="qwen3.6-35b" --output
 
 raptor:
   install:

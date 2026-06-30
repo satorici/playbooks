@@ -3,7 +3,7 @@ settings:
   description: "Strix (usestrix/strix) driven by the local LLM model"
   timeout: 5400
   files: false   # do not upload artifacts; the scan runs in a temp dir and findings print to stdout
-  example: satori local satori://web/llm/strix-local.yml -d MODEL="qwen3.6-35b" -d HOST="http://zero.webappsecurity.com" --output
+  example: satori local satori://web/llm/local/strix.yml -d MODEL="qwen3.6-35b" -d HOST="http://zero.webappsecurity.com" --output
 
 strix:
   install:
