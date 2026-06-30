@@ -11,6 +11,9 @@ raptor:
     - test -d /tmp/raptor/.claude || git clone --depth 1 https://github.com/gadievron/raptor.git /tmp/raptor
     # uv is a single self-contained binary (fine to keep in ~/.local/bin); used to run RAPTOR in a throwaway env.
     - command -v uv >/dev/null 2>&1 || curl -LsSf https://astral.sh/uv/install.sh | sh
+    # Semgrep as an ISOLATED uv tool (its own env in /tmp) so RAPTOR finds it on PATH. It must NOT share
+    # RAPTOR deps: bundling semgrep into RAPTOR env breaks its opentelemetry import.
+    - export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"; UV_TOOL_DIR=/tmp/semgrep UV_TOOL_BIN_DIR=/tmp/semgrep/bin uv tool install --python 3.12 -q semgrep
 
   run:
     - |
@@ -28,8 +31,8 @@ raptor:
       export API_TIMEOUT_MS=1800000
       # RAPTOR refuses agentic mode as root unless it detects a sandbox.
       export IS_SANDBOX=1
-      # uv lives in ~/.local/bin.
-      export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
+      # uv lives in ~/.local/bin; the isolated semgrep tool binary is in /tmp/semgrep/bin.
+      export PATH="/tmp/semgrep/bin:$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
 
       # Preflight: the local model must be reachable before we start.
       curl -sf -m 10 -o /dev/null "$ANTHROPIC_BASE_URL/v1/models" || { echo "[fatal] local model not reachable at $ANTHROPIC_BASE_URL (is vLLM up on pgx?)"; exit 1; }
@@ -37,11 +40,11 @@ raptor:
       TARGET="$(pwd)"
       OUT=/tmp/raptor-out
       echo "Target: $TARGET  ($(find "$TARGET" -type f 2>/dev/null | wc -l) files)  MODE=${{MODE}}  MODEL=$ANTHROPIC_MODEL"
-      # Ephemeral execution: uv resolves RAPTOR deps (+ semgrep) into a throwaway env (uv cache),
-      # nothing is installed into the host Python. --no-project ignores any pyproject in the cwd.
+      # Ephemeral execution: uv resolves RAPTOR deps into a throwaway env (uv cache) pinned to Python
+      # 3.12; semgrep comes from the isolated tool on PATH. Nothing is installed into the host Python.
       cd /tmp/raptor
       timeout --signal=INT 5100 \
-        uv run --no-project --with-requirements /tmp/raptor/requirements.txt --with semgrep \
+        uv run --no-project --python 3.12 --with-requirements /tmp/raptor/requirements.txt \
         python raptor.py "${{MODE}}" --repo "$TARGET" --out "$OUT" \
         > /tmp/raptor.log 2>&1
       RC=$?
