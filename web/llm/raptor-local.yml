@@ -1,6 +1,8 @@
 settings:
   name: "RAPTOR Web - LLM Web App Pentesting (local model)"
-  description: "Runs RAPTOR (gadievron/raptor) web scanner against a LIVE web application for OWASP Top 10 issues, powered by a LOCAL model. NOTE: RAPTOR web is ALPHA (false positives, no authenticated scanning) - only test targets you own or are authorised to test. Choose the model with -d MODEL."
+  description: "Runs RAPTOR web scanner against a live web application for OWASP Top 10 issues, powered by a local model. Note: RAPTOR web is alpha (false positives, no authenticated scanning) - only test targets you own or are authorised to test. Choose the model with -d MODEL."
+  author:
+    - https://github.com/gadievron
   timeout: 5400
   files: false   # do not upload artifacts; findings print to stdout (scan files land under /tmp/raptor/out)
   example: satori local satori://web/llm/raptor-local.yml -d HOST="http://zero.webappsecurity.com" -d MODEL="qwen3.6-35b" --output

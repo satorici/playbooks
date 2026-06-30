@@ -1,6 +1,8 @@
 settings:
   name: "RAPTOR - LLM Security Research (local model)"
-  description: "Runs RAPTOR (gadievron/raptor) in AGENTIC mode against SOURCE CODE: Semgrep static analysis plus LLM-driven exploitability validation, proof-of-concept generation and patch writing, powered by a LOCAL model. Choose the model with -d MODEL."
+  description: "Runs RAPTOR in agentic mode against source code: Semgrep static analysis plus LLM-driven exploitability validation, proof-of-concept generation and patch writing, powered by a local model. Choose the model with -d MODEL."
+  author:
+    - https://github.com/gadievron
   timeout: 5400
   files: false   # do not upload artifacts; findings print to stdout (validated findings + SARIF under /tmp)
   example: satori local satori://code/llm/raptor-local.yml --repo OWASP/NodeGoat -d MODEL="qwen3.6-35b" --output
