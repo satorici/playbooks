@@ -3,7 +3,7 @@ settings:
   description: "Runs RAPTOR in agentic mode against source code: Semgrep static analysis plus LLM-driven exploitability validation, proof-of-concept generation and patch writing, powered by a local model. Choose the model with -d MODEL."
   author:
     - https://github.com/gadievron
-  timeout: 5400
+  timeout: 28800
   files: false   # findings and report print to stdout as separate test steps below
   example: satori local satori://code/llm/local/raptor.yml --repo OWASP/NodeGoat -d MODEL="qwen3.6-35b" --output
 
@@ -13,8 +13,8 @@ raptor:
     - grep -q '"ANTHROPIC_BASE_URL"' /tmp/raptor/core/config/__init__.py || sed -i 's/"_RAPTOR_TRUSTED", "CLAUDECODE",/"_RAPTOR_TRUSTED", "CLAUDECODE", "ANTHROPIC_BASE_URL", "ANTHROPIC_AUTH_TOKEN", "ANTHROPIC_MODEL", "ANTHROPIC_SMALL_FAST_MODEL", "CLAUDE_CODE_DISABLE_1M_CONTEXT", "API_TIMEOUT_MS",/' /tmp/raptor/core/config/__init__.py
     - mkdir -p "$HOME/.config/raptor" && printf '%s\n' '{"proxy_hosts":["localhost","127.0.0.1"]}' > "$HOME/.config/raptor/cc-dispatch-proxy-hosts.json"
     - grep -q 'NO_PROXY.*localhost' /tmp/raptor/core/sandbox/context.py || sed -i 's/"NO_PROXY":[ ]"",[ ]"no_proxy":[ ]"",/"NO_PROXY":"localhost,127.0.0.1", "no_proxy":"localhost,127.0.0.1",/' /tmp/raptor/core/sandbox/context.py
-    # The local model is free but claude prices it like a hosted one, so the default --max-budget-usd 1.00 aborts per-finding analysis (error_max_budget_usd); raise it. Idempotent.
     - grep -q '"--max-budget-usd", "1000.00"' /tmp/raptor/core/llm/cc_adapter.py || sed -i 's/"--max-budget-usd", config.budget_usd,/"--max-budget-usd", "1000.00",/' /tmp/raptor/core/llm/cc_adapter.py
+    - grep -q 'timeout=1500,' /tmp/raptor/core/llm/config.py || sed -i 's/timeout=300,/timeout=1500,/' /tmp/raptor/core/llm/config.py
     - command -v uv >/dev/null 2>&1 || curl -LsSf https://astral.sh/uv/install.sh | sh
     - export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"; rm -rf /tmp/semgrep /tmp/bin && UV_TOOL_DIR=/tmp UV_TOOL_BIN_DIR=/tmp/bin uv tool install --force --python 3.12 -q semgrep
 
@@ -33,16 +33,9 @@ raptor:
       export UV_CACHE_DIR=/tmp/uv-cache
 
       TARGET="$(pwd)"; cd /tmp/raptor
-      timeout --signal=INT 5100 \
-        uv run --no-project --python 3.12 --with-requirements /tmp/raptor/requirements.txt \
-        python raptor.py agentic --repo "$TARGET" --out /tmp/raptor-out --max-findings 1 --sandbox none \
-        > /tmp/raptor.log 2>&1
-      RC=$?
-      [ "$RC" = "124" ] && echo "WARN: RAPTOR hit the run cap (killed by timeout)"
-      echo "==================== RAPTOR LOG ===================="
-      cat /tmp/raptor.log
-      echo "[gate] raptor exit code: $RC"
-      exit $RC
+      uv run --no-project --python 3.12 --with-requirements /tmp/raptor/requirements.txt python raptor.py agentic --repo "$TARGET" --out /tmp/raptor-out --sandbox none > /tmp/raptor.log 2>&1
+  log:
+    - cat /tmp/raptor.log
 
 findings:
   list:
