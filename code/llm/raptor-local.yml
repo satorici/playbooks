@@ -15,6 +15,10 @@ raptor:
     # (get_safe_env), which drops ANTHROPIC_* — so the sandboxed claude loses our endpoint/model and the
     # LLM analysis silently does nothing. Add those vars to the allowlist in our /tmp clone. Idempotent.
     - grep -q '"ANTHROPIC_BASE_URL"' /tmp/raptor/core/config/__init__.py || sed -i 's/"_RAPTOR_TRUSTED", "CLAUDECODE",/"_RAPTOR_TRUSTED", "CLAUDECODE", "ANTHROPIC_BASE_URL", "ANTHROPIC_AUTH_TOKEN", "ANTHROPIC_MODEL", "ANTHROPIC_SMALL_FAST_MODEL", "CLAUDE_CODE_DISABLE_1M_CONTEXT", "API_TIMEOUT_MS",/' /tmp/raptor/core/config/__init__.py
+    # RAPTOR sandboxes the model calls behind an egress proxy whose allowlist defaults to api.anthropic.com
+    # and is NOT auto-derived from ANTHROPIC_BASE_URL — so calls to the local server get denied (400). Use
+    # RAPTOR's supported operator override to allowlist the local host.
+    - mkdir -p "$HOME/.config/raptor" && printf '%s\n' '{"proxy_hosts":["localhost","127.0.0.1"]}' > "$HOME/.config/raptor/cc-dispatch-proxy-hosts.json"
     # uv: a single self-contained binary used to run RAPTOR in a throwaway env (nothing installed into system Python).
     - command -v uv >/dev/null 2>&1 || curl -LsSf https://astral.sh/uv/install.sh | sh
     # Semgrep as an ISOLATED uv tool (its own env) so RAPTOR finds it on PATH without clashing with RAPTOR deps
