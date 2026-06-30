@@ -20,29 +20,24 @@ raptor:
 
   run:
     - |
-      # --- LOCAL MODEL: point the RAPTOR LLM dispatcher at the pgx vLLM (Anthropic /v1/messages) ---
-      export ANTHROPIC_BASE_URL="http://localhost:8000"
-      export ANTHROPIC_AUTH_TOKEN=""
-      export ANTHROPIC_API_KEY="local"
-      export ANTHROPIC_MODEL="${{MODEL}}"
-      export ANTHROPIC_SMALL_FAST_MODEL="${{MODEL}}"
-      export CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1
-      export CLAUDE_CODE_DISABLE_1M_CONTEXT=1
-      export CLAUDE_AUTOCOMPACT_PCT_OVERRIDE=75
+      # --- LOCAL MODEL: route RAPTOR at the pgx vLLM via the `ollama` provider (OpenAI-compatible /v1).
+      # RAPTOR builds api_base as $OLLAMA_HOST/v1; a models.json (RAPTOR_CONFIG) sets it as the primary
+      # model. We deliberately do NOT set ANTHROPIC_API_KEY (that made RAPTOR default to claude-opus-4-6).
+      export OLLAMA_HOST="http://localhost:8000"
+      printf '%s' '{"models":[{"provider":"ollama","model":"${{MODEL}}","timeout":1800,"max_context":262144}]}' > /tmp/raptor-models.json
+      export RAPTOR_CONFIG=/tmp/raptor-models.json
       export DISABLE_TELEMETRY=1 DISABLE_AUTOUPDATER=1 DISABLE_ERROR_REPORTING=1
-      # Local 35B can be slow per turn; raise the LLM request timeout to 30 min.
-      export API_TIMEOUT_MS=1800000
       # RAPTOR refuses agentic mode as root unless it detects a sandbox.
       export IS_SANDBOX=1
       # uv lives in ~/.local/bin; the isolated semgrep tool binary is in /tmp/bin.
       export PATH="/tmp/bin:$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
 
       # Preflight: the local model must be reachable before we start.
-      curl -sf -m 10 -o /dev/null "$ANTHROPIC_BASE_URL/v1/models" || { echo "[fatal] local model not reachable at $ANTHROPIC_BASE_URL (is vLLM up on pgx?)"; exit 1; }
+      curl -sf -m 10 -o /dev/null "$OLLAMA_HOST/v1/models" || { echo "[fatal] local model not reachable at $OLLAMA_HOST/v1 (is vLLM up on pgx?)"; exit 1; }
       # Satori cloned the target repo (via --repo) into the cwd. Point RAPTOR at it.
       TARGET="$(pwd)"
       OUT=/tmp/raptor-out
-      echo "Target: $TARGET  ($(find "$TARGET" -type f 2>/dev/null | wc -l) files)  MODE=agentic  MODEL=$ANTHROPIC_MODEL"
+      echo "Target: $TARGET  ($(find "$TARGET" -type f 2>/dev/null | wc -l) files)  MODE=agentic  MODEL=${{MODEL}} (ollama->$OLLAMA_HOST/v1)"
       # Ephemeral execution: uv resolves RAPTOR deps into a throwaway env (uv cache) pinned to Python
       # 3.12; semgrep comes from the isolated tool on PATH. Nothing is installed into the host Python.
       cd /tmp/raptor
