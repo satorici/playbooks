@@ -3,7 +3,7 @@ settings:
   description: "An autonomous security-research framework built on Claude Code, against a certain repo"
   timeout: 5400
   files: false   # do not upload artifacts; findings print to stdout (SARIF + log under /tmp)
-  example: satori local satori://code/llm/raptor-local.yml --repo OWASP/NodeGoat -d MODE="scan" --output
+  example: satori local satori://code/llm/raptor-local.yml --repo OWASP/NodeGoat -d MODE="scan" -d MODEL="qwen3.6-35b" --output
 
 raptor:
   install:
@@ -18,8 +18,8 @@ raptor:
       export ANTHROPIC_BASE_URL="http://localhost:8000"
       export ANTHROPIC_AUTH_TOKEN=""
       export ANTHROPIC_API_KEY="local"
-      export ANTHROPIC_MODEL="qwen3.6-35b"
-      export ANTHROPIC_SMALL_FAST_MODEL="qwen3.6-35b"
+      export ANTHROPIC_MODEL="${{MODEL}}"
+      export ANTHROPIC_SMALL_FAST_MODEL="${{MODEL}}"
       export CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1
       export CLAUDE_CODE_DISABLE_1M_CONTEXT=1
       export CLAUDE_AUTOCOMPACT_PCT_OVERRIDE=75
