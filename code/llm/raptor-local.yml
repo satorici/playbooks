@@ -1,9 +1,9 @@
 settings:
   name: "RAPTOR - LLM Security Research (local model)"
-  description: "An autonomous security-research framework built on Claude Code, against a certain repo"
+  description: "Local-model variant of code/llm/raptor.yml. Runs RAPTOR (gadievron/raptor) in AGENTIC mode against SOURCE CODE: Semgrep static analysis + LLM-driven exploitability validation, PoC and patch writing, with its LLM dispatcher pointed at the LOCAL vLLM on pgx (ANTHROPIC_BASE_URL=http://localhost:8000, the Anthropic /v1/messages API). Pass the code with Satori's native --repo <git-url>. Launched with `satori local` ON pgx; RAPTOR runs via `uv run` (throwaway env), semgrep is isolated in /tmp/semgrep, nothing is installed into the host Python. Mode is hardcoded to agentic on purpose — for static-only Semgrep use code/semgrep.yml. Pick the model with -d MODEL."
   timeout: 5400
-  files: false   # do not upload artifacts; findings print to stdout (SARIF + log under /tmp)
-  example: satori local satori://code/llm/raptor-local.yml --repo OWASP/NodeGoat -d MODE="scan" -d MODEL="qwen3.6-35b" --output
+  files: false   # do not upload artifacts; findings print to stdout (validated findings + SARIF under /tmp)
+  example: satori local satori://code/llm/raptor-local.yml --repo OWASP/NodeGoat -d MODEL="qwen3.6-35b" --output
 
 raptor:
   install:
@@ -40,27 +40,35 @@ raptor:
       # Satori cloned the target repo (via --repo) into the cwd. Point RAPTOR at it.
       TARGET="$(pwd)"
       OUT=/tmp/raptor-out
-      echo "Target: $TARGET  ($(find "$TARGET" -type f 2>/dev/null | wc -l) files)  MODE=${{MODE}}  MODEL=$ANTHROPIC_MODEL"
+      echo "Target: $TARGET  ($(find "$TARGET" -type f 2>/dev/null | wc -l) files)  MODE=agentic  MODEL=$ANTHROPIC_MODEL"
       # Ephemeral execution: uv resolves RAPTOR deps into a throwaway env (uv cache) pinned to Python
       # 3.12; semgrep comes from the isolated tool on PATH. Nothing is installed into the host Python.
       cd /tmp/raptor
       timeout --signal=INT 5100 \
         uv run --no-project --python 3.12 --with-requirements /tmp/raptor/requirements.txt \
-        python raptor.py "${{MODE}}" --repo "$TARGET" --out "$OUT" \
+        python raptor.py agentic --repo "$TARGET" --out "$OUT" \
         > /tmp/raptor.log 2>&1
       RC=$?
       [ "$RC" = "124" ] && echo "WARN: RAPTOR hit the run cap (killed by timeout)"
       echo "==================== RAPTOR LOG ===================="
       cat /tmp/raptor.log
-      echo "==================== FINDINGS (SARIF results) ===================="
-      FOUND=0
+      # RAPTOR prints OUTPUT_DIR=<path>; agentic also writes its own run dir there.
+      ODIR=$(grep -oE 'OUTPUT_DIR=.*' /tmp/raptor.log | tail -1 | cut -d= -f2-)
+      echo "==================== VALIDATED FINDINGS (agentic: validation/findings.json) ===================="
+      VF=0
+      for f in "$OUT/validation/findings.json" "$OUT/findings.json" "$ODIR/validation/findings.json" "$ODIR/findings.json"; do
+        [ -f "$f" ] || continue
+        VF=1; echo "--- $f ---"
+        jq -r '(.findings // .results // .)[]? | "[\(.severity // .level // "?")] \(.title // .rule // .id // "?")  @ \(.file // .path // .location // "?")\n  \(.description // .message // "")"' "$f" 2>/dev/null || cat "$f"
+      done
+      [ "$VF" = "0" ] && echo "(no findings.json — agentic filed no validated findings, or wrote elsewhere)"
+      echo "==================== SEMGREP (SARIF) ===================="
       for s in $(find "$OUT" -name '*.sarif' 2>/dev/null); do
-        FOUND=1; echo "--- $s ---"
+        echo "--- $s ---"
         jq -r '.runs[].results[]? | "[\(.level // "note")] \(.ruleId): \(.message.text)  @ \(.locations[0].physicalLocation.artifactLocation.uri // "?")"' "$s" 2>/dev/null
       done
-      [ "$FOUND" = "0" ] && echo "no .sarif written (0 findings filed or static engines skipped)"
-      echo "==================== ARTIFACTS (en $OUT) ===================="
-      find "$OUT" -type f 2>/dev/null | sort | head -50
+      echo "==================== ARTIFACTS (en $OUT y $ODIR) ===================="
+      find "$OUT" "$ODIR" -type f 2>/dev/null | sort | head -80
       echo "[gate] raptor exit code: $RC"
       exit $RC
   ran:
