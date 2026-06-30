@@ -4,83 +4,79 @@ settings:
   author:
     - https://github.com/gadievron
   timeout: 5400
-  files: false   # do not upload artifacts; findings print to stdout (validated findings under /tmp)
+  files: false   # findings and report print to stdout as separate test steps below
   example: satori local satori://code/llm/raptor-local.yml --repo OWASP/NodeGoat -d MODEL="qwen3.6-35b" --output
 
 raptor:
   install:
-    # Clone RAPTOR into /tmp (just source; no Python deps installed). Nothing of RAPTOR in $HOME.
+    # Clone RAPTOR into /tmp (just source; no Python deps installed here).
     - test -d /tmp/raptor/.claude || git clone --depth 1 https://github.com/gadievron/raptor.git /tmp/raptor
-    # uv is a single self-contained binary (fine to keep in ~/.local/bin); used to run RAPTOR in a throwaway env.
+    # uv: a single self-contained binary used to run RAPTOR in a throwaway env (nothing installed into system Python).
     - command -v uv >/dev/null 2>&1 || curl -LsSf https://astral.sh/uv/install.sh | sh
-    # Semgrep as an ISOLATED uv tool (env in /tmp/semgrep, binary in /tmp/bin) so RAPTOR finds it on
-    # PATH. NOT the host Python, NOT mixed with RAPTOR deps (that breaks its opentelemetry import).
-    # rm -rf first so a stale env from a previous layout never trips `uv tool`.
+    # Semgrep as an ISOLATED uv tool (its own env) so RAPTOR finds it on PATH without clashing with RAPTOR deps
+    # (bundling semgrep into RAPTOR's env breaks its opentelemetry import). rm -rf first to avoid stale state.
     - export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"; rm -rf /tmp/semgrep /tmp/bin && UV_TOOL_DIR=/tmp UV_TOOL_BIN_DIR=/tmp/bin uv tool install --force --python 3.12 -q semgrep
 
   run:
     - |
-      # --- LOCAL MODEL: route RAPTOR at the pgx vLLM via the `ollama` provider (OpenAI-compatible /v1).
-      # RAPTOR builds api_base as $OLLAMA_HOST/v1; the model is selected on the CLI with
-      # --model ollama/<name> (no models.json file; no ANTHROPIC_API_KEY -> no claude-opus-4-6 default).
-      export OLLAMA_HOST="http://localhost:8000"
+      # --- LOCAL MODEL: RAPTOR analyses via its Claude Code provider (the `claude` CLI). Point that CLI at a
+      # local model server that exposes the Anthropic /v1/messages API (default http://localhost:8000).
+      # IMPORTANT: do NOT set ANTHROPIC_API_KEY — that makes RAPTOR pick a hosted Claude model as primary and
+      # pass it to claude (the local server has no such model). With only AUTH_TOKEN + MODEL set, RAPTOR drives
+      # claude with the local model named in -d MODEL.
+      export ANTHROPIC_BASE_URL="http://localhost:8000"
+      export ANTHROPIC_AUTH_TOKEN="local"
+      export ANTHROPIC_MODEL="${{MODEL}}"
+      export ANTHROPIC_SMALL_FAST_MODEL="${{MODEL}}"
+      export CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1
+      export CLAUDE_CODE_DISABLE_1M_CONTEXT=1
+      export CLAUDE_AUTOCOMPACT_PCT_OVERRIDE=75
       export DISABLE_TELEMETRY=1 DISABLE_AUTOUPDATER=1 DISABLE_ERROR_REPORTING=1
+      # A local model can be slow per call; widen the Claude Code request timeout to 30 min.
+      export API_TIMEOUT_MS=1800000
       # RAPTOR refuses agentic mode as root unless it detects a sandbox.
       export IS_SANDBOX=1
-      # uv lives in ~/.local/bin; the isolated semgrep tool binary is in /tmp/bin.
+      # uv is in ~/.local/bin; the isolated semgrep binary is in /tmp/bin.
       export PATH="/tmp/bin:$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
 
-      # Preflight: the local model must be reachable before we start.
-      curl -sf -m 10 -o /dev/null "$OLLAMA_HOST/v1/models" || { echo "[fatal] local model not reachable at $OLLAMA_HOST/v1 (is vLLM up on pgx?)"; exit 1; }
+      # Preflight: the local model server must be reachable before we start.
+      curl -sf -m 10 -o /dev/null "$ANTHROPIC_BASE_URL/v1/models" || { echo "[fatal] local model not reachable at $ANTHROPIC_BASE_URL"; exit 1; }
       # Satori cloned the target repo (via --repo) into the cwd. Point RAPTOR at it.
       TARGET="$(pwd)"
       OUT=/tmp/raptor-out
-      echo "Target: $TARGET  ($(find "$TARGET" -type f 2>/dev/null | wc -l) files)  MODE=agentic  MODEL=${{MODEL}} (ollama->$OLLAMA_HOST/v1)"
-      # Ephemeral execution: uv resolves RAPTOR deps into a throwaway env (uv cache) pinned to Python
-      # 3.12; semgrep comes from the isolated tool on PATH. Nothing is installed into the host Python.
+      echo "Target: $TARGET  ($(find "$TARGET" -type f 2>/dev/null | wc -l) files)  MODE=agentic  MODEL=${{MODEL}}"
+      # Ephemeral execution: uv resolves RAPTOR deps into a throwaway env (uv cache); nothing installed into system Python.
       cd /tmp/raptor
       timeout --signal=INT 5100 \
         uv run --no-project --python 3.12 --with-requirements /tmp/raptor/requirements.txt \
-        python raptor.py agentic --repo "$TARGET" --out "$OUT" --model "ollama/${{MODEL}}" \
+        python raptor.py agentic --repo "$TARGET" --out "$OUT" \
         > /tmp/raptor.log 2>&1
       RC=$?
       [ "$RC" = "124" ] && echo "WARN: RAPTOR hit the run cap (killed by timeout)"
       echo "==================== RAPTOR LOG ===================="
       cat /tmp/raptor.log
-      echo "==================== ARTIFACTS ===================="
-      find /tmp/raptor-out /tmp/raptor/out -type f 2>/dev/null | sort | head -80
       echo "[gate] raptor exit code: $RC"
       exit $RC
   ran:
     setOutput: raptor.run
     assertReturnCode: 0
 
-# Clean cat of the validated findings (separate from the noisy RAPTOR log above).
-# Per-severity gates assert on findings.run.stdout (severity_assessment from the LLM validation).
+# Validated findings (RAPTOR writes them to a fixed path under the output dir).
+# Per-severity gates assert on findings.list stdout (severity_assessment from the LLM validation).
 findings:
   list:
-    - |
-      F=$(find /tmp/raptor-out /tmp/raptor/out -path '*/validation/findings.json' 2>/dev/null | head -1)
-      [ -z "$F" ] && F=$(find /tmp/raptor-out /tmp/raptor/out -name findings.json 2>/dev/null | head -1)
-      if [ -n "$F" ]; then cat "$F"; else echo "(no validation/findings.json - no validated findings filed)"; fi
-
+    - cat /tmp/raptor-out/validation/findings.json
   critical:
     setOutput: findings.list
     setSeverity: 1
     assertStdoutNotContains: '"severity_assessment": "critical"'
-
   high:
     setOutput: findings.list
     setSeverity: 2
     assertStdoutNotContains: '"severity_assessment": "high"'
-
   medium:
     setOutput: findings.list
     setSeverity: 3
     assertStdoutNotContains: '"severity_assessment": "medium"'
-
   report:
-    - |
-      R=/tmp/raptor-out/agentic-report.md
-      [ -f "$R" ] || R=$(find /tmp/raptor-out -name '*report*.md' 2>/dev/null | head -1)
-      if [ -n "$R" ] && [ -f "$R" ]; then cat "$R"; else echo "(no agentic-report.md written)"; fi
+    - cat /tmp/raptor-out/agentic-report.md
