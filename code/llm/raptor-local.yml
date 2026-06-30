@@ -1,20 +1,20 @@
 settings:
   name: "RAPTOR - LLM Security Research (local model)"
-  description: "Local-model variant of code/llm/raptor.yml. Runs RAPTOR (gadievron/raptor) against SOURCE CODE, but points its Claude Code orchestrator at the LOCAL vLLM on pgx (ANTHROPIC_BASE_URL=http://localhost:8000, which serves the Anthropic /v1/messages API natively) instead of OpenRouter. Pass the code with Satori's native --repo <git-url> (cloned into the cwd). Pick the subcommand with -d MODE (scan = static-only/cheap, agentic = full autonomous scan->validate->exploit->patch). Meant to be launched with `satori local` ON pgx, where the commands run on the host and can reach the local model."
+  description: "An autonomous security-research framework built on Claude Code, against a certain repo"
   timeout: 5400
-  files: false   # do not upload artifacts; findings print to stdout (SARIF + log under ~/.raptor/out-local)
-  example: satori local --repo OWASP/NodeGoat --playbook satori://code/llm/raptor-local.yml -d MODE="scan" --output
+  files: false   # do not upload artifacts; findings print to stdout (SARIF + log under /tmp)
+  example: satori local satori://code/llm/raptor-local.yml --repo OWASP/NodeGoat -d MODE="scan" --output
 
 raptor:
   install:
-    # Clone RAPTOR into ~/.raptor (no sudo needed; the cwd holds the code under test).
-    - test -d "$HOME/.raptor/.claude" || git clone --depth 1 https://github.com/gadievron/raptor.git "$HOME/.raptor"
-    - pip install -r "$HOME/.raptor/requirements.txt" -q --break-system-packages --root-user-action=ignore || true
-    - command -v semgrep >/dev/null 2>&1 || pip install semgrep -U -q --break-system-packages
+    # Clone RAPTOR into /tmp (just source; no Python deps installed). Nothing of RAPTOR in $HOME.
+    - test -d /tmp/raptor/.claude || git clone --depth 1 https://github.com/gadievron/raptor.git /tmp/raptor
+    # uv is a single self-contained binary (fine to keep in ~/.local/bin); used to run RAPTOR in a throwaway env.
+    - command -v uv >/dev/null 2>&1 || curl -LsSf https://astral.sh/uv/install.sh | sh
 
   run:
     - |
-      # --- LOCAL MODEL: point Claude Code (the RAPTOR orchestrator) at the pgx vLLM (Anthropic /v1/messages) ---
+      # --- LOCAL MODEL: point the RAPTOR LLM dispatcher at the pgx vLLM (Anthropic /v1/messages) ---
       export ANTHROPIC_BASE_URL="http://localhost:8000"
       export ANTHROPIC_AUTH_TOKEN=""
       export ANTHROPIC_API_KEY="local"
@@ -24,21 +24,25 @@ raptor:
       export CLAUDE_CODE_DISABLE_1M_CONTEXT=1
       export CLAUDE_AUTOCOMPACT_PCT_OVERRIDE=75
       export DISABLE_TELEMETRY=1 DISABLE_AUTOUPDATER=1 DISABLE_ERROR_REPORTING=1
-      # Local 35B can be slow per turn; raise Claude Code request timeout to 30 min.
+      # Local 35B can be slow per turn; raise the LLM request timeout to 30 min.
       export API_TIMEOUT_MS=1800000
-      # Claude Code refuses agentic mode as root unless it detects a sandbox.
+      # RAPTOR refuses agentic mode as root unless it detects a sandbox.
       export IS_SANDBOX=1
+      # uv lives in ~/.local/bin.
+      export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
 
       # Preflight: the local model must be reachable before we start.
       curl -sf -m 10 -o /dev/null "$ANTHROPIC_BASE_URL/v1/models" || { echo "[fatal] local model not reachable at $ANTHROPIC_BASE_URL (is vLLM up on pgx?)"; exit 1; }
       # Satori cloned the target repo (via --repo) into the cwd. Point RAPTOR at it.
       TARGET="$(pwd)"
-      OUT="$HOME/.raptor/out-local"
+      OUT=/tmp/raptor-out
       echo "Target: $TARGET  ($(find "$TARGET" -type f 2>/dev/null | wc -l) files)  MODE=${{MODE}}  MODEL=$ANTHROPIC_MODEL"
-      # Drive RAPTOR headlessly from its repo. agentic = full workflow; scan = static-only.
-      cd "$HOME/.raptor"
+      # Ephemeral execution: uv resolves RAPTOR deps (+ semgrep) into a throwaway env (uv cache),
+      # nothing is installed into the host Python. --no-project ignores any pyproject in the cwd.
+      cd /tmp/raptor
       timeout --signal=INT 5100 \
-        python3 raptor.py "${{MODE}}" --repo "$TARGET" --out "$OUT" \
+        uv run --no-project --with-requirements /tmp/raptor/requirements.txt --with semgrep \
+        python raptor.py "${{MODE}}" --repo "$TARGET" --out "$OUT" \
         > /tmp/raptor.log 2>&1
       RC=$?
       [ "$RC" = "124" ] && echo "WARN: RAPTOR hit the run cap (killed by timeout)"

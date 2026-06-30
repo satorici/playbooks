@@ -1,6 +1,6 @@
 settings:
   name: "RAPTOR - LLM Security Research"
-  description: "Runs RAPTOR (gadievron/raptor), the autonomous security-research framework built on Claude Code, against the SOURCE CODE in the current working directory. Pass the code to analyse with Satori's native --repo <git-url> (Satori clones it into the cwd); RAPTOR then chains Semgrep + CodeQL static analysis with LLM-powered exploitability validation, PoC generation and patch writing. Pick the subcommand with -d MODE (scan = static-only/cheap, agentic = full autonomous scan->validate->exploit->patch). Claude Code talks to OpenRouter via its native Anthropic Skin (ANTHROPIC_BASE_URL=https://openrouter.ai/api), so no proxy and no Anthropic key are needed. Choose the model with -d MODEL (e.g. anthropic/claude-haiku-4.5 cheap, anthropic/claude-sonnet-4.6 for higher coverage)."
+  description: "An autonomous security-research framework built on Claude Code, against a certain repo"
   image: danielcuthbert/raptor:latest
   author:
     - https://github.com/danielcuthbert

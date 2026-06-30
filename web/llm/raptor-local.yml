@@ -1,19 +1,20 @@
 settings:
   name: "RAPTOR Web - LLM Web App Pentesting (local model)"
-  description: "Local-model variant of web/raptor.yml. Drives RAPTOR's /web Claude Code command against a LIVE web app, but points Claude Code at the LOCAL vLLM on pgx (ANTHROPIC_BASE_URL=http://localhost:8000, which serves the Anthropic /v1/messages API natively) instead of OpenRouter. Meant to be launched with `satori local` ON pgx, where the commands run directly on the host and can reach the local model. NOTE: RAPTOR /web is ALPHA (false positives, no authenticated scanning). Only test targets you own or are authorised to test."
+  description: "Local-model variant of web/llm/raptor.yml. Runs RAPTOR's web scanner (gadievron/raptor: `raptor.py web`) against a LIVE web app, with RAPTOR's LLM dispatcher pointed at the LOCAL vLLM on pgx (ANTHROPIC_BASE_URL=http://localhost:8000, the Anthropic /v1/messages API). Meant to be launched with `satori local` ON pgx; RAPTOR is cloned and run from /tmp via `uv run` in a throwaway env, so NOTHING is installed into the host Python (uv itself lives in ~/.local/bin). NOTE: RAPTOR web is ALPHA (false positives, no authenticated scanning). Only test targets you own or are authorised to test."
   timeout: 5400
-  files: false   # do not upload artifacts; findings print to stdout (scan files land in ~/.raptor/out)
+  files: false   # do not upload artifacts; findings print to stdout (scan files land under /tmp/raptor/out)
   example: satori local raptor-local.yml -d HOST="http://zero.webappsecurity.com" --output
 
 raptor:
   install:
-    # Clone RAPTOR into ~/.raptor so its .claude/commands/web.md (the /web command) is present (no sudo needed).
-    - test -d "$HOME/.raptor/.claude" || git clone --depth 1 https://github.com/gadievron/raptor.git "$HOME/.raptor"
-    - pip install -r "$HOME/.raptor/requirements.txt" -q --break-system-packages --root-user-action=ignore || true
+    # Clone RAPTOR into /tmp (just source; no Python deps installed). Nothing of RAPTOR in $HOME.
+    - test -d /tmp/raptor/.claude || git clone --depth 1 https://github.com/gadievron/raptor.git /tmp/raptor
+    # uv is a single self-contained binary (fine to keep in ~/.local/bin); used to run RAPTOR in a throwaway env.
+    - command -v uv >/dev/null 2>&1 || curl -LsSf https://astral.sh/uv/install.sh | sh
 
   run:
     - |
-      # --- LOCAL MODEL: point Claude Code at the pgx vLLM (it serves the Anthropic /v1/messages API) ---
+      # --- LOCAL MODEL: point the RAPTOR LLM dispatcher at the pgx vLLM (Anthropic /v1/messages) ---
       export ANTHROPIC_BASE_URL="http://localhost:8000"
       export ANTHROPIC_AUTH_TOKEN=""
       export ANTHROPIC_API_KEY="local"
@@ -23,37 +24,35 @@ raptor:
       export CLAUDE_CODE_DISABLE_1M_CONTEXT=1
       export CLAUDE_AUTOCOMPACT_PCT_OVERRIDE=75
       export DISABLE_TELEMETRY=1 DISABLE_AUTOUPDATER=1 DISABLE_ERROR_REPORTING=1
-      # Local 35B can be slow per turn; raise Claude Code request timeout to 30 min (env-var
-      # analogue of the strix-local timeout fix, no shim needed here).
       export API_TIMEOUT_MS=1800000
-      # Claude Code refuses --dangerously-skip-permissions as root unless it detects a sandbox.
       export IS_SANDBOX=1
+      # uv lives in ~/.local/bin.
+      export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
 
       TARGET="${{HOST}}"
       # Preflight: the local model must be reachable before we start.
       curl -sf -m 10 -o /dev/null "$ANTHROPIC_BASE_URL/v1/models" || { echo "[fatal] local model not reachable at $ANTHROPIC_BASE_URL (is vLLM up on pgx?)"; exit 1; }
-      # Run from the RAPTOR repo so Claude Code discovers .claude/commands/web.md (the /web command).
-      cd "$HOME/.raptor"
-      echo "PWD=$(pwd)  claude=$(claude --version 2>/dev/null)  raptor=$(git rev-parse --short HEAD 2>/dev/null)  MODEL=$ANTHROPIC_MODEL  TARGET=$TARGET"
-      # Drive the /web slash command headlessly; it dispatches the RAPTOR web scanner.
-      # Force non-interactive: the command would otherwise ask for scope/auth.
+      echo "raptor=$(cd /tmp/raptor && git rev-parse --short HEAD 2>/dev/null)  MODEL=$ANTHROPIC_MODEL  TARGET=$TARGET"
+      # Ephemeral execution via uv (nothing installed into the host Python). Run the web scanner directly.
+      cd /tmp/raptor
       timeout --signal=INT 5100 \
-        claude -p "/web $TARGET . Non-interactive: do NOT ask any questions; immediately run: python3 raptor.py web --url $TARGET ; then summarise the OWASP Top 10 findings with severity and print the full report as your final message with CVSS scores." \
-        --dangerously-skip-permissions \
-        --max-turns 60 \
-        --output-format json > /tmp/web.json 2>/tmp/web.err
+        uv run --no-project --with-requirements /tmp/raptor/requirements.txt \
+        python raptor.py web --url "$TARGET" \
+        > /tmp/raptor-web.log 2>&1
       RC=$?
-      [ "$RC" = "124" ] && echo "WARN: claude hit the run cap (killed by timeout)"
-      echo "==================== CLAUDE RESULT ===================="
-      RES=$(jq -r '.result // empty' /tmp/web.json 2>/dev/null)
-      if [ -n "$RES" ]; then echo "$RES"; else cat /tmp/web.json; fi
-      echo "==================== RUN STATS ===================="
-      jq -r '"success=\(.subtype)  is_error=\(.is_error)  turns=\(.num_turns)"' /tmp/web.json 2>/dev/null
-      echo "==================== WEB SCAN ARTIFACTS (en ~/.raptor/out) ===================="
-      ls -d "$HOME/.raptor/out/web_scan_"* 2>/dev/null | tail -5 || echo "  (ninguno escrito)"
-      echo "==================== STDERR (tail) ===================="
-      tail -20 /tmp/web.err
-      echo "[gate] claude exit code: $RC"
+      [ "$RC" = "124" ] && echo "WARN: RAPTOR hit the run cap (killed by timeout)"
+      echo "==================== RAPTOR WEB LOG ===================="
+      cat /tmp/raptor-web.log
+      echo "==================== FINDINGS (SARIF / results) ===================="
+      FOUND=0
+      for s in $(find /tmp/raptor/out -name '*.sarif' -o -name 'vulnerabilities.json' 2>/dev/null); do
+        FOUND=1; echo "--- $s ---"
+        jq -r '(.runs[].results[]? | "[\(.level // "note")] \(.ruleId): \(.message.text)") // (.[]? | "[\(.severity // "?")] \(.title // .name)")' "$s" 2>/dev/null || cat "$s"
+      done
+      [ "$FOUND" = "0" ] && echo "no findings file written (0 findings or scanner skipped)"
+      echo "==================== WEB SCAN ARTIFACTS (en /tmp/raptor/out) ===================="
+      find /tmp/raptor/out -type f 2>/dev/null | sort | head -50
+      echo "[gate] raptor exit code: $RC"
       exit $RC
   ran:
     setOutput: raptor.run
