@@ -1,8 +1,9 @@
 settings:
   name: "RAPTOR Web - LLM Web App Pentesting"
-  description: "Drives RAPTOR's /web Claude Code command (gadievron/raptor) headlessly to pentest a LIVE web application. Claude Code runs the /web slash command, which dispatches RAPTOR's web scanner (python3 raptor.py web --url) for OWASP Top 10 issues, then summarises the findings. Claude Code talks to OpenRouter via its native Anthropic Skin (ANTHROPIC_BASE_URL=https://openrouter.ai/api), so no proxy and no Anthropic key are needed. Pick the model with -d MODEL (e.g. anthropic/claude-haiku-4.5 cheap, anthropic/claude-sonnet-4.6 for higher coverage). NOTE: RAPTOR /web is ALPHA (expect false positives, no authenticated scanning). Only test targets you own or are authorised to test."
+  description: "Runs RAPTOR web scanner against a live web application for OWASP Top 10 issues. Note: RAPTOR web is alpha (false positives, no authenticated scanning) - only test targets you own or are authorised to test. Choose the model with -d MODEL."
   image: danielcuthbert/raptor:latest
   author:
+    - https://github.com/gadievron
     - https://github.com/danielcuthbert
   example: satori run satori://web/llm/raptor.yml -d HOST="http://zero.webappsecurity.com" -d MODEL="anthropic/claude-sonnet-4.6" -d OPENROUTER=$OPENROUTER --output
   timeout: 4800

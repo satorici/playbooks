@@ -1,8 +1,9 @@
 settings:
   name: "RAPTOR - LLM Security Research"
-  description: "An autonomous security-research framework built on Claude Code, against a certain repo"
+  description: "Runs RAPTOR against source code: Semgrep + CodeQL static analysis plus LLM-driven exploitability validation, proof-of-concept generation and patch writing. Pick the subcommand with -d MODE (scan or agentic) and the model with -d MODEL."
   image: danielcuthbert/raptor:latest
   author:
+    - https://github.com/gadievron
     - https://github.com/danielcuthbert
   example: satori run satori://code/llm/raptor.yml --repo OWASP/NodeGoat -d MODE="scan" -d MODEL="anthropic/claude-sonnet-4.6" -d OPENROUTER=$OPENROUTER --output --report
   timeout: 4800
