@@ -46,12 +46,15 @@ raptor:
       export _RAPTOR_TRUSTED=1
       # uv is in ~/.local/bin; the isolated semgrep binary is in /tmp/bin.
       export PATH="/tmp/bin:$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
+      # Keep uv's ephemeral run env under /tmp: RAPTOR's sandbox only allows writes to /tmp + its output
+      # dir, so an env under ~/.cache/uv gets its pyvenv.cfg write denied and the sandboxed model call dies.
+      export UV_CACHE_DIR=/tmp/uv-cache
 
       # Satori cloned the target repo (via --repo) into the cwd; RAPTOR analyses it.
       TARGET="$(pwd)"; cd /tmp/raptor
       timeout --signal=INT 5100 \
         uv run --no-project --python 3.12 --with-requirements /tmp/raptor/requirements.txt \
-        python raptor.py agentic --repo "$TARGET" --out /tmp/raptor-out \
+        python raptor.py agentic --repo "$TARGET" --out /tmp/raptor-out --max-findings 1 \
         > /tmp/raptor.log 2>&1
       RC=$?
       [ "$RC" = "124" ] && echo "WARN: RAPTOR hit the run cap (killed by timeout)"
