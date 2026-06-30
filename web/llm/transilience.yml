@@ -6,7 +6,7 @@ settings:
     - https://github.com/satoridev01
   gallery:
     - https://files.catbox.moe/byf8jh.png
-  example: satori run satori://web/transilience.yml -d HOST="http://zero.webappsecurity.com" -d MODEL="anthropic/claude-sonnet-4.6" -d OPENROUTER=$OPENROUTER --output
+  example: satori run satori://web/llm/transilience.yml -d HOST="http://zero.webappsecurity.com" -d MODEL="anthropic/claude-sonnet-4.6" -d OPENROUTER=$OPENROUTER --output
   timeout: 4800
   cpu: 4096
   memory: 8192

@@ -1,0 +1,79 @@
+settings:
+  name: "RAPTOR - LLM Security Research"
+  description: "Runs RAPTOR (gadievron/raptor), the autonomous security-research framework built on Claude Code, against the SOURCE CODE in the current working directory. Pass the code to analyse with Satori's native --repo <git-url> (Satori clones it into the cwd); RAPTOR then chains Semgrep + CodeQL static analysis with LLM-powered exploitability validation, PoC generation and patch writing. Pick the subcommand with -d MODE (scan = static-only/cheap, agentic = full autonomous scan->validate->exploit->patch). Claude Code talks to OpenRouter via its native Anthropic Skin (ANTHROPIC_BASE_URL=https://openrouter.ai/api), so no proxy and no Anthropic key are needed. Choose the model with -d MODEL (e.g. anthropic/claude-haiku-4.5 cheap, anthropic/claude-sonnet-4.6 for higher coverage)."
+  image: danielcuthbert/raptor:latest
+  author:
+    - https://github.com/danielcuthbert
+  example: satori run satori://code/llm/raptor.yml --repo OWASP/NodeGoat -d MODE="scan" -d MODEL="anthropic/claude-sonnet-4.6" -d OPENROUTER=$OPENROUTER --output --report
+  timeout: 4800
+  cpu: 4096
+  memory: 8192
+  files: true
+  redacted:
+    - OPENROUTER
+
+raptor:
+  install:
+    # The devcontainer image ships CodeQL, Semgrep, Python 3.12 and Claude Code.
+    # Clone RAPTOR itself into /opt so the entrypoint is deterministic (the cwd holds the code under test).
+    - git clone --depth 1 https://github.com/gadievron/raptor.git /opt/raptor >/dev/null 2>&1
+    - pip install --break-system-packages -q -r /opt/raptor/requirements.txt >/dev/null 2>&1 || true
+    # Belt-and-suspenders: ensure the LLM-driver and SAST engines are present even on a thin image.
+    - command -v claude  >/dev/null 2>&1 || npm install -g @anthropic-ai/claude-code >/dev/null 2>&1
+    - command -v semgrep >/dev/null 2>&1 || pip install semgrep -U -q --break-system-packages
+
+  run:
+    - |
+      # Fail fast with a clear message if the OpenRouter key was not supplied.
+      if [ -z "${{OPENROUTER}}" ]; then
+        echo "ERROR: OPENROUTER is empty. Run with: -d OPENROUTER=\$OPENROUTER"; exit 1
+      fi
+      # --- Route Claude Code (the RAPTOR orchestrator) through the OpenRouter Anthropic Skin ---
+      export ANTHROPIC_BASE_URL="https://openrouter.ai/api"
+      export ANTHROPIC_AUTH_TOKEN="${{OPENROUTER}}"
+      export ANTHROPIC_API_KEY="${{OPENROUTER}}"
+      export ANTHROPIC_MODEL="${{MODEL}}"
+      export ANTHROPIC_SMALL_FAST_MODEL="${{MODEL}}"
+      export DISABLE_TELEMETRY=1 DISABLE_AUTOUPDATER=1 DISABLE_ERROR_REPORTING=1
+      # Satori containers run as root; Claude Code refuses agentic mode as root unless
+      # it detects a sandbox. We are already inside an ephemeral container.
+      export IS_SANDBOX=1
+      # Pre-flight budget cap so a runaway agentic run can never overspend.
+      export RAPTOR_MAX_COST=5.00
+
+      # Satori cloned the target repo (via --repo) into the cwd. Point RAPTOR at it.
+      TARGET="$(pwd)"
+      echo "Target: $TARGET  ($(find "$TARGET" -type f | wc -l) files)"
+      echo "RAPTOR: $(cd /opt/raptor && git rev-parse --short HEAD 2>/dev/null)  MODE=${{MODE}}  MODEL=${{MODEL}}"
+
+      # Drive RAPTOR headlessly. Bound it BELOW the Satori timeout so it can flush
+      # artifacts before we are killed. agentic = full autonomous workflow; scan = static-only.
+      cd /opt/raptor
+      timeout --signal=INT 4200 \
+        python3 raptor.py "${{MODE}}" --repo "$TARGET" --out /data/raptor-out --max-cost-usd 5.00 \
+        > /tmp/raptor.log 2>&1
+      RC=$?
+      [ "$RC" = "124" ] && echo "WARN: RAPTOR hit the run cap (killed by timeout)"
+
+      # RAPTOR prints OUTPUT_DIR=<path>; persist everything it wrote to /data for --files.
+      ODIR=$(grep -oE 'OUTPUT_DIR=.*' /tmp/raptor.log | tail -1 | cut -d= -f2-)
+      [ -n "$ODIR" ] && [ -d "$ODIR" ] && cp -a "$ODIR" /data/ 2>/dev/null
+      cp /tmp/raptor.log /data/raptor.log 2>/dev/null
+
+      echo "==================== RAPTOR LOG ===================="
+      cat /tmp/raptor.log
+      echo "==================== FINDINGS (SARIF results) ===================="
+      # Summarise every SARIF result RAPTOR filed (rule id + message + location).
+      FOUND=0
+      for s in $(find /data -name '*.sarif' 2>/dev/null); do
+        FOUND=1; echo "--- $s ---"
+        jq -r '.runs[].results[]? | "[\(.level // "note")] \(.ruleId): \(.message.text)  @ \(.locations[0].physicalLocation.artifactLocation.uri // "?")"' "$s" 2>/dev/null
+      done
+      [ "$FOUND" = "0" ] && echo "no .sarif written (0 findings filed or static engines skipped)"
+      echo "==================== ARTIFACTS IN /data (retrievable with --files) ===================="
+      find /data -type f 2>/dev/null | sort
+      echo "[gate] raptor exit code: $RC"
+      exit $RC
+  ran:
+    setOutput: raptor.run
+    assertReturnCode: 0

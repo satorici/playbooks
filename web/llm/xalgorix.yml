@@ -4,7 +4,7 @@ settings:
   image: golang
   files: true
   timeout: 3600
-  example: satori run satori://web/xalgorix.yml -d HOST="http://zero.webappsecurity.com" -d MODEL="openrouter/anthropic/claude-sonnet-4.5" -d OPENROUTER="$OPENROUTER" --output
+  example: satori run satori://web/llm/xalgorix.yml -d HOST="http://zero.webappsecurity.com" -d MODEL="openrouter/anthropic/claude-sonnet-4.5" -d OPENROUTER="$OPENROUTER" --output
   cpu: 4096
   memory: 8192
   redacted:

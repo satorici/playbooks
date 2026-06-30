@@ -1,0 +1,60 @@
+settings:
+  name: "RAPTOR Web - LLM Web App Pentesting (local model)"
+  description: "Local-model variant of web/raptor.yml. Drives RAPTOR's /web Claude Code command against a LIVE web app, but points Claude Code at the LOCAL vLLM on pgx (ANTHROPIC_BASE_URL=http://localhost:8000, which serves the Anthropic /v1/messages API natively) instead of OpenRouter. Meant to be launched with `satori local` ON pgx, where the commands run directly on the host and can reach the local model. NOTE: RAPTOR /web is ALPHA (false positives, no authenticated scanning). Only test targets you own or are authorised to test."
+  timeout: 5400
+  files: false   # do not upload artifacts; findings print to stdout (scan files land in ~/.raptor/out)
+  example: satori local raptor-local.yml -d HOST="http://zero.webappsecurity.com" --output
+
+raptor:
+  install:
+    # Clone RAPTOR into ~/.raptor so its .claude/commands/web.md (the /web command) is present (no sudo needed).
+    - test -d "$HOME/.raptor/.claude" || git clone --depth 1 https://github.com/gadievron/raptor.git "$HOME/.raptor"
+    - pip install -r "$HOME/.raptor/requirements.txt" -q --break-system-packages --root-user-action=ignore || true
+
+  run:
+    - |
+      # --- LOCAL MODEL: point Claude Code at the pgx vLLM (it serves the Anthropic /v1/messages API) ---
+      export ANTHROPIC_BASE_URL="http://localhost:8000"
+      export ANTHROPIC_AUTH_TOKEN=""
+      export ANTHROPIC_API_KEY="local"
+      export ANTHROPIC_MODEL="qwen3.6-35b"
+      export ANTHROPIC_SMALL_FAST_MODEL="qwen3.6-35b"
+      export CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1
+      export CLAUDE_CODE_DISABLE_1M_CONTEXT=1
+      export CLAUDE_AUTOCOMPACT_PCT_OVERRIDE=75
+      export DISABLE_TELEMETRY=1 DISABLE_AUTOUPDATER=1 DISABLE_ERROR_REPORTING=1
+      # Local 35B can be slow per turn; raise Claude Code request timeout to 30 min (env-var
+      # analogue of the strix-local timeout fix, no shim needed here).
+      export API_TIMEOUT_MS=1800000
+      # Claude Code refuses --dangerously-skip-permissions as root unless it detects a sandbox.
+      export IS_SANDBOX=1
+
+      TARGET="${{HOST}}"
+      # Preflight: the local model must be reachable before we start.
+      curl -sf -m 10 -o /dev/null "$ANTHROPIC_BASE_URL/v1/models" || { echo "[fatal] local model not reachable at $ANTHROPIC_BASE_URL (is vLLM up on pgx?)"; exit 1; }
+      # Run from the RAPTOR repo so Claude Code discovers .claude/commands/web.md (the /web command).
+      cd "$HOME/.raptor"
+      echo "PWD=$(pwd)  claude=$(claude --version 2>/dev/null)  raptor=$(git rev-parse --short HEAD 2>/dev/null)  MODEL=$ANTHROPIC_MODEL  TARGET=$TARGET"
+      # Drive the /web slash command headlessly; it dispatches the RAPTOR web scanner.
+      # Force non-interactive: the command would otherwise ask for scope/auth.
+      timeout --signal=INT 5100 \
+        claude -p "/web $TARGET . Non-interactive: do NOT ask any questions; immediately run: python3 raptor.py web --url $TARGET ; then summarise the OWASP Top 10 findings with severity and print the full report as your final message with CVSS scores." \
+        --dangerously-skip-permissions \
+        --max-turns 60 \
+        --output-format json > /tmp/web.json 2>/tmp/web.err
+      RC=$?
+      [ "$RC" = "124" ] && echo "WARN: claude hit the run cap (killed by timeout)"
+      echo "==================== CLAUDE RESULT ===================="
+      RES=$(jq -r '.result // empty' /tmp/web.json 2>/dev/null)
+      if [ -n "$RES" ]; then echo "$RES"; else cat /tmp/web.json; fi
+      echo "==================== RUN STATS ===================="
+      jq -r '"success=\(.subtype)  is_error=\(.is_error)  turns=\(.num_turns)"' /tmp/web.json 2>/dev/null
+      echo "==================== WEB SCAN ARTIFACTS (en ~/.raptor/out) ===================="
+      ls -d "$HOME/.raptor/out/web_scan_"* 2>/dev/null | tail -5 || echo "  (ninguno escrito)"
+      echo "==================== STDERR (tail) ===================="
+      tail -20 /tmp/web.err
+      echo "[gate] claude exit code: $RC"
+      exit $RC
+  ran:
+    setOutput: raptor.run
+    assertReturnCode: 0

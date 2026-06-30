@@ -1,0 +1,74 @@
+settings:
+  name: "RAPTOR Web - LLM Web App Pentesting"
+  description: "Drives RAPTOR's /web Claude Code command (gadievron/raptor) headlessly to pentest a LIVE web application. Claude Code runs the /web slash command, which dispatches RAPTOR's web scanner (python3 raptor.py web --url) for OWASP Top 10 issues, then summarises the findings. Claude Code talks to OpenRouter via its native Anthropic Skin (ANTHROPIC_BASE_URL=https://openrouter.ai/api), so no proxy and no Anthropic key are needed. Pick the model with -d MODEL (e.g. anthropic/claude-haiku-4.5 cheap, anthropic/claude-sonnet-4.6 for higher coverage). NOTE: RAPTOR /web is ALPHA (expect false positives, no authenticated scanning). Only test targets you own or are authorised to test."
+  image: danielcuthbert/raptor:latest
+  author:
+    - https://github.com/danielcuthbert
+  example: satori run satori://web/llm/raptor.yml -d HOST="http://zero.webappsecurity.com" -d MODEL="anthropic/claude-sonnet-4.6" -d OPENROUTER=$OPENROUTER --output
+  timeout: 4800
+  cpu: 4096
+  memory: 8192
+  files: true
+  redacted:
+    - OPENROUTER
+
+raptor:
+  install:
+    # The devcontainer image ships Claude Code, Semgrep, CodeQL and Python 3.12.
+    # Clone RAPTOR into /opt so its .claude/commands/web.md (the /web command) is present.
+    - test -d /opt/raptor/.claude || git clone --depth 1 https://github.com/gadievron/raptor.git /opt/raptor >/dev/null 2>&1
+    - pip install --break-system-packages -q -r /opt/raptor/requirements.txt >/dev/null 2>&1 || true
+    # Belt-and-suspenders: ensure the LLM driver is present even on a thin image.
+    - command -v claude >/dev/null 2>&1 || npm install -g @anthropic-ai/claude-code >/dev/null 2>&1
+
+  run:
+    - |
+      # Fail fast with a clear message if the OpenRouter key was not supplied.
+      if [ -z "${{OPENROUTER}}" ]; then
+        echo "ERROR: OPENROUTER is empty. Run with: -d OPENROUTER=\$OPENROUTER"; exit 1
+      fi
+      # --- Route Claude Code (the /web driver) through the OpenRouter Anthropic Skin ---
+      export ANTHROPIC_BASE_URL="https://openrouter.ai/api"
+      export ANTHROPIC_AUTH_TOKEN="${{OPENROUTER}}"
+      export ANTHROPIC_API_KEY="${{OPENROUTER}}"
+      export ANTHROPIC_MODEL="${{MODEL}}"
+      export ANTHROPIC_SMALL_FAST_MODEL="${{MODEL}}"
+      export DISABLE_TELEMETRY=1 DISABLE_AUTOUPDATER=1 DISABLE_ERROR_REPORTING=1
+      # Satori containers run as root; Claude Code refuses --dangerously-skip-permissions
+      # as root unless it detects a sandbox. We are already inside an ephemeral container.
+      export IS_SANDBOX=1
+      export RAPTOR_MAX_COST=5.00
+      # Run from the RAPTOR repo so Claude Code discovers .claude/commands/web.md (the /web command).
+      cd /opt/raptor
+      echo "PWD=$(pwd)  claude=$(claude --version 2>/dev/null)  raptor=$(git rev-parse --short HEAD 2>/dev/null)  MODEL=${{MODEL}}"
+      # Drive the /web slash command headlessly. It dispatches the RAPTOR web scanner.
+      # Force non-interactive execution: the command would otherwise ask for scope/auth.
+      timeout --signal=INT 3600 \
+        claude -p "/web ${{HOST}} . Non-interactive: do NOT ask any questions; immediately run: python3 raptor.py web --url ${{HOST}} ; then summarise the OWASP Top 10 findings with severity to /data/findings.md and print the full report as your final message with CVSS scores." \
+        --dangerously-skip-permissions \
+        --max-turns 60 \
+        --output-format json > /tmp/web.json 2>/tmp/web.err
+      RC=$?
+      [ "$RC" = "124" ] && echo "WARN: claude hit the 60-min agent cap (killed by timeout)"
+      # Persist artifacts to /data for --files: the report from the JSON result, plus
+      # whatever RAPTOR wrote (web scans land in out/web_scan_<ts>/ under the repo).
+      jq -r '.result // empty' /tmp/web.json > /data/raptor-web-report.md 2>/dev/null
+      cp /tmp/web.json /data/raptor-web-result.json 2>/dev/null
+      cp /opt/raptor/findings.md /data/ 2>/dev/null
+      for d in /opt/raptor/out/web_scan_*; do [ -d "$d" ] && cp -a "$d" /data/ 2>/dev/null; done
+      echo "==================== CLAUDE RESULT ===================="
+      RES=$(jq -r '.result // empty' /tmp/web.json 2>/dev/null)
+      if [ -n "$RES" ]; then echo "$RES"
+      elif [ -f /data/findings.md ]; then echo "(empty final message - showing /data/findings.md)"; cat /data/findings.md
+      else cat /tmp/web.json; fi
+      echo "==================== RUN STATS ===================="
+      jq -r '"success=\(.subtype)  is_error=\(.is_error)  turns=\(.num_turns)  cost_usd=\(.total_cost_usd)"' /tmp/web.json 2>/dev/null
+      echo "==================== STDERR (tail) ===================="
+      tail -20 /tmp/web.err
+      echo "==================== ARTIFACTS IN /data (retrievable with --files) ===================="
+      find /data -type f 2>/dev/null | sort
+      echo "[gate] claude exit code: $RC"
+      exit $RC
+  ran:
+    setOutput: raptor.run
+    assertReturnCode: 0
