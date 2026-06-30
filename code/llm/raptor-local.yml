@@ -78,3 +78,14 @@ findings:
     setOutput: findings.run
     setSeverity: 3
     assertStdoutNotContains: '"severity_assessment": "medium"'
+
+# Human-readable agentic report (scan + LLM analysis summary). Its stdout is exposed for reference.
+report:
+  run:
+    - |
+      R=/tmp/raptor-out/agentic-report.md
+      [ -f "$R" ] || R=$(find /tmp/raptor-out -name '*report*.md' 2>/dev/null | head -1)
+      if [ -n "$R" ] && [ -f "$R" ]; then cat "$R"; else echo "(no agentic-report.md written)"; fi
+  ran:
+    setOutput: report.run
+    assertReturnCode: 0
