@@ -10,7 +10,7 @@ settings:
 
 yamllint:
   install:
-    - pip install yamllint --disable-pip-version-check --no-warn-script-location -q --break-system-packages
+    - pip install yamllint -U -q --disable-pip-version-check --no-warn-script-location --break-system-packages
 
   help:
     - yamllint --help

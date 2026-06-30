@@ -10,7 +10,7 @@ settings:
 
 pytype:
   install:
-    - command -v pytype >/dev/null || pip install pytype -q --disable-pip-version-check --root-user-action=ignore
+    - command -v pytype >/dev/null || pip install pytype -U -q --disable-pip-version-check --root-user-action=ignore
 
   test:
     assertReturnCode: 0

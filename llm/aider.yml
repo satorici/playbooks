@@ -11,7 +11,7 @@ settings:
 
 aider:
   install:
-    - pip install setuptools aider-chat >> /dev/null 2>&1
+    - pip install setuptools aider-chat -U -q
 
   test:
     assertReturnCode: 0

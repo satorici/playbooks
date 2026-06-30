@@ -10,7 +10,7 @@ settings:
 
 vulture:
   install:
-    - command -v vulture >/dev/null || pip install vulture -q --disable-pip-version-check --root-user-action=ignore
+    - command -v vulture >/dev/null || pip install vulture -U -q --disable-pip-version-check --root-user-action=ignore
 
   test:
     assertReturnCode: 0

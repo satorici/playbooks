@@ -26,9 +26,9 @@ assess:
     - export DEBIAN_FRONTEND=noninteractive; apt-get update >/dev/null 2>&1; apt-get install -qy jq curl awscli >/dev/null 2>&1; mkdir -p /data/out
     - aws configure set aws_access_key_id ${{AWS_ACCESS_KEY}}; aws configure set aws_secret_access_key ${{AWS_SECRET_KEY}}; aws configure set region us-east-1
     - aws ec2 describe-regions --query "Regions[].RegionName" --output text | tr "\t" "\n" > /data/regions.txt; [ -s /data/regions.txt ] || echo us-east-1 > /data/regions.txt
-    - python3 -m venv /opt/ss; /opt/ss/bin/pip install -q scoutsuite > /data/ss_pip.log 2>&1; echo "SS_RC=$?" >> /data/ss_pip.log
-    - python3 -m venv /opt/pw; /opt/pw/bin/pip install -q prowler > /data/pw_pip.log 2>&1; echo "PW_RC=$?" >> /data/pw_pip.log
-    - python3 -m venv /opt/cs; /opt/cs/bin/pip install -q cloudsplaining > /data/cs_pip.log 2>&1; echo "CS_RC=$?" >> /data/cs_pip.log
+    - python3 -m venv /opt/ss; /opt/ss/bin/pip install scoutsuite -U -q > /data/ss_pip.log 2>&1; echo "SS_RC=$?" >> /data/ss_pip.log
+    - python3 -m venv /opt/pw; /opt/pw/bin/pip install prowler -U -q > /data/pw_pip.log 2>&1; echo "PW_RC=$?" >> /data/pw_pip.log
+    - python3 -m venv /opt/cs; /opt/cs/bin/pip install cloudsplaining -U -q > /data/cs_pip.log 2>&1; echo "CS_RC=$?" >> /data/cs_pip.log
 
   # ---- 1. ScoutSuite: cloud posture (writes under /data so --files captures it) ----
   scoutsuite:

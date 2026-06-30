@@ -8,7 +8,7 @@ settings:
 
 cobol:
   install:
-    - test -e /tmp/cobol-minimal-sast >/dev/null || (cd /tmp; git clone --depth 1 https://github.com/jone0709/cobol-minimal-sast.git; pip install legacylens_cobol_parser -q --disable-pip-version-check --root-user-action=ignore)
+    - test -e /tmp/cobol-minimal-sast >/dev/null || (cd /tmp; git clone --depth 1 https://github.com/jone0709/cobol-minimal-sast.git; pip install legacylens_cobol_parser -U -q --disable-pip-version-check --root-user-action=ignore)
 
   test:
     run:

@@ -10,7 +10,7 @@ settings:
 
 checkov:
   install:
-    - pip install checkov -q --disable-pip-version-check
+    - pip install checkov -U -q --disable-pip-version-check
 
   help:
     - checkov --help

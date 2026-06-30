@@ -15,7 +15,7 @@ apkleaks:
     - unzip -q /tmp/jadx-1.4.7.zip -d /opt/jadx
     - ln -s /opt/jadx/bin/jadx /usr/local/bin/
     - ln -s /opt/jadx/bin/jadx-gui /usr/local/bin/
-    - pip install apkleaks -q --disable-pip-version-check
+    - pip install apkleaks -U -q --disable-pip-version-check
 
   help:
     - apkleaks --help

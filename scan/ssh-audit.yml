@@ -8,7 +8,7 @@ settings:
 
 ssh-audit:
   install:
-    - command -v ssh-audit >/dev/null || pip install ssh-audit -q --disable-pip-version-check --root-user-action=ignore
+    - command -v ssh-audit >/dev/null || pip install ssh-audit -U -q --disable-pip-version-check --root-user-action=ignore
 
   help:
     - ssh-audit --help

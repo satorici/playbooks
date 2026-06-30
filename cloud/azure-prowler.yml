@@ -16,7 +16,7 @@ settings:
 prowler:
   install:
     - export DEBIAN_FRONTEND=noninteractive; apt-get update >/dev/null 2>&1; apt-get install -qy jq curl >/dev/null 2>&1; mkdir -p /data/out
-    - python3 -m venv /opt/pw; /opt/pw/bin/pip install -q prowler > /data/pw_pip.log 2>&1; echo "PW_RC=$?" >> /data/pw_pip.log
+    - python3 -m venv /opt/pw; /opt/pw/bin/pip install prowler -U -q > /data/pw_pip.log 2>&1; echo "PW_RC=$?" >> /data/pw_pip.log
 
   scan:
     - export AZURE_CLIENT_ID=${{AZURE_CLIENT_ID}}; export AZURE_CLIENT_SECRET=${{AZURE_CLIENT_SECRET}}; export AZURE_TENANT_ID=${{AZURE_TENANT_ID}}; /opt/pw/bin/prowler azure --sp-env-auth --status FAIL --severity critical high -M json-ocsf -o /data/prowler --log-level ERROR > /data/prowler_run.log 2>&1; echo "PROWLER_RC=$?" >> /data/prowler_run.log; { echo "--- ls /data/prowler ---"; ls -laR /data/prowler; } >> /data/prowler_run.log 2>&1

@@ -10,7 +10,7 @@ settings:
 
 mypy:
   install:
-    - command -v mypy >/dev/null || pip install mypy -q --disable-pip-version-check --root-user-action=ignore
+    - command -v mypy >/dev/null || pip install mypy -U -q --disable-pip-version-check --root-user-action=ignore
 
   test:
     assertReturnCode: 0

@@ -15,13 +15,13 @@ settings:
 strix:
   install:
     # The image already ships the full pentest toolchain but NOT the strix CLI itself. Install it pinned so the shim's monkeypatches stay valid.
-    - pip install --break-system-packages --root-user-action=ignore -q "strix-agent==1.0.2"
+    - pip install "strix-agent==1.0.2" -U -q --break-system-packages --root-user-action=ignore
     # The local-backend fix — tracks main (repo is in active development; we control it).
     - curl -sL https://raw.githubusercontent.com/satoridev01/strix/main/strix_local_backend.py -o /tmp/strix_local_backend.py
 
   run:
     - |
-      export STRIX_LLM="openrouter/anthropic/claude-sonnet-4.5"
+      export STRIX_LLM="openrouter/anthropic/claude-sonnet-4.6"
       export LLM_API_KEY="${{OPENROUTER}}"
       export STRIX_TELEMETRY=0
       export STRIX_TARGET="${{HOST}}"

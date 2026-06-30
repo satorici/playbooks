@@ -10,7 +10,7 @@ settings:
 
 bandit:
   install:
-    - pip install bandit -q --disable-pip-version-check
+    - pip install bandit -U -q --disable-pip-version-check
 
   help:
     - bandit --help

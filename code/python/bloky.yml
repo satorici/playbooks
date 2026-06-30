@@ -7,7 +7,7 @@ settings:
   example: satori run satori://code/python/bloky.yml --repo satorici/satori-cli --report --output
 
 install:
-  - command -v bloky >/dev/null || pip install bloky -q --disable-pip-version-check --root-user-action=ignore
+  - command -v bloky >/dev/null || pip install bloky -U -q --disable-pip-version-check --root-user-action=ignore
 
 bloky:
   assertStdoutNotContains: BLOCKING OPERATIONS DETECTED

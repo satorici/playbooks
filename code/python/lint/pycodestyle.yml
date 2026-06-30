@@ -10,7 +10,7 @@ settings:
 
 pycodestyle:
   install:
-    - command -v pycodestyle >/dev/null || pip install pycodestyle -q --disable-pip-version-check --root-user-action=ignore
+    - command -v pycodestyle >/dev/null || pip install pycodestyle -U -q --disable-pip-version-check --root-user-action=ignore
 
   test:
     assertReturnCode: 0

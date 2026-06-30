@@ -10,7 +10,7 @@ settings:
 
 waymore:
   install:
-    - pip install waymore -q --disable-pip-version-check --root-user-action=ignore
+    - pip install waymore -U -q --disable-pip-version-check --root-user-action=ignore
 
   help:
     - waymore -h

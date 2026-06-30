@@ -8,7 +8,7 @@ settings:
 
 pyspector:
   install:
-    - command -v pyspector >/dev/null || pip install -q --root-user-action=ignore --disable-pip-version-check pyspector
+    - command -v pyspector >/dev/null || pip install pyspector -U -q --root-user-action=ignore --disable-pip-version-check
 
   test:
     run:

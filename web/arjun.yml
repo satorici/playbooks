@@ -10,7 +10,7 @@ settings:
 
 arjun:
   install:
-    - pip install arjun -q --disable-pip-version-check
+    - pip install arjun -U -q --disable-pip-version-check
 
   help:
     - arjun --help

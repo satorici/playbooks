@@ -8,8 +8,8 @@ settings:
 
 install:
   - python -m venv venv >>/dev/null
-  - venv/bin/pip install --upgrade pip setuptools wheel -q --disable-pip-version-check --root-user-action=ignore
-  - venv/bin/pip install pytest -q --disable-pip-version-check --root-user-action=ignore
+  - venv/bin/pip install pip setuptools wheel -U -q --disable-pip-version-check --root-user-action=ignore
+  - venv/bin/pip install pytest -U -q --disable-pip-version-check --root-user-action=ignore
   - |
     if [ -f "pyproject.toml" ]; then
       echo "Found pyproject.toml, attempting installation..."
@@ -39,12 +39,12 @@ install:
         venv/bin/pip install -r "$req_file" || echo "Failed to install $req_file"
       fi
     done
-  - venv/bin/pip install pytest-xdist pytest-cov pytest-mock pytest-html pytest-json-report -q --disable-pip-version-check --root-user-action=ignore
-  - venv/bin/pip install tomli packaging setuptools wheel -q --disable-pip-version-check --root-user-action=ignore
-  - venv/bin/pip install binaryornot filelock fields pyjson5 selenium pydantic_ai -q --disable-pip-version-check --root-user-action=ignore
+  - venv/bin/pip install pytest-xdist pytest-cov pytest-mock pytest-html pytest-json-report -U -q --disable-pip-version-check --root-user-action=ignore
+  - venv/bin/pip install tomli packaging setuptools wheel -U -q --disable-pip-version-check --root-user-action=ignore
+  - venv/bin/pip install binaryornot filelock fields pyjson5 selenium pydantic_ai -U -q --disable-pip-version-check --root-user-action=ignore
   - |
     if [ "${TORCH_CPU:-0}" = "1" ]; then
-      venv/bin/pip install --index-url https://download.pytorch.org/whl/cpu torch
+      venv/bin/pip install torch -U -q --index-url https://download.pytorch.org/whl/cpu
     fi
   - venv/bin/pip list
   - "venv/bin/python -c 'import pytest; print(f\"pytest version: {pytest.__version__}\")'"

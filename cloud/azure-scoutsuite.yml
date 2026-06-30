@@ -16,7 +16,7 @@ settings:
 scoutsuite:
   install:
     - export DEBIAN_FRONTEND=noninteractive; apt-get update >/dev/null 2>&1; apt-get install -qy jq curl >/dev/null 2>&1; mkdir -p /data/out
-    - python3 -m venv /opt/ss; /opt/ss/bin/pip install -q scoutsuite > /data/ss_pip.log 2>&1; echo "SS_RC=$?" >> /data/ss_pip.log
+    - python3 -m venv /opt/ss; /opt/ss/bin/pip install scoutsuite -U -q > /data/ss_pip.log 2>&1; echo "SS_RC=$?" >> /data/ss_pip.log
 
   scan:
     - cd /data; /opt/ss/bin/scout azure -s --tenant ${{AZURE_TENANT_ID}} --client-id ${{AZURE_CLIENT_ID}} --client-secret ${{AZURE_CLIENT_SECRET}} --all-subscriptions --no-browser > /data/ss_run.log 2>&1; echo "SS_SCAN_RC=$?" >> /data/ss_run.log

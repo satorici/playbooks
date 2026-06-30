@@ -12,7 +12,7 @@ settings:
 mobsfscan:
   install:
     - apt-get update >>/dev/null; apt-get install -qy jq >>/dev/null
-    - pip3 install mobsfscan -q --disable-pip-version-check
+    - pip3 install mobsfscan -U -q --disable-pip-version-check
 
   help:
     - mobsfscan --help

@@ -14,7 +14,7 @@ settings:
 
 prowler:
   install:
-    - pip install poetry -q --disable-pip-version-check --root-user-action=ignore
+    - pip install poetry -U -q --disable-pip-version-check --root-user-action=ignore
     - cd /tmp; git clone --depth 1 https://github.com/prowler-cloud/prowler; cd prowler; poetry install >>/dev/null
 
   test:
