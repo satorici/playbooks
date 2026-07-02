@@ -7,4 +7,4 @@ settings:
   example: satori run sh.yml -d CMD="id" --stdout
 
 run:
-  - bash -c '${{CMD}}'
+  - sh -c '${{CMD}}'
