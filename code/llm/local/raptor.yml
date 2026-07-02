@@ -3,7 +3,6 @@ settings:
   description: "Runs RAPTOR in agentic mode against source code: Semgrep static analysis plus LLM-driven exploitability validation, proof-of-concept generation and patch writing, powered by a local model. Choose the model with -d MODEL."
   author:
     - https://github.com/gadievron
-  timeout: 28800
   files: false   # findings and report print to stdout as separate test steps below
   example: satori local satori://code/llm/local/raptor.yml --repo OWASP/NodeGoat -d MODEL="qwen3.6-35b" --output
 

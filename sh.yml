@@ -1,0 +1,10 @@
+settings:
+  name: "Bash Shell Command"
+  description: "Execute a command with a bash shell"
+  author:
+    - https://github.com/satorici
+  image: debian
+  example: satori run sh.yml -d CMD="id" --stdout
+
+run:
+  - bash -c '${{CMD}}'
