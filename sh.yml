@@ -4,7 +4,7 @@ settings:
   author:
     - https://github.com/satorici
   image: debian
-  example: satori run sh.yml -d CMD="id" --stdout
+  example: satori run satori://sh.yml -d CMD="id" --stdout
 
 run:
   - sh -c '${{CMD}}'
