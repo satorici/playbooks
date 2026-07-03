@@ -3,18 +3,38 @@ settings:
   description: "John the Ripper is a password cracking tool that tests password strength and recovers lost credentials by performing dictionary attacks, brute-force attacks, and cryptanalysis on various password hash types."
   image: debian
   files: true
+  timeout: 600
+  cpu: 16384
+  memory: 32768
   author:
     - https://github.com/openwall
   gallery:
     - https://files.catbox.moe/yko8ow.png
-  example: satori run satori://crack/john.yml -d PASS='$2b$10$heqvAkYMez.Va6Et2uXInOnkCT6/uQj1brkrbyG3LpopDklcq7ZOS' --cpu 16384 --memory 32768 --report --output
+  example: satori run satori://crack/john.yml -d PASS='5f4dcc3b5aa765d61d8327deb882cf99' -d FORMAT='raw-md5' --report --output
 
 john:
   install:
-    - apt-get update >>/dev/null; apt-get install -qy john wget >>/dev/null
+    # Build John the Ripper "jumbo" from source (stock Debian john lacks raw-md5 & other raw-* formats)
+    - apt-get update >>/dev/null; apt-get install -qy build-essential libssl-dev zlib1g-dev git wget >>/dev/null
+    - git clone --depth 1 https://github.com/openwall/john /john >>/dev/null 2>&1
+    - cd /john/src && ./configure >>/dev/null 2>&1 && make -sj"$(nproc)" >>/dev/null 2>&1
     - echo '${{PASS}}' > hash.txt
+    # Fetch a wordlist so weak passwords crack instantly instead of falling back to slow brute-force
+    - wget -q https://github.com/brannondorsey/naive-hashcat/releases/download/data/rockyou.txt -O rockyou.txt
+
+  # FORMAT = John hash-type name passed as --format. The assistant filling in -d FORMAT should:
+  #   1) Use the format the user states verbatim, if given.
+  #   2) Otherwise infer it from the hash shape:
+  #        - has a $prefix$ (e.g. $2b$ bcrypt, $6$ sha512crypt, $1$ md5crypt) -> leave empty, John autodetects.
+  #        - raw/unprefixed hex -> pick by length: 32=raw-md5, 40=raw-sha1, 64=raw-sha256, 128=raw-sha512.
+  #   Raw hashes REQUIRE a format: without it John guesses LM/DES and silently cracks nothing.
+  #   Full list: /john/run/john --list=formats
 
   test:
     assertStdoutNotContains: "?"
+    setSeverity: 1
     run:
-      - john hash.txt
+      # Bounded dictionary attack; FORMAT flag added only when provided
+      - FMT='${{FORMAT}}'; /john/run/john ${FMT:+--format="$FMT"} --wordlist=rockyou.txt hash.txt
+      # Print the cracked password(s)
+      - FMT='${{FORMAT}}'; /john/run/john ${FMT:+--format="$FMT"} --show hash.txt
