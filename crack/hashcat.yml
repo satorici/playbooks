@@ -1,0 +1,38 @@
+settings:
+  name: "Hashcat: Crack passwords"
+  description: "Hashcat is a fast password recovery tool that cracks password hashes using dictionary, brute-force, rule-based and mask attacks across a wide range of hash algorithms."
+  image: debian
+  files: true
+  timeout: 600
+  cpu: 16384
+  memory: 32768
+  author:
+    - https://github.com/hashcat
+  gallery:
+    - https://files.catbox.moe/yko8ow.png
+  example: satori run satori://crack/hashcat.yml -d PASS='076a89c23179cedfc61171fe400ecf01fb76b9a48a68fb82dd0cd688d684d900' -d MODE='1400' --report --output
+
+hashcat:
+  install:
+    # pocl-opencl-icd lets hashcat run on CPU inside the container (no GPU)
+    - apt-get update >>/dev/null; apt-get install -qy hashcat pocl-opencl-icd wget >>/dev/null
+    - echo '${{PASS}}' > hash.txt
+    # Fetch a wordlist so weak passwords crack instantly
+    - wget -q https://github.com/brannondorsey/naive-hashcat/releases/download/data/rockyou.txt -O rockyou.txt
+
+  # MODE = Hashcat hash-type number (-m). The assistant filling in -d MODE should pick it from the hash:
+  #   raw/unprefixed hex by length: 32=0 (MD5), 40=100 (SHA1), 64=1400 (SHA256), 128=1700 (SHA512).
+  #   prefixed: $1$=500 (md5crypt), $2b$=3200 (bcrypt), $6$=1800 (sha512crypt), NTLM=1000.
+  #   Full list: hashcat --help | grep -i <algo>
+
+  # Bounded dictionary attack
+  crack:
+    run:
+      - hashcat -m ${{MODE}} -a 0 --force --potfile-path=pot hash.txt rockyou.txt
+
+  # Pass = nothing cracked (strong). Fail = a weak password was recovered.
+  test:
+    setSeverity: 1
+    assertStdoutNotContains: ":"
+    run:
+      - hashcat -m ${{MODE}} --show --potfile-path=pot hash.txt
