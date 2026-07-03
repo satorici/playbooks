@@ -30,11 +30,14 @@ john:
   #   Raw hashes REQUIRE a format: without it John guesses LM/DES and silently cracks nothing.
   #   Full list: /john/run/john --list=formats
 
-  test:
-    assertStdoutNotContains: "?"
-    setSeverity: 1
+  # Bounded dictionary attack; FORMAT flag added only when provided
+  crack:
     run:
-      # Bounded dictionary attack; FORMAT flag added only when provided
       - FMT='${{FORMAT}}'; /john/run/john ${FMT:+--format="$FMT"} --wordlist=rockyou.txt hash.txt
-      # Print the cracked password(s)
+
+  # Pass = nothing cracked (strong). Fail = a weak password was recovered.
+  test:
+    setSeverity: 1
+    assertStdoutContains: "0 password hashes cracked"
+    run:
       - FMT='${{FORMAT}}'; /john/run/john ${FMT:+--format="$FMT"} --show hash.txt
