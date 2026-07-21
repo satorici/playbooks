@@ -16,13 +16,50 @@ strix:
   install:
     # The image already ships the full pentest toolchain but NOT the strix CLI itself. Install it pinned so the shim's monkeypatches stay valid.
     - pip install "strix-agent==1.0.2" -U -q --break-system-packages --root-user-action=ignore
+    # `-U` above pulls openai>=2.46, which breaks openai-agents (1.0.2/0.14.6) two
+    # ways: (1) InputTokensDetails now *requires* cache_write_tokens (agents only
+    # passes cached_tokens) -> pydantic ValidationError kills LLM warm-up. Pin
+    # openai into the compatible window: new enough to expose ResponseToolSearchCall
+    # (needed by agents.items, absent <=2.22), old enough that cache_write_tokens
+    # is still optional (becomes required at 2.45). 2.40.0 is the newest that fits.
+    - pip install "openai==2.40.0" -q --break-system-packages --root-user-action=ignore
     # The local-backend fix — tracks main (repo is in active development; we control it).
     - curl -sL https://raw.githubusercontent.com/satoridev01/strix/main/strix_local_backend.py -o /tmp/strix_local_backend.py
 
   run:
     - |
-      export STRIX_LLM="openrouter/anthropic/claude-sonnet-4.6"
+      # ---- LLM preflight -------------------------------------------------
+      # A dead/rate-limited/uncredited model makes Strix crash MID-scan after
+      # burning the whole timeout. Ping the model cheaply up front (a real
+      # max_tokens:1 completion, since an .error can come back even on HTTP
+      # 200) and fall back to an OpenAI model if the primary Claude one is
+      # unreachable. STRIX_LLM is then set from whatever actually answered.
+      PRIMARY="anthropic/claude-sonnet-4.6"   # 1M-context + Anthropic prompt caching (Claude-specific)
+      BACKUP="openai/gpt-4.1"                 # fallback: closest OpenAI tier to Sonnet 4.6 in cost + capability (strong tool-use, long context); no Anthropic 1M/caching tuning
+      API="https://openrouter.ai/api/v1/chat/completions"
+      ping_model() {
+        MODEL="$1"; echo "[preflight] pinging $MODEL ..."
+        BODY=$(curl -sS -w '\n%{http_code}' "$API" \
+          -H "Authorization: Bearer ${{OPENROUTER}}" \
+          -H "Content-Type: application/json" \
+          -d "{\"model\":\"$MODEL\",\"max_tokens\":1,\"messages\":[{\"role\":\"user\",\"content\":\"ping\"}]}")
+        HTTP=$(printf '%s' "$BODY" | tail -n1)
+        JSON=$(printf '%s' "$BODY" | sed '$d')
+        ERR=$(printf '%s' "$JSON" | jq -r '.error.message // empty' 2>/dev/null)
+        if [ "$HTTP" = "200" ] && [ -z "$ERR" ]; then echo "[preflight] $MODEL OK"; return 0; fi
+        echo "[preflight] $MODEL FAIL (http $HTTP): ${ERR:-non-200 response}"; return 1
+      }
+      if ping_model "$PRIMARY"; then SELECTED="openrouter/$PRIMARY"
+      elif echo "[preflight] primary unavailable, trying OpenAI backup..." && ping_model "$BACKUP"; then SELECTED="openrouter/$BACKUP"
+      else echo "[preflight] no LLM available — aborting before scan"; exit 1; fi
+      echo "[preflight] using model: $SELECTED"
+      # --------------------------------------------------------------------
+      export STRIX_LLM="$SELECTED"
       export LLM_API_KEY="${{OPENROUTER}}"
+      # litellm's openrouter/ provider authenticates from OPENROUTER_API_KEY.
+      # With only LLM_API_KEY the bearer sometimes isn't sent -> OpenRouter falls
+      # back to cookie auth and 401s ("No cookie auth credentials found"). Set both.
+      export OPENROUTER_API_KEY="${{OPENROUTER}}"
       export STRIX_TELEMETRY=0
       export STRIX_TARGET="${{HOST}}"
       export STRIX_SCAN_MODE="${{MODE}}"
