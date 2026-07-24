@@ -1,6 +1,7 @@
 settings:
   name: "Breach News: Compromise mentions scored by an LLM"
   description: "Searches Google News for a company alongside a compromise lexicon (hack, ransomware, breach, data leak, phishing, compromised, exposed, stolen data) and asks an OpenRouter LLM (Google Gemini 2.5 Flash) to judge whether the headlines credibly indicate THAT company was itself breached/compromised. Returns a scorable verdict (BREACH_NEWS_FOUND vs CLEAN). Unlike osint/google-news.yml (which lists any mention without filtering or scoring), this filters by the compromise lexicon and discards false positives such as a security vendor merely reporting on someone else's incident."
+  mitigation: "Investigate any credible compromise report immediately through your incident-response process, confirm scope, contain and remediate, and rotate any credentials or secrets that may be exposed."
   image: debian
   timeout: 300
   author:

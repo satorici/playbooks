@@ -1,6 +1,7 @@
 settings:
   name: "RBL Check: IP reputation (spam / botnet C2)"
   description: "Resolves the organisation's own IPs (domain A records + each MX host) and checks them against IP reputation blocklists: DNS blocklists for spam/policy/exploit (Spamhaus ZEN, Barracuda, SORBS, SpamCop) and the abuse.ch Feodo Tracker for active botnet C2. A live hit means an IP in the org's space is sending spam or is a compromised/C2 host — the IP-axis complement to the domain-axis blocklist-check. No API key required."
+  mitigation: "Identify and clean the compromised or misconfigured host behind any listed IP (malware, open relay, spam bot), then request delisting from the relevant blocklist once remediated."
   image: debian
   author:
     - https://github.com/satorici

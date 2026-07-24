@@ -1,6 +1,7 @@
 settings:
   name: "Bug Bounty: Program discovery across platforms"
   description: "Checks if a company has a public bug bounty or vulnerability disclosure program on HackerOne, Bugcrowd, Intigriti, or via security.txt. Having a bug bounty program indicates security maturity and proactive vulnerability management."
+  mitigation: "Establish a vulnerability disclosure policy (and, once mature enough, a bug bounty program) with a clear reporting channel and safe-harbour terms so external researchers can report issues responsibly."
   image: debian
   author:
     - https://github.com/satorici

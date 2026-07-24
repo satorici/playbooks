@@ -1,6 +1,7 @@
 settings:
   name: "AlienVault OTX: Threat-intel pulse exposure"
   description: "Checks whether a domain is named in any AlienVault OTX threat-intelligence pulse (tracked IOC sets, malware campaigns, incident reports). A match means the domain has been referenced in community/vendor threat reporting. Uses the public OTX domain endpoint (no API key required). Note: well-known brands appear in many benign monitoring pulses, so treat matches as a review signal."
+  mitigation: "Review each threat-intelligence pulse referencing your domain to confirm whether it reflects a real compromise or benign monitoring, and feed any genuine IOCs into your detection and incident-response workflow."
   image: debian
   author:
     - https://github.com/satorici

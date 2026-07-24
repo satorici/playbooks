@@ -1,6 +1,7 @@
 settings:
   name: "Qualys SSL Labs: SSL/TLS configuration assessment"
   description: "Assesses SSL/TLS configuration quality using the Qualys SSL Labs API. Reports grade, certificate details, protocol support, and known vulnerabilities like BEAST, POODLE, and Heartbleed."
+  mitigation: "Remediate the issues behind a low grade: disable weak protocols and ciphers, deploy a complete and valid certificate chain, enable forward secrecy and HSTS, and re-test until the configuration reaches an A grade."
   image: debian
   author:
     - https://github.com/satorici

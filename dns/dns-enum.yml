@@ -1,6 +1,7 @@
 settings:
   name: "DNS Enum: Full DNS footprint mapping"
   description: "Maps the target's full DNS footprint using dig for record resolution and crt.sh certificate transparency logs for subdomain discovery. Passive reconnaissance only."
+  mitigation: "Inventory every subdomain and DNS record discovered here, decommission unused or forgotten hosts, and ensure each remaining asset is patched and monitored to shrink your external attack surface."
   image: debian
   author:
     - https://github.com/satorici

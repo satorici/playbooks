@@ -1,6 +1,7 @@
 settings:
   name: "dnsX: queries all dns records of a domain"
   description: "dnsx is a DNS toolkit for performing DNS queries and collecting DNS-related information. It supports subdomain enumeration, wildcard filtering, and DNS resolution. The tool allows users to customize queries and extract specific DNS records."
+  mitigation: "Publish only the DNS records you need externally, avoid leaking internal hostnames or infrastructure details, and review resolved records regularly for stale or unintended entries."
   image: debian
   author:
     - https://github.com/projectdiscovery

@@ -1,6 +1,7 @@
 settings:
   name: "Email Security: SPF, DMARC, and DKIM assessment"
   description: "Checks email authentication and anti-spoofing configuration by querying SPF, DMARC, and DKIM DNS records. Assesses strictness levels and provides an overall email security rating. Passive DNS lookups only."
+  mitigation: "Publish a strict SPF record, enable DKIM signing, and deploy DMARC with a p=reject (or at least p=quarantine) policy to stop attackers from spoofing your domain in phishing and BEC attacks."
   image: debian
   author:
     - https://github.com/satorici

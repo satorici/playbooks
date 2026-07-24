@@ -1,6 +1,7 @@
 settings:
   name: "httpx: performs multiple web probes"
   description: "Identify and analyze web server configurations, verify HTTP responses, and diagnose potential vulnerabilities or misconfigurations"
+  mitigation: "Review every exposed web endpoint, disable or restrict those that should not be public, remove server/version banners, and apply the security headers and TLS hardening appropriate for each service."
   image: debian
   author:
     - https://github.com/projectdiscovery

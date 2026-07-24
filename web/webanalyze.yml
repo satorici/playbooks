@@ -1,6 +1,7 @@
 settings:
   name: "WebAnalyze: a port of Wappalyzer in Go to be performant and allows to test huge lists of web hosts"
   description: "Webanalyze detects and identifies technologies used by websites by analyzing their responses and matching them against fingerprints from the Wappalyzer database. It supports scanning multiple targets and provides structured output for further analysis."
+  mitigation: "Minimise technology and version disclosure in responses and headers, and keep every identified framework, CMS, and library patched to a supported version so attackers cannot map you to known exploits."
   image: debian
   author:
     - https://github.com/rverton

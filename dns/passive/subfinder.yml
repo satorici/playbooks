@@ -1,6 +1,7 @@
 settings:
   name: "Subfinder: Discover valid subdomains using passive online sources"
   description: "subfinder discovers subdomains by querying public sources, certificate transparency logs, APIs, and brute-force techniques. It is designed for reconnaissance and security assessments, providing a comprehensive list of subdomains associated with a target domain."
+  mitigation: "Maintain an authoritative inventory of all discovered subdomains, retire stale or forgotten hosts, and confirm each live subdomain is intentionally exposed, patched, and monitored."
   image: debian
   author:
     - https://github.com/projectdiscovery

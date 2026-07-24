@@ -1,6 +1,7 @@
 settings:
   name: "Certificate Transparency Monitor: Lookalike cert issuance"
   description: "Detects phishing infrastructure at provisioning time by watching Certificate Transparency logs (crt.sh) for newly issued certificates whose hostname contains your brand keyword but is NOT on your legitimate domain. Catches attacker lookalike/impersonation domains the moment they get a TLS cert, often before they are weaponized. Complements typosquat detection. No API key required. Designed to run as a daily monitor."
+  mitigation: "Treat any lookalike certificate for your brand as likely phishing infrastructure: investigate the host and file a takedown/abuse report with the registrar, hosting provider, and issuing CA before it is weaponised."
   image: debian
   author:
     - https://github.com/satorici

@@ -1,6 +1,7 @@
 settings:
   name: "Typosquat Detection: Lookalike / impersonation domains"
   description: "Detects attacker-registered lookalike domains impersonating your brand (typosquats, homoglyphs, TLD swaps, bitsquats). Uses dnstwist to generate permutations, keeps only the ones that are registered and resolve, checks for MX records (mail-capable = BEC/phishing risk), and ages each via WHOIS so freshly registered impostors are flagged as high risk. No API key required. Designed to run as a daily monitor."
+  mitigation: "Monitor continuously for newly registered lookalike domains, defensively register the highest-risk permutations, and file takedown/abuse reports against active impersonation or phishing domains."
   image: python
   author:
     - https://github.com/satorici

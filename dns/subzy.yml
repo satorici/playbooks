@@ -1,6 +1,7 @@
 settings:
   name: "Subzy: subdomain takeover tool that matches response fingerprings from can-i-take-over-xyz"
   description: "subzy detects and exploits subdomain takeover vulnerabilities by identifying misconfigured DNS records pointing to external services. It automates checks for abandoned subdomains that attackers could hijack for phishing, data theft, or malicious content hosting."
+  mitigation: "Remove or reclaim any dangling DNS record pointing to a deprovisioned third-party service so an attacker cannot register the resource and take over the subdomain."
   image: golang
   author:
     - https://github.com/PentestPad

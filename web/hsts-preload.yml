@@ -1,6 +1,7 @@
 settings:
   name: "HSTS Preload: Chrome preload list membership check"
   description: "Checks if a domain is registered on the HSTS Preload List, which is hardcoded into Chrome, Firefox, Safari, Edge, and other browsers. Domains on the list are always accessed via HTTPS, eliminating the possibility of SSL stripping attacks on the first visit."
+  mitigation: "Serve HSTS with a long max-age and includeSubDomains, then submit the domain to the HSTS preload list so browsers enforce HTTPS on the first visit and SSL-stripping attacks are eliminated."
   image: debian
   author:
     - https://github.com/satorici

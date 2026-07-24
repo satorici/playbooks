@@ -1,6 +1,7 @@
 settings:
   name: "Certificate Transparency: Organization domain discovery"
   description: "Searches crt.sh certificate transparency logs by Organization name (not domain) to discover all domains with SSL certificates issued to a specific company. CA-validated org names are high confidence. No API key required."
+  mitigation: "Reconcile every domain issued a certificate under your organisation name against your asset inventory, and investigate or reclaim any domain you do not recognise as it may indicate shadow IT or impersonation."
   image: debian
   author:
     - https://github.com/satorici

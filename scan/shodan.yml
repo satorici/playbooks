@@ -1,6 +1,7 @@
 settings:
   name: "Shodan: Exposed services and CVE identification"
   description: "Queries Shodan API to identify exposed services, open ports, software versions, and known CVEs on the target's infrastructure and subdomains. Requires SHODAN_API_KEY."
+  mitigation: "Reduce internet-exposed services to the minimum required, patch any host matching a reported CVE, and place management or database services behind a VPN or firewall instead of exposing them publicly."
   image: debian
   author:
     - https://github.com/satorici

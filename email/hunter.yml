@@ -1,6 +1,7 @@
 settings:
   name: "Hunter.io: Email discovery and pattern identification"
   description: "Discovers professional email addresses associated with a domain using Hunter.io's database. Returns email addresses, their sources, confidence scores, and the organisation's email naming pattern (e.g. {first}.{last}@domain.com). Free tier: 25 searches/month."
+  mitigation: "Treat every publicly discoverable employee address as a phishing target: enforce MFA, run security-awareness training, and prefer role-based aliases over publishing individual addresses."
   image: debian
   author:
     - https://github.com/satorici
