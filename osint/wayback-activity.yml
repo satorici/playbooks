@@ -1,15 +1,14 @@
 settings:
-  name: "Wayback Machine: Web archive activity check"
-  description: "Two Wayback Machine (archive.org) tests for a domain: (1) activity — fails if the website content has not changed in more than 2 years (via CDX content digests), suggesting the company is inactive or dead; (2) secrets — recovers historical JS/JSON/config files (including content already deleted from the live site) and scans them with TruffleHog for leaked API keys, tokens and credentials."
+  name: "Wayback Activity: web-archive freshness check"
+  description: "Wayback Machine (archive.org) activity check: collapses CDX snapshots by content digest to find when the site's content last actually changed, and FAILS if it has not changed in more than 2 years — a signal the company may be inactive or defunct. Passive reconnaissance only; no secrets scanning (see wayback-secrets.yml)."
   image: debian
   author:
     - https://github.com/satorici
-  example: satori run satori://osint/wayback-check.yml -d DOMAIN="cloudflare.com" --report --output
+  example: satori run satori://osint/wayback-activity.yml -d DOMAIN="cloudflare.com" --report --output
 
-wayback-check:
+wayback-activity:
   install:
-    - which curl pip3 git >/dev/null 2>&1 || (export DEBIAN_FRONTEND=noninteractive && apt-get update -qq && apt-get install -qy curl ca-certificates python3-pip git >>/dev/null 2>&1)
-    - which trufflehog3 >/dev/null 2>&1 || pip3 install trufflehog3 -U -q --disable-pip-version-check --root-user-action=ignore --break-system-packages >/dev/null 2>&1
+    - which curl >/dev/null 2>&1 || (export DEBIAN_FRONTEND=noninteractive && apt-get update -qq && apt-get install -qy curl ca-certificates >>/dev/null 2>&1)
 
   check_archive:
     setSeverity: 5
@@ -17,7 +16,7 @@ wayback-check:
     run:
       - |
         DOMAIN="${{DOMAIN}}"
-        echo "=== Wayback Machine Check: $DOMAIN ==="
+        echo "=== Wayback Machine Activity Check: $DOMAIN ==="
 
         # Query archive.org CDX with a small retry (it is intermittently rate-limited)
         cdx() {
@@ -73,53 +72,3 @@ wayback-check:
 
           echo "Archive: https://web.archive.org/web/$LAST_CHANGE_TS/https://$DOMAIN/"
         fi
-
-  scan_secrets:
-    setSeverity: 1
-    assertStdoutNotContains:
-      - HIGH
-      - MEDIUM
-      - LOW
-    run:
-      - |
-        DOMAIN="${{DOMAIN}}"
-        LIMIT=200
-        WORKDIR=/tmp/wb
-        mkdir -p "$WORKDIR"
-        echo "=== Wayback Secrets Scan: $DOMAIN (up to $LIMIT files) ==="
-
-        fetch() {
-          i=0
-          while [ "$i" -lt 5 ]; do
-            out=$(curl -s -m "$1" "$2" 2>/dev/null)
-            if [ -n "$out" ]; then printf '%s' "$out"; return 0; fi
-            i=$((i + 1)); sleep 2
-          done
-        }
-
-        # List unique archived source/config files (one snapshot per URL, HTTP 200)
-        echo "Querying CDX for archived files..."
-        URLS=$(fetch 90 "https://web.archive.org/cdx/search/cdx?url=$DOMAIN/*&output=text&fl=timestamp,original&collapse=urlkey&filter=statuscode:200&matchType=domain&limit=100000" \
-          | grep -iE '\.(js|json|xml|ya?ml|txt|env|config|conf|ini|properties|bak|map)([?#]|$)' \
-          | head -n "$LIMIT")
-
-        COUNT=$(printf '%s\n' "$URLS" | grep -c .)
-        echo "Archived files to scan: $COUNT"
-        if [ "$COUNT" -eq 0 ]; then
-          echo "No archived source/config files found for $DOMAIN"
-          exit 0
-        fi
-
-        # Download the ORIGINAL archived content (id_ modifier = raw, un-rewritten)
-        n=0
-        printf '%s\n' "$URLS" | while read -r TS ORIG; do
-          [ -z "$TS" ] && continue
-          n=$((n + 1))
-          curl -s -m 30 -o "$WORKDIR/f_${TS}_${n}" \
-            "https://web.archive.org/web/${TS}id_/${ORIG}" 2>/dev/null
-        done
-        echo "Downloaded $(ls -1 "$WORKDIR" | wc -l) files"
-
-        # Scan recovered files for leaked secrets
-        echo "=== trufflehog3 scan ==="
-        trufflehog3 filesystem "$WORKDIR"

@@ -88,7 +88,8 @@ playbooks/
 | `satori://osint/sec-subsidiaries.yml` — **SEC EDGAR: Subsidiary discovery from public filings** | Searches SEC EDGAR full-text search for Exhibit 21 (subsidiary listings) and 8-K (acquisition announcements) to discover legally disclosed subsidiaries. US public compani |
 | `satori://osint/thecompaniesapi.yml` — **TheCompaniesAPI Lookup** | Query TheCompaniesAPI for company info by hostname/domain |
 | `satori://osint/typosquat.yml` — **Typosquat Detection: Lookalike / impersonation domains** | Detects attacker-registered lookalike domains impersonating your brand (typosquats, homoglyphs, TLD swaps, bitsquats). Uses dnstwist to generate permutations, keeps only  |
-| `satori://osint/wayback-check.yml` — **Wayback Machine: Web archive activity check** | Checks the Wayback Machine (archive.org) for a domain's archive history. Reports first snapshot, last snapshot, and recent activity. A domain with no recent snapshots or  |
+| `satori://osint/wayback-activity.yml` — **Wayback Activity: web-archive freshness check** | Collapses archive.org CDX snapshots by content digest to find when the site last actually changed; flags a domain unchanged for >2 years (possibly inactive/defunct). |
+| `satori://osint/wayback-secrets.yml` — **Wayback Secrets: archived-file leaked-credential scan** | Recovers historical JS/JSON/config files from archive.org (including content deleted from the live site) and scans them with Semgrep p/secrets for leaked API keys, tokens and credentials. |
 
 ### Compliance (10 playbooks)
 

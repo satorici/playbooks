@@ -23,7 +23,8 @@ Playbooks for OSINT (Open-Source Intelligence) reconnaissance — passively prof
 | [sec-subsidiaries.yml](sec-subsidiaries.yml) | SEC EDGAR | Discovers legally disclosed subsidiaries and acquisitions via Exhibit 21 and 8-K filings (US public companies) |
 | [thecompaniesapi.yml](thecompaniesapi.yml) | TheCompaniesAPI | Queries company information by hostname/domain |
 | [typosquat.yml](typosquat.yml) | dnstwist | Detects registered lookalike/impersonation domains (typosquats, homoglyphs, TLD swaps) with MX and age risk scoring |
-| [wayback-check.yml](wayback-check.yml) | Wayback Machine (archive.org) | Checks a domain's web archive history to gauge whether a company is active or defunct |
+| [wayback-activity.yml](wayback-activity.yml) | Wayback Machine (archive.org) | Web-archive freshness: flags a domain whose content is unchanged for >2 years (possibly inactive/defunct) |
+| [wayback-secrets.yml](wayback-secrets.yml) | Wayback Machine + Semgrep | Recovers historical JS/JSON/config files from the archive and scans them with Semgrep p/secrets for leaked credentials |
 
 ## Usage
 
