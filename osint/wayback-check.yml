@@ -12,7 +12,7 @@ wayback-check:
     - which trufflehog3 >/dev/null 2>&1 || pip3 install trufflehog3 -U -q --disable-pip-version-check --root-user-action=ignore --break-system-packages >/dev/null 2>&1
 
   check_archive:
-    setSeverity: 2
+    setSeverity: 5
     assertStdoutNotContains: "WAYBACK_STALE"
     run:
       - |
