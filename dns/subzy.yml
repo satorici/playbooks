@@ -18,7 +18,7 @@ subzy:
     # only when a real takeover is found. The result line is "[ NOT VULNERABLE ]"
     # when safe and "[ VULNERABLE ]" when vulnerable; the lookbehind matches only
     # the vulnerable form (VULNERABLE not preceded by "NOT ").
-    setSeverity: 1
+    setSeverity: 2
     assertStdoutContains: "Loaded"
     assertStdoutNotRegex: "(?<!NOT )VULNERABLE"
     run:

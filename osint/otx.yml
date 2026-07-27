@@ -11,7 +11,7 @@ otx:
     - command -v curl >/dev/null 2>&1 && command -v jq >/dev/null 2>&1 || (export DEBIAN_FRONTEND=noninteractive && apt-get update -qq && apt-get install -qy curl jq ca-certificates >/dev/null 2>&1)
 
   pulses:
-    setSeverity: 3
+    setSeverity: 4
     assertStdoutNotContains: "OTX_PULSE_MATCH"
     run:
       - |

@@ -1,6 +1,6 @@
 settings:
   name: "Wayback Machine: Web archive activity check"
-  description: "Checks the Wayback Machine (archive.org) for a domain's archive history. Reports first snapshot, last snapshot, and recent activity. A domain with no recent snapshots or only error codes suggests the company is inactive or dead."
+  description: "Two Wayback Machine (archive.org) tests for a domain: (1) activity — fails if the website content has not changed in more than 2 years (via CDX content digests), suggesting the company is inactive or dead; (2) secrets — recovers historical JS/JSON/config files (including content already deleted from the live site) and scans them with TruffleHog for leaked API keys, tokens and credentials."
   image: debian
   author:
     - https://github.com/satorici
@@ -8,72 +8,118 @@ settings:
 
 wayback-check:
   install:
-    - which curl >/dev/null 2>&1 || (export DEBIAN_FRONTEND=noninteractive && apt-get update -qq && apt-get install -qy curl ca-certificates >>/dev/null 2>&1)
+    - which curl pip3 git >/dev/null 2>&1 || (export DEBIAN_FRONTEND=noninteractive && apt-get update -qq && apt-get install -qy curl ca-certificates python3-pip git >>/dev/null 2>&1)
+    - which trufflehog3 >/dev/null 2>&1 || pip3 install trufflehog3 -U -q --disable-pip-version-check --root-user-action=ignore --break-system-packages >/dev/null 2>&1
 
   check_archive:
-    setSeverity: 3
-    assertStdoutNotContains: "WAYBACK_INACTIVE"
+    setSeverity: 2
+    assertStdoutNotContains: "WAYBACK_STALE"
     run:
       - |
         DOMAIN="${{DOMAIN}}"
         echo "=== Wayback Machine Check: $DOMAIN ==="
 
-        # Get last snapshot
-        LAST=$(curl -s -m 15 "https://web.archive.org/cdx/search/cdx?url=$DOMAIN&output=json&limit=1&fl=timestamp,statuscode&sort=reverse" 2>/dev/null)
-        LAST_TS=$(echo "$LAST" | grep -oE '"[0-9]{14}"' | head -1 | tr -d '"')
-        LAST_CODE=$(echo "$LAST" | grep -oE '"[0-9]{3}"' | tail -1 | tr -d '"')
+        # Query archive.org CDX with a small retry (it is intermittently rate-limited)
+        cdx() {
+          i=0
+          while [ "$i" -lt 5 ]; do
+            out=$(curl -s -m "$1" "$2" 2>/dev/null)
+            if [ -n "$out" ]; then printf '%s' "$out"; return 0; fi
+            i=$((i + 1)); sleep 2
+          done
+        }
 
-        # Get first snapshot
-        FIRST=$(curl -s -m 15 "https://web.archive.org/cdx/search/cdx?url=$DOMAIN&output=json&limit=1&fl=timestamp,statuscode&sort=asc&filter=statuscode:200" 2>/dev/null)
-        FIRST_TS=$(echo "$FIRST" | grep -oE '"[0-9]{14}"' | head -1 | tr -d '"')
-
-        # Format timestamps
+        # Format YYYYMMDD... timestamp as YYYY-MM-DD (POSIX: /bin/sh is dash on debian)
         format_ts() {
           ts="$1"
-          if [ -n "$ts" ] && [ ${#ts} -ge 8 ]; then
-            echo "${ts:0:4}-${ts:4:2}-${ts:6:2}"
+          if [ -n "$ts" ] && [ "$(printf '%s' "$ts" | wc -c)" -ge 8 ]; then
+            printf '%s-%s-%s\n' "$(printf '%s' "$ts" | cut -c1-4)" "$(printf '%s' "$ts" | cut -c5-6)" "$(printf '%s' "$ts" | cut -c7-8)"
           else
             echo "N/A"
           fi
         }
 
+        # Collapse by content digest: only snapshots where the CONTENT actually changed.
+        # First timestamp = first snapshot ever; last = last real change to the website.
+        CHANGES=$(cdx 60 "https://web.archive.org/cdx/search/cdx?url=$DOMAIN&output=text&fl=timestamp,digest&collapse=digest")
+        TIMESTAMPS=$(printf '%s\n' "$CHANGES" | grep -oE '[0-9]{14}' | sort)
+        CHANGE_COUNT=$(printf '%s\n' "$TIMESTAMPS" | grep -c .)
+        FIRST_TS=$(printf '%s\n' "$TIMESTAMPS" | head -1)
+        LAST_CHANGE_TS=$(printf '%s\n' "$TIMESTAMPS" | tail -1)
+
         FIRST_DATE=$(format_ts "$FIRST_TS")
-        LAST_DATE=$(format_ts "$LAST_TS")
+        LAST_CHANGE_DATE=$(format_ts "$LAST_CHANGE_TS")
 
         echo "First snapshot: $FIRST_DATE"
-        echo "Last snapshot: $LAST_DATE (HTTP $LAST_CODE)"
+        echo "Distinct content versions archived: $CHANGE_COUNT"
+        echo "Last content change: $LAST_CHANGE_DATE"
 
-        if [ -n "$FIRST_TS" ] && [ -n "$LAST_TS" ]; then
-          # Calculate domain age
-          FIRST_YEAR=${FIRST_TS:0:4}
-          LAST_YEAR=${LAST_TS:0:4}
-          CURRENT_YEAR=$(date +%Y)
-          AGE=$((CURRENT_YEAR - FIRST_YEAR))
-          echo "Domain web presence: ~${AGE} years"
-
-          # Check if last snapshot is recent (within 6 months)
-          LAST_YYYYMM="${LAST_TS:0:6}"
-          CURRENT_YYYYMM=$(date +%Y%m)
-          SIX_MONTHS_AGO=$(date -v-6m +%Y%m 2>/dev/null || date -d "6 months ago" +%Y%m 2>/dev/null || echo "000000")
-
-          if [ "$LAST_YYYYMM" -ge "$SIX_MONTHS_AGO" ] 2>/dev/null; then
-            if [ "$LAST_CODE" = "200" ]; then
-              echo "WAYBACK_ACTIVE: $DOMAIN has recent web activity (last: $LAST_DATE, HTTP 200)"
-            elif [ "$LAST_CODE" = "301" ] || [ "$LAST_CODE" = "302" ]; then
-              echo "WAYBACK_REDIRECT: $DOMAIN redirects (last: $LAST_DATE, HTTP $LAST_CODE) — domain may have been acquired or parked"
-            else
-              echo "WAYBACK_DEGRADED: $DOMAIN returning HTTP $LAST_CODE (last: $LAST_DATE) — possible issues"
-            fi
-          else
-            echo "WAYBACK_INACTIVE: $DOMAIN has no recent web activity (last snapshot: $LAST_DATE) — company may be defunct"
-          fi
-        elif [ -z "$FIRST_TS" ] && [ -z "$LAST_TS" ]; then
-          echo "WAYBACK_INACTIVE: $DOMAIN has no Wayback Machine history — domain may be new or never had a website"
+        if [ -z "$LAST_CHANGE_TS" ]; then
+          echo "WAYBACK_STALE: $DOMAIN has no Wayback Machine history — company may be defunct or never had a website"
         else
-          echo "WAYBACK_ACTIVE: $DOMAIN has archive history"
+          FIRST_YEAR=$(printf '%s' "$FIRST_TS" | cut -c1-4)
+          CURRENT_YEAR=$(date +%Y)
+          [ -n "$FIRST_YEAR" ] && echo "Domain web presence: ~$((CURRENT_YEAR - FIRST_YEAR)) years"
+
+          # Fail if the website content has not changed in more than 2 years
+          LAST_CHANGE_YYYYMM=$(printf '%s' "$LAST_CHANGE_TS" | cut -c1-6)
+          TWO_YEARS_AGO=$(date -v-2y +%Y%m 2>/dev/null || date -d "2 years ago" +%Y%m 2>/dev/null || echo "000000")
+
+          if [ "$LAST_CHANGE_YYYYMM" -ge "$TWO_YEARS_AGO" ] 2>/dev/null; then
+            echo "WAYBACK_ACTIVE: $DOMAIN web content changed within the last 2 years (last change: $LAST_CHANGE_DATE)"
+          else
+            echo "WAYBACK_STALE: $DOMAIN web content has not changed in more than 2 years (last change: $LAST_CHANGE_DATE) — company may be inactive or defunct"
+          fi
+
+          echo "Archive: https://web.archive.org/web/$LAST_CHANGE_TS/https://$DOMAIN/"
         fi
 
-        # Show Wayback URL
-        if [ -n "$LAST_TS" ]; then
-          echo "Archive: https://web.archive.org/web/$LAST_TS/https://$DOMAIN/"
+  scan_secrets:
+    setSeverity: 1
+    assertStdoutNotContains:
+      - HIGH
+      - MEDIUM
+      - LOW
+    run:
+      - |
+        DOMAIN="${{DOMAIN}}"
+        LIMIT=200
+        WORKDIR=/tmp/wb
+        mkdir -p "$WORKDIR"
+        echo "=== Wayback Secrets Scan: $DOMAIN (up to $LIMIT files) ==="
+
+        fetch() {
+          i=0
+          while [ "$i" -lt 5 ]; do
+            out=$(curl -s -m "$1" "$2" 2>/dev/null)
+            if [ -n "$out" ]; then printf '%s' "$out"; return 0; fi
+            i=$((i + 1)); sleep 2
+          done
+        }
+
+        # List unique archived source/config files (one snapshot per URL, HTTP 200)
+        echo "Querying CDX for archived files..."
+        URLS=$(fetch 90 "https://web.archive.org/cdx/search/cdx?url=$DOMAIN/*&output=text&fl=timestamp,original&collapse=urlkey&filter=statuscode:200&matchType=domain&limit=100000" \
+          | grep -iE '\.(js|json|xml|ya?ml|txt|env|config|conf|ini|properties|bak|map)([?#]|$)' \
+          | head -n "$LIMIT")
+
+        COUNT=$(printf '%s\n' "$URLS" | grep -c .)
+        echo "Archived files to scan: $COUNT"
+        if [ "$COUNT" -eq 0 ]; then
+          echo "No archived source/config files found for $DOMAIN"
+          exit 0
         fi
+
+        # Download the ORIGINAL archived content (id_ modifier = raw, un-rewritten)
+        n=0
+        printf '%s\n' "$URLS" | while read -r TS ORIG; do
+          [ -z "$TS" ] && continue
+          n=$((n + 1))
+          curl -s -m 30 -o "$WORKDIR/f_${TS}_${n}" \
+            "https://web.archive.org/web/${TS}id_/${ORIG}" 2>/dev/null
+        done
+        echo "Downloaded $(ls -1 "$WORKDIR" | wc -l) files"
+
+        # Scan recovered files for leaked secrets
+        echo "=== trufflehog3 scan ==="
+        trufflehog3 filesystem "$WORKDIR"

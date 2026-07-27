@@ -11,7 +11,7 @@ crt:
     - command -v curl >/dev/null 2>&1 && command -v jq >/dev/null 2>&1 || (export DEBIAN_FRONTEND=noninteractive && apt-get update -qq && apt-get install -qy curl jq ca-certificates >/dev/null 2>&1)
 
   newly-issued:
-    setSeverity: 2
+    setSeverity: 3
     assertStdoutNotContains: "SUSPICIOUS_CERT"
     run:
       - |

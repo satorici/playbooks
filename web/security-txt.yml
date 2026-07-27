@@ -11,7 +11,7 @@ security-txt:
     - which curl >/dev/null 2>&1 || (export DEBIAN_FRONTEND=noninteractive && apt-get update -qq && apt-get install -qy curl ca-certificates >>/dev/null 2>&1)
 
   check:
-    setSeverity: 4
+    setSeverity: 5
     assertStdoutNotContains: "NO_SECURITY_TXT"
     run:
       - |

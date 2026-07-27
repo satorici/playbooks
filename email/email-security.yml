@@ -35,7 +35,7 @@ email-security:
         fi
 
   dmarc_check:
-    setSeverity: 2
+    setSeverity: 3
     assertReturnCode: 0
     run:
       - |
@@ -76,7 +76,7 @@ email-security:
         fi
 
   overall_rating:
-    setSeverity: 2
+    setSeverity: 3
     assertStdoutNotContains:
       - "ABSENT"
       - "WEAK"

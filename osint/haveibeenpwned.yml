@@ -13,7 +13,7 @@ haveibeenpwned:
     - command -v curl >/dev/null 2>&1 && command -v jq >/dev/null 2>&1 || (export DEBIAN_FRONTEND=noninteractive && apt-get update -qq && apt-get install -qy curl jq ca-certificates >>/dev/null)
 
   domain_breaches:
-    setSeverity: 1
+    setSeverity: 2
     assertStdoutNotContains: "CRITICAL"
     run:
       - |

@@ -13,7 +13,7 @@ hunter:
     - which curl >/dev/null 2>&1 && which jq >/dev/null 2>&1 || (export DEBIAN_FRONTEND=noninteractive && apt-get update -qq && apt-get install -qy curl jq ca-certificates >>/dev/null 2>&1)
 
   domain_search:
-    setSeverity: 4
+    setSeverity: 5
     assertStdout: true
     run:
       - |

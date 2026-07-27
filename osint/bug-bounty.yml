@@ -11,7 +11,7 @@ bug-bounty:
     - which curl >/dev/null 2>&1 || (export DEBIAN_FRONTEND=noninteractive && apt-get update -qq && apt-get install -qy curl ca-certificates >>/dev/null 2>&1)
 
   check_programs:
-    setSeverity: 4
+    setSeverity: 5
     assertStdoutNotContains: "NO_BUG_BOUNTY"
     run:
       - |

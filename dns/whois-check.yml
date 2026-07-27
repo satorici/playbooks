@@ -11,7 +11,7 @@ whois-check:
     - command -v whois >/dev/null 2>&1 || (export DEBIAN_FRONTEND=noninteractive && apt-get update -qq && apt-get install -qy whois >>/dev/null 2>&1)
 
   check_domain:
-    setSeverity: 2
+    setSeverity: 3
     assertStdoutNotContains: "DOMAIN_EXPIRED"
     run:
       - |
