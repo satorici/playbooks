@@ -1,6 +1,7 @@
 settings:
   name: "Security.txt: Security contact and disclosure policy check"
   description: "Checks if a domain publishes a security.txt file (RFC 9116) at /.well-known/security.txt. Presence indicates a mature security program with defined vulnerability disclosure processes, security contacts, and often a bug bounty program."
+  mitigation: "Publish a security.txt file at /.well-known/security.txt with a monitored security contact and disclosure policy so researchers can report vulnerabilities responsibly."
   image: debian
   author:
     - https://github.com/satorici

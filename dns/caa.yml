@@ -1,6 +1,7 @@
 settings:
   name: "DNS CAA: Certificate Authority Authorization check"
   description: "Checks if a domain has DNS CAA records configured. CAA records restrict which Certificate Authorities can issue certificates for the domain, preventing unauthorized certificate issuance and reducing the risk of man-in-the-middle attacks."
+  mitigation: "Publish DNS CAA records restricting certificate issuance to your approved Certificate Authorities to block unauthorised certificate issuance for your domain."
   image: debian
   author:
     - https://github.com/satorici

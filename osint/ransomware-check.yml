@@ -1,6 +1,7 @@
 settings:
   name: "Ransomware Check: Ransomware victim history"
   description: "Checks if a company or domain has been published as a ransomware victim, using the ransomware.live v2 API which indexes victims across ~100 ransomware leak sites (live, fresher than a static dump). Returns ransomware group, dates, country, sector, and whether the victim also appeared in infostealer logs. No API key required."
+  mitigation: "If your organisation appears as a victim, trigger incident response: confirm the breach, rotate credentials, verify offline backups, patch the initial access vector, and notify affected parties as required."
   image: debian
   author:
     - https://github.com/satorici

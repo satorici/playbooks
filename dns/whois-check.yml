@@ -1,6 +1,7 @@
 settings:
   name: "WHOIS: Domain registration and expiry check"
   description: "Checks domain WHOIS data including registration date, expiry date, registrar, and domain status. Expired or soon-to-expire domains are a strong signal of company distress or abandonment."
+  mitigation: "Enable domain auto-renewal and registrar/registry lock, and keep registrant contact details current, to prevent accidental expiry or unauthorised transfer of the domain."
   image: debian
   author:
     - https://github.com/satorici

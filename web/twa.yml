@@ -1,6 +1,7 @@
 settings:
   name: "TWA: Tiny Web Auditor"
   description: "twa audits web security headers and configurations. It checks for issues such as HTTP redirects to HTTP, missing security headers, and the absence of Content-Security-Policy. Findings are categorized into levels to indicate severity and status."
+  mitigation: "Add the missing security headers (Content-Security-Policy, X-Frame-Options/frame-ancestors, X-Content-Type-Options, Referrer-Policy, HSTS) and redirect all HTTP traffic to HTTPS."
   image: debian
   author:
     - https://github.com/trailofbits/twa

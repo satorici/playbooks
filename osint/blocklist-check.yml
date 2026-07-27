@@ -1,6 +1,7 @@
 settings:
   name: "Blocklist Check: Phishing & malware feed exposure"
   description: "Alerts a domain owner if their domain or subdomains appear on public phishing/malware blocklists (URLhaus, OpenPhish, Phishunt, PhishStats). A hit means the domain is likely compromised and serving malicious content, or has been flagged and is damaging its reputation/deliverability. No API key required. Designed to run as a daily monitor."
+  mitigation: "If your domain is listed, find and remove the malicious or compromised content, fix the underlying compromise, then request delisting from each feed to restore reputation and deliverability."
   image: debian
   author:
     - https://github.com/satorici

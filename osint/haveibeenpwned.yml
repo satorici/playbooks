@@ -1,6 +1,7 @@
 settings:
   name: "HaveIBeenPwned: Breach exposure check"
   description: "Checks if employee credentials from the target domain have appeared in known data breaches using the Have I Been Pwned API. Requires HIBP_API_KEY."
+  mitigation: "Force password resets for any exposed accounts, enforce MFA, block reuse of known-breached passwords, and monitor your login endpoints for credential-stuffing."
   image: debian
   author:
     - https://github.com/satorici

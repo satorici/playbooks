@@ -1,6 +1,7 @@
 settings:
   name: "DNSSEC: Domain Name System Security Extensions validation"
   description: "Checks if a domain has DNSSEC enabled by verifying the presence of DNSKEY and RRSIG records. DNSSEC protects against DNS spoofing and cache poisoning by cryptographically signing DNS responses."
+  mitigation: "Enable DNSSEC on the domain and its zones so resolvers can cryptographically validate responses, protecting users against DNS spoofing and cache-poisoning attacks."
   image: debian
   author:
     - https://github.com/satorici
