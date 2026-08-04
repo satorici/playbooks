@@ -136,3 +136,26 @@ assess:
       report:
         - |-
           curl -s https://openrouter.ai/api/v1/chat/completions -H "Authorization: Bearer ${{OPENROUTER}}" -H "Content-Type: application/json" -d @/data/payload.json -o /data/resp.json; jq -e -r '.choices[0].message.content' /data/resp.json > /data/report.md; RC=$?; sed -i 's/  */ /g' /data/report.md; cat /data/report.md; exit $RC
+
+# Deterministic findings for downstream scoring (riskpoint): normalise every tool's findings into
+# {findings:[{title,severity,resource,description}]} with fixed severity rules — no LLM in the scored
+# path, so the same findings always produce the same posture. The Gemini report above stays as the
+# human summary. Emitted ONLY when data was collected (same guard as verify_data) so an auth/perms
+# failure yields an error object (→ the consumer fails the scan) rather than a misleading clean score.
+assessment:
+  json:
+    - |-
+      if jq -e '[.scoutsuite, .prowler, .iam_risk, .privesc, .guardduty, .securityhub, .access_analyzer] | map(length) | add > 0' /data/out/merged.json >/dev/null 2>&1; then
+        jq -c '{findings: (
+          [ .scoutsuite[]? | {title:.finding, severity:(if .level=="danger" then "high" else "medium" end), resource:(.service//"aws"), description:((.flagged|tostring)+" flagged item(s) in "+(.service//"aws")+".")} ]
+          + [ .prowler[]? | {title:.check, severity:((.severity//"high")|ascii_downcase|if test("critical")then"critical"elif test("high")then"high"elif test("medium")then"medium"else"low"end), resource:(.sample//"aws"), description:((.count|tostring)+" resource(s) failed this check.")} ]
+          + [ .iam_risk[]? | {title:.finding, severity:(if .type=="managed_policy_admin" then "critical" else "medium" end), resource:(.name//"aws"), description:(.finding+" ("+(.name//"")+").")} ]
+          + [ .privesc[]? | {title:("Privilege escalation: "+(.policy//"policy")), severity:"high", resource:(.policy//"aws"), description:("Enables: "+((.privesc_methods//[])|join(", "))+".")} ]
+          + [ .guardduty[]? | {title:(.title//"GuardDuty finding"), severity:(if (.severity//0)>=7 then "high" elif (.severity//0)>=4 then "medium" else "low" end), resource:(.type//"aws"), description:(.type//"")} ]
+          + [ .securityhub[]? | {title:(.title//"Security Hub finding"), severity:((.severity//"medium")|ascii_downcase|if test("critical")then"critical"elif test("high")then"high"elif test("medium")then"medium"elif test("low")then"low"else"info"end), resource:(.resource//"aws"), description:(.title//"")} ]
+          + [ .access_analyzer[]? | {title:("External access: "+((.resource//"resource")|tostring)), severity:(if .isPublic then "high" else "medium" end), resource:((.resource//"aws")|tostring), description:((.type//"")+(if .isPublic then " (public)" else "" end))} ]
+        )}' /data/out/merged.json > /data/assessment.json
+      else
+        echo '{"error":"no cloud data collected"}' > /data/assessment.json
+      fi
+      cat /data/assessment.json
