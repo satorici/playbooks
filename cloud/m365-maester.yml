@@ -25,7 +25,7 @@ assess:
         $ErrorActionPreference = "Continue"
         $ProgressPreference = "SilentlyContinue"
         Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
-        try { Install-Module Pester -SkipPublisherCheck -Force -Scope CurrentUser -ErrorAction Stop; "Pester OK" } catch { "Pester FAIL: $_" }
+        try { Install-Module Pester -MaximumVersion 5.99 -SkipPublisherCheck -Force -Scope CurrentUser -ErrorAction Stop; "Pester OK" } catch { "Pester FAIL: $_" }
         try { Install-Module Microsoft.Graph.Authentication -Force -Scope CurrentUser -ErrorAction Stop; "Graph OK" } catch { "Graph FAIL: $_" }
         try { Install-Module Maester -Force -Scope CurrentUser -ErrorAction Stop; "Maester OK" } catch { "Maester FAIL: $_" }
         Get-Module -ListAvailable Maester,Pester,Microsoft.Graph.Authentication | Select-Object Name,Version | Format-Table -AutoSize | Out-String
@@ -38,6 +38,11 @@ assess:
         $ErrorActionPreference = "Stop"
         $ProgressPreference = "SilentlyContinue"
         Import-Module Microsoft.Graph.Authentication
+        # Maester 2.x requires Pester 5.x — the powershell:latest image also ships Pester 6, whose
+        # breaking config rewrite makes `Import-Module Maester` throw at load (Update-TypeData /
+        # PesterConfigurationDeserializer), aborting the run before it authenticates. Force the 5.x we
+        # installed so Maester loads and the tests actually run.
+        Import-Module Pester -MaximumVersion 5.99 -Force
         Import-Module Maester
         $sec = ConvertTo-SecureString $env:AZURE_CLIENT_SECRET -AsPlainText -Force
         $cred = New-Object System.Management.Automation.PSCredential($env:AZURE_CLIENT_ID, $sec)
