@@ -1,3 +1,23 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# REQUIRED PERMISSIONS  (app-only / Entra service principal)
+#
+#   Inputs (-d):  AZURE_CLIENT_ID  AZURE_CLIENT_SECRET  AZURE_TENANT_ID
+#   From an Entra ID App registration + client secret (Connect-MgGraph client-credential auth).
+#
+#   Microsoft Graph - APPLICATION permissions  (Entra -> App registrations -> <app> ->
+#   API permissions -> Microsoft Graph -> Application permissions -> add ->
+#   "Grant admin consent"). Maester runs 280+ read-only Entra/M365 tests; grant its
+#   documented read set - the key ones:
+#        - Directory.Read.All            - Policy.Read.All
+#        - RoleManagement.Read.All       - PrivilegedAccess.Read.AzureAD
+#        - Reports.Read.All              - UserAuthenticationMethod.Read.All
+#        - Application.Read.All          - Domain.Read.All
+#        - IdentityRiskEvent.Read.All    - SecurityEvents.Read.All
+#        - DeviceManagementConfiguration.Read.All   - DeviceManagementManagedDevices.Read.All
+#   For the exact/maximal set use Maester's own tooling (Install-Module Maester;
+#   Set-MtGraphPermission) or the app manifest at https://maester.dev . A skipped
+#   permission only turns its dependent tests "not run" - it never fails the scan.
+# ─────────────────────────────────────────────────────────────────────────────
 settings:
   name: "Microsoft 365 / Entra ID Security Assessment with Maester"
   description: "Runs Maester (https://github.com/maester365/maester) — a PowerShell/Pester framework with 280+ Microsoft 365 / Entra ID security tests (EIDSCA, CISA SCuBA, CIS M365). Authenticates to Microsoft Graph as an Entra service principal (app-only, client secret), installs the Maester/Pester/Microsoft.Graph modules, runs the full Entra ID test suite and writes JSON/HTML/Markdown results under /data (captured by --files). Tests requiring Exchange Online / Teams / SharePoint / Intune permissions are skipped when those scopes are not granted to the service principal."

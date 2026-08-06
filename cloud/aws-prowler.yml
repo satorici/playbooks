@@ -1,3 +1,16 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# REQUIRED PERMISSIONS  (AWS IAM access keys)
+#
+#   Inputs (-d):  AWS_ACCESS_KEY  AWS_SECRET_KEY
+#   Programmatic access keys of a dedicated read-only IAM user (or assumed role).
+#
+#   Attach these AWS managed policies to that IAM principal  (IAM -> Users -> <user> ->
+#   Add permissions -> Attach policies directly):
+#        - arn:aws:iam::aws:policy/SecurityAudit
+#        - arn:aws:iam::aws:policy/job-function/ViewOnlyAccess
+#   Prowler's documented read-only baseline; a few checks need small extra grants -
+#   see the AWS "Requirements" page at https://docs.prowler.com
+# ─────────────────────────────────────────────────────────────────────────────
 settings:
   name: "Prowler: AWS Security Best Practices Assessment Tool"
   description: "Prowler is an open-source security tool to perform AWS security best practices assessments, audits, incident response, continuous monitoring, hardening and forensics readiness. It contains hundreds of controls covering CIS, PCI-DSS, ISO27001, GDPR, HIPAA, FFIEC, SOC2, AWS FTR, ENS and custom security frameworks."

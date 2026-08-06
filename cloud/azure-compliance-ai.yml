@@ -1,3 +1,17 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# REQUIRED PERMISSIONS  (app-only / Entra service principal)
+#
+#   Inputs (-d):  AZURE_CLIENT_ID  AZURE_CLIENT_SECRET  AZURE_TENANT_ID  OPENROUTER
+#   Imports azure-scoutsuite.yml + azure-prowler.yml - grant the UNION of their
+#   permissions to one Entra App registration + client secret:
+#
+#     - Azure RBAC on each subscription:  Reader  +  Security Reader
+#     - Microsoft Graph APPLICATION perms (+ admin consent):
+#         Directory.Read.All, Policy.Read.All, UserAuthenticationMethod.Read.All
+#
+#   OPENROUTER is an API key for the Gemini correlation step (no cloud access).
+#   Per-tool detail: cloud/azure-scoutsuite.yml, cloud/azure-prowler.yml.
+# ─────────────────────────────────────────────────────────────────────────────
 settings:
   name: "Azure compliance & posture (ScoutSuite + Prowler) with AI by Gemini"
   description: "Read-only Azure / Entra ID compliance & posture assessment. Imports two tools - azure-scoutsuite (Azure/Entra posture: flagged misconfigurations) and azure-prowler (CIS/compliance: failed critical/high checks) - each authenticating as an Entra service principal and writing a compact findings JSON under /data. This playbook merges them and Google Gemini Flash (via OpenRouter) correlates them into a prioritized report. The AI step is grounded: it summarizes only the merged findings JSON and never invents resources."

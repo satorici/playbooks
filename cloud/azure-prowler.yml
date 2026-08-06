@@ -1,3 +1,19 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# REQUIRED PERMISSIONS  (app-only / Entra service principal - Prowler --sp-env-auth)
+#
+#   Inputs (-d):  AZURE_CLIENT_ID  AZURE_CLIENT_SECRET  AZURE_TENANT_ID
+#   From an Entra ID App registration + client secret.
+#
+#   1) Azure RBAC - role assignments on each subscription  (Subscription ->
+#      Access control (IAM) -> Add role assignment -> assign to the service principal):
+#        - Reader            -> resource configuration
+#        - Security Reader   -> Defender for Cloud / security posture
+#
+#   2) Microsoft Graph - APPLICATION permissions (+ admin consent) for the Entra ID checks:
+#        - Directory.Read.All   - Policy.Read.All   - UserAuthenticationMethod.Read.All
+#
+#   Authoritative list: Prowler Azure "Requirements" at https://docs.prowler.com
+# ─────────────────────────────────────────────────────────────────────────────
 settings:
   name: "Azure Prowler: CIS / compliance assessment (service principal)"
   description: "Runs Prowler against Azure authenticating as an Entra service principal (--sp-env-auth, client secret), returning failed critical/high checks. Reduces the OCSF output to a compact findings JSON under /data/out/prowler.json (captured by --files) grouped by check, and surfaces the critical findings. Read-only. Prowler 5.x requires Python <3.13."

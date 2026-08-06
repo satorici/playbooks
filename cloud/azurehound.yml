@@ -1,3 +1,19 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# REQUIRED PERMISSIONS  (app-only / Entra service principal)
+#
+#   Inputs (-d):  AZURE_CLIENT_ID  AZURE_CLIENT_SECRET  AZURE_TENANT_ID  AZURE_SUBSCRIPTION_ID
+#   From an Entra ID App registration + client secret.
+#
+#   1) Microsoft Graph - APPLICATION permission  (Entra admin center -> App registrations ->
+#      <app> -> API permissions -> Microsoft Graph -> Application permissions -> add ->
+#      "Grant admin consent for <tenant>"):
+#        - Directory.Read.All   -> tenant graph: users, groups, roles, role assignments,
+#                                  apps, service principals, ownerships
+#
+#   2) Azure Resource Manager (ARM) - Azure RBAC  (each Subscription -> Access control (IAM) ->
+#      Add role assignment -> role "Reader" -> assign to the app's service principal):
+#        - Reader   -> Azure resource objects + ARM role assignments (attack-path edges)
+# ─────────────────────────────────────────────────────────────────────────────
 settings:
   name: "Azure Attack Paths with AzureHound (Entra ID / Azure BloodHound collection)"
   description: "Collects the Entra ID / Azure tenant graph with AzureHound (the BloodHound data collector) authenticating as an Entra service principal via client secret, and writes the full typed JSON (identities, roles, role assignments, apps, service principals, ownerships, ARM resources) to /data/azurehound.json. A jq analysis layer then summarizes the collection (object counts by kind) and surfaces attack-path-relevant signals without needing neo4j/BloodHound: principals holding privileged directory roles (Global Administrator, Privileged Role Administrator, Application Administrator, etc.), counts of apps / service principals, and owners of privileged objects. All outputs are written under /data (captured by --files)."

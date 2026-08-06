@@ -1,3 +1,15 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# REQUIRED PERMISSIONS  (AWS IAM access keys)
+#
+#   Inputs (-d):  AWS_ACCESS_KEY  AWS_SECRET_KEY
+#   Programmatic access keys of a dedicated read-only IAM user (or assumed role).
+#
+#   Attach these AWS managed policies  (IAM -> Users -> <user> -> Add permissions ->
+#   Attach policies directly):
+#        - arn:aws:iam::aws:policy/SecurityAudit
+#        - arn:aws:iam::aws:policy/job-function/ViewOnlyAccess
+#   ScoutSuite's read-only baseline (the broader ReadOnlyAccess also works).
+# ─────────────────────────────────────────────────────────────────────────────
 settings:
   name: "AWS ScoutSuite: cloud security-auditing tool"
   description: "ScoutSuite is a multi-cloud security auditing tool that identifies and analyze potential misconfigurations and vulnerabilities across various cloud environments, including AWS, Azure, GCP, and more. It uses read-only credentials to collect configuration data, then generates a comprehensive report highlighting key security findings and suggesting remediation steps. Built for simplicity and scalability, ScoutSuite offers an agentless approach that allows security teams to efficiently evaluate their cloud infrastructure without the complexity of additional software or persistent agents. Its web-based interactive reports provide a clear overview of risk areas, enabling faster and more informed decision-making to strengthen overall cloud security posture."

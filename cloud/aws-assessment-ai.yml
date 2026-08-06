@@ -1,3 +1,17 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# REQUIRED PERMISSIONS  (AWS IAM access keys)
+#
+#   Inputs (-d):  AWS_ACCESS_KEY  AWS_SECRET_KEY  OPENROUTER
+#   Programmatic access keys of a dedicated read-only IAM user (or assumed role). Runs
+#   ScoutSuite + Prowler + IAM/privesc/GuardDuty/Security Hub/Access Analyzer reads.
+#
+#   Attach these AWS managed policies  (IAM -> Users -> <user> -> Add permissions ->
+#   Attach policies directly):
+#        - arn:aws:iam::aws:policy/SecurityAudit
+#        - arn:aws:iam::aws:policy/job-function/ViewOnlyAccess
+#   These cover the read-only APIs used (config, IAM, GuardDuty, Security Hub,
+#   Access Analyzer). OPENROUTER is an API key for the Gemini step (no cloud access).
+# ─────────────────────────────────────────────────────────────────────────────
 settings:
   name: "AWS Assessment with AI multi-tool cloud audit by Gemini"
   description: "Runs a read-only AWS security assessment using several complementary tools (ScoutSuite for posture, Prowler for compliance/CIS checks, a jq-based IAM over-privilege analysis in the spirit of Cloudsplaining, plus best-effort pulls of native AWS sources: GuardDuty, Security Hub and IAM Access Analyzer). Each source is reduced to a compact findings JSON under /data (captured by --files), merged, and handed to Google Gemini Flash (via OpenRouter) which correlates them across tools into a prioritized report. The AI step is grounded: it summarizes only the merged findings JSON and is instructed never to invent resources. Credentials are written to disk once (read-only audit user) so they are never passed on command lines."

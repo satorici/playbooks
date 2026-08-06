@@ -1,3 +1,20 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# REQUIRED PERMISSIONS  (app-only / Entra service principal)
+#
+#   Inputs (-d):  AZURE_CLIENT_ID  AZURE_CLIENT_SECRET  AZURE_TENANT_ID
+#   From an Entra ID App registration + client secret.
+#
+#   1) Azure RBAC - role assignment on each subscription  (Subscription ->
+#      Access control (IAM) -> Add role assignment -> assign to the service principal):
+#        - Reader   -> all subscription resource configuration
+#
+#   2) For the Entra ID / AAD posture checks, grant to the same service principal:
+#        - Security Reader   (Entra role), and/or
+#        - Microsoft Graph APPLICATION permission  Directory.Read.All  (App registrations ->
+#          <app> -> API permissions -> Microsoft Graph -> Application -> add -> admin consent)
+#
+#   Read-only, agentless. See ScoutSuite's Azure docs for the authoritative list.
+# ─────────────────────────────────────────────────────────────────────────────
 settings:
   name: "Azure ScoutSuite: read-only Azure / Entra ID posture audit"
   description: "Runs ScoutSuite against Azure / Entra ID authenticating as an Entra service principal (client secret), across all subscriptions. Extracts the flagged findings (service, level, description, count) to /data/out/scoutsuite.json (captured by --files) and surfaces the danger-level findings. Read-only, agentless."

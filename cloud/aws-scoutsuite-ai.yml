@@ -1,3 +1,13 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# REQUIRED PERMISSIONS  (AWS IAM access keys)
+#
+#   Inputs (-d):  AWS_ACCESS_KEY  AWS_SECRET_KEY  OPENROUTER
+#   Same as cloud/aws-scoutsuite.yml - a read-only IAM user with these managed policies
+#   attached (IAM -> Users -> <user> -> Add permissions -> Attach policies directly):
+#        - arn:aws:iam::aws:policy/SecurityAudit
+#        - arn:aws:iam::aws:policy/job-function/ViewOnlyAccess
+#   OPENROUTER is an API key for the Gemini summary step (no cloud access).
+# ─────────────────────────────────────────────────────────────────────────────
 settings:
   name: "Scoutsuite + AI: cloud audit summarized by Gemini Flash"
   description: "Runs ScoutSuite (read-only) against AWS, verifies the scan actually produced data, asserts on flagged danger/warning findings, and uses Google Gemini Flash (via OpenRouter) to summarize the real findings into a markdown table. The AI step is grounded: it summarizes only the extracted findings JSON and is instructed never to invent resources."
