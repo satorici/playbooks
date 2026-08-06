@@ -1,0 +1,127 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# REQUIRED PERMISSIONS  (app-only / Entra service principal)
+#
+#   Inputs (-d):  AZURE_CLIENT_ID  AZURE_CLIENT_SECRET  AZURE_TENANT_ID  AZURE_SUBSCRIPTION_ID
+#   These come from an Entra ID *App registration* + client secret (the SAME service
+#   principal used by azurehound.yml / m365-maester.yml — grant everything to one app).
+#
+#   1) Microsoft Graph — APPLICATION permissions.
+#      Where: Entra admin center → App registrations → <your app> → API permissions →
+#             Add a permission → Microsoft Graph → Application permissions → (add below) →
+#             then "Grant admin consent for <tenant>".
+#        · InformationProtectionPolicy.Read.All   → sensitivity labels (DLP / data classification)
+#        · SecurityEvents.Read.All                → Microsoft Secure Score (endpoint / Device)
+#        · DeviceManagementConfiguration.Read.All → Intune device compliance policies
+#
+#   2) Azure Resource Manager (ARM) — Azure RBAC role assignment.
+#      Where: Subscription → Access control (IAM) → Add role assignment →
+#             role "Reader", assign access to the app's service principal.
+#        · Reader on the subscription → Recovery Services vaults, Log Analytics
+#          workspaces, Microsoft Sentinel onboarding state.
+#
+#   A missing Graph permission or IAM role degrades gracefully: that collector logs a
+#   *_error into raw{} and emits no finding (it never fails the whole scan).
+# ─────────────────────────────────────────────────────────────────────────────
+settings:
+  name: "Azure configuration posture — backups, SIEM, DLP/labeling, endpoint (MDE)"
+  description: "Read-only checks that complement AzureHound (identity graph) and Maester (Entra config) with the estate-configuration controls those two don't cover: immutable/isolated backups (ARM Recovery Services vaults), security-log centralisation (ARM Log Analytics / Microsoft Sentinel), data classification (Graph sensitivity labels) and endpoint/Defender posture (Graph Microsoft Secure Score, Device category). App-only with the same Entra service principal; ARM token for ARM, Graph token for Graph — raw REST with per-call timeouts so nothing hangs. Emits deterministic findings in the shared {title,severity,resource,description,remediation} schema under /data/config.json for the azure-exploitability orchestrator to merge + score."
+  image: mcr.microsoft.com/powershell:latest
+  files: True
+  cpu: 2048
+  memory: 4096
+  redacted:
+    - AZURE_CLIENT_ID
+    - AZURE_CLIENT_SECRET
+    - AZURE_TENANT_ID
+
+config:
+  collect:
+    - |-
+      AZURE_CLIENT_ID='${{AZURE_CLIENT_ID}}' AZURE_CLIENT_SECRET='${{AZURE_CLIENT_SECRET}}' AZURE_TENANT_ID='${{AZURE_TENANT_ID}}' AZURE_SUBSCRIPTION_ID='${{AZURE_SUBSCRIPTION_ID}}' pwsh -NoProfile -Command '
+        $ErrorActionPreference = "Continue"; $ProgressPreference = "SilentlyContinue"
+        $sub = $env:AZURE_SUBSCRIPTION_ID
+        $findings = @(); $raw = @{}
+        function Tok($scope){ (Invoke-RestMethod -Method POST -TimeoutSec 25 -Uri "https://login.microsoftonline.com/$($env:AZURE_TENANT_ID)/oauth2/v2.0/token" -Body @{client_id=$env:AZURE_CLIENT_ID;client_secret=$env:AZURE_CLIENT_SECRET;grant_type="client_credentials";scope=$scope}).access_token }
+        $armH = @{ Authorization = "Bearer $(Tok "https://management.azure.com/.default")" }
+        $ghH  = @{ Authorization = "Bearer $(Tok "https://graph.microsoft.com/.default")" }
+        function Arm($uri){ Invoke-RestMethod -Method GET -TimeoutSec 30 -Uri $uri -Headers $armH }
+        function Gph($uri){ Invoke-RestMethod -Method GET -TimeoutSec 30 -Uri $uri -Headers $ghH }
+
+        # ================= BACKUPS: Recovery Services vaults + immutability =================
+        try {
+          $vaults = @((Arm "https://management.azure.com/subscriptions/$sub/providers/Microsoft.RecoveryServices/vaults?api-version=2023-04-01").value)
+          $raw.recovery_vaults = @($vaults | ForEach-Object { @{ name=$_.name; immutability=$_.properties.securitySettings.immutabilitySettings.state } })
+          if ($vaults.Count -eq 0) {
+            $findings += @{ title="No Azure Recovery Services vault"; severity="high"; resource="Azure Backup"; description="No Recovery Services vault exists in the subscription - Azure-native backups are not configured (third-party M365 backup, if any, is not visible from Azure)."; remediation="Provision a Recovery Services vault, back up critical workloads, and enable immutability + soft-delete." }
+          } else {
+            $mutable = @($vaults | Where-Object { $_.properties.securitySettings.immutabilitySettings.state -notin @("Locked","Unlocked") })
+            if ($mutable.Count -gt 0) {
+              $names = ($mutable | ForEach-Object { $_.name }) -join ", "
+              $findings += @{ title="Backup vault immutability not enabled"; severity="high"; resource="Recovery Services vault: $names"; description="$($mutable.Count) of $($vaults.Count) Recovery Services vault(s) do not have immutability enabled, so backups can be deleted or altered by a compromised admin - the ransomware failure mode."; remediation="Enable immutability (Unlocked, then Locked once validated) and soft-delete on every Recovery Services vault." }
+            }
+          }
+        } catch { $raw.backups_error = ($_.Exception.Message -replace "\s+"," ") }
+
+        # ================= SIEM: Log Analytics workspaces / Microsoft Sentinel =================
+        try {
+          $wksp = @((Arm "https://management.azure.com/subscriptions/$sub/providers/Microsoft.OperationalInsights/workspaces?api-version=2022-10-01").value)
+          $raw.log_analytics_workspaces = $wksp.Count
+          if ($wksp.Count -eq 0) {
+            $findings += @{ title="No Log Analytics workspace (no SIEM)"; severity="medium"; resource="Azure Monitor / Sentinel"; description="No Log Analytics workspace exists - there is nowhere to centralise identity/endpoint/SaaS logs, so a SIEM (e.g. Microsoft Sentinel) is not deployed and breaches can go undetected for months."; remediation="Deploy a Log Analytics workspace + Microsoft Sentinel; connect Entra, Defender and O365 logs with retention and alerting." }
+          } else {
+            $sentinel = $false
+            foreach ($w in $wksp) { try { if (@((Arm "https://management.azure.com$($w.id)/providers/Microsoft.SecurityInsights/onboardingStates?api-version=2023-11-01").value).Count -gt 0) { $sentinel = $true } } catch {} }
+            $raw.sentinel_enabled = $sentinel
+            if (-not $sentinel) {
+              $findings += @{ title="Microsoft Sentinel not enabled"; severity="medium"; resource="Microsoft Sentinel"; description="A Log Analytics workspace exists but Microsoft Sentinel (SIEM/SOAR) is not onboarded, so security logs are stored but not correlated or alerted on."; remediation="Enable Microsoft Sentinel on the Log Analytics workspace and connect the security data sources." }
+            }
+          }
+        } catch { $raw.siem_error = ($_.Exception.Message -replace "\s+"," ") }
+
+        # ================= DLP / DATA CLASSIFICATION: sensitivity labels =================
+        try {
+          $labels = @((Gph "https://graph.microsoft.com/beta/security/informationProtection/sensitivityLabels").value)
+          $raw.sensitivity_labels = $labels.Count
+          if ($labels.Count -eq 0) {
+            $findings += @{ title="No sensitivity labels (data not classified)"; severity="medium"; resource="Purview Information Protection"; description="No sensitivity labels are published, so investment/portfolio/LP data is not classified and cannot have encryption or access enforced on a label - the basis for DLP."; remediation="Publish Purview sensitivity labels (auto-label on keywords/locations) and enforce encryption/access on the label; layer DLP on top." }
+          }
+        } catch { $raw.dlp_error = ($_.Exception.Message -replace "\s+"," ") }
+
+        # ================= ENDPOINT: Microsoft Secure Score, Device category =================
+        try {
+          $score = (Gph "https://graph.microsoft.com/v1.0/security/secureScores?\$top=1").value | Select-Object -First 1
+          $profs = @((Gph "https://graph.microsoft.com/v1.0/security/secureScoreControlProfiles").value)
+          $cat = @{}; foreach ($p in $profs) { $cat[$p.id] = $p.controlCategory }
+          $device = @($score.controlScores | Where-Object { $cat[$_.controlName] -eq "Device" })
+          if ($device.Count -gt 0) {
+            $cur = ($device | Measure-Object -Property score -Sum).Sum
+            $max = ($device | ForEach-Object { $_.total } | Measure-Object -Sum).Sum
+            $pct = if ($max -gt 0) { [Math]::Round(100 * $cur / $max) } else { 0 }
+            $raw.device_secure_pct = $pct
+            if ($pct -lt 50) {
+              $missing = @($device | Where-Object { $_.score -lt $_.total } | ForEach-Object { $_.controlName } | Select-Object -First 5) -join ", "
+              $findings += @{ title="Endpoint / Defender controls largely not implemented"; severity="high"; resource="Microsoft Defender Secure Score (Device)"; description="Device-category Secure Score is $pct% - endpoint protections (EDR onboarding, ASR, encryption, patching) are mostly not in place. Top gaps: $missing."; remediation="Roll out an endpoint baseline: Defender for Endpoint (EDR), disk encryption, auto-patching, ASR rules; raise the Device Secure Score." }
+            }
+          } else {
+            $raw.device_controls = 0
+          }
+        } catch { $raw.endpoint_error = ($_.Exception.Message -replace "\s+"," ") }
+
+        # ================= ENDPOINT (Intune): device compliance policies =================
+        # Only meaningful when Intune is provisioned (the endpoint returns 400 otherwise → caught + skipped).
+        try {
+          $pols = @((Gph "https://graph.microsoft.com/v1.0/deviceManagement/deviceCompliancePolicies").value)
+          $raw.intune_compliance_policies = $pols.Count
+          if ($pols.Count -eq 0) {
+            $findings += @{ title="No Intune device compliance policy"; severity="high"; resource="Microsoft Intune"; description="Intune is provisioned but no device compliance policy exists, so managed devices are not evaluated for disk encryption, screen lock/PIN, minimum OS/patch level or jailbreak - non-compliant endpoints reach company data unchecked."; remediation="Create Intune device compliance policies (disk encryption, screen lock, minimum OS/patch, block jailbroken/rooted) and enforce them via Conditional Access." }
+          }
+        } catch { $raw.intune_error = ($_.Exception.Message -replace "\s+"," ") }
+
+        @{ findings = $findings; raw = $raw } | ConvertTo-Json -Depth 8 -Compress
+      ' > /data/config.json 2>/data/config.err
+      echo "CONFIG_RC=$?"; echo "===CONFIG_JSON==="; cat /data/config.json; echo; echo "===ERR==="; cat /data/config.err 2>/dev/null
+
+  findings:
+    show:
+      - |-
+        jq -c '.findings[]?' /data/config.json 2>/dev/null
