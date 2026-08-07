@@ -3,7 +3,7 @@ settings:
   image: python
 
 install:
-  - pip install pyspector
+  - pip3 install pyspector
 
 test:
   assertStdoutContains: '"issue_count": 0'
