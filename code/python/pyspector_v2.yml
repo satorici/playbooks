@@ -1,8 +1,8 @@
 settings:
   name: Pyspector v2
-  image: python
 
 install:
+  - apt-get update && apt-get install -y python3-pip
   - pip3 install pyspector
 
 test:
