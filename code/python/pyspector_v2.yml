@@ -1,0 +1,11 @@
+settings:
+  name: Pyspector v2
+  image: python
+
+install:
+  - pip install pyspector
+
+test:
+  assertStdoutContains: '"issue_count": 0'
+  run:
+    - pyspector scan -f json ./
