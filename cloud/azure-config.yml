@@ -106,6 +106,13 @@ config:
           $raw.sensitivity_labels = $labels.Count
           if ($labels.Count -eq 0) {
             $findings += @{ title="No sensitivity labels (data not classified)"; severity="medium"; resource="Purview Information Protection"; description="No sensitivity labels are published, so investment/portfolio/LP data is not classified and cannot have encryption or access enforced on a label - the basis for DLP."; remediation="Publish Purview sensitivity labels (auto-label on keywords/locations) and enforce encryption/access on the label; layer DLP on top." }
+          } else {
+            # Labels exist but do any ENFORCE protection (encryption/access)? A label without protection is a visual marker only.
+            $protected = @($labels | Where-Object { $_.isActive -and $_.hasProtection })
+            $raw.protected_labels = $protected.Count
+            if ($protected.Count -eq 0) {
+              $findings += @{ title="Sensitivity labels apply no encryption / protection"; severity="medium"; resource="Purview Information Protection"; description="$($labels.Count) sensitivity label(s) are published but none applies encryption/protection, so labelled investment/portfolio/LP data is classified but not actually protected - Microsoft 365 Copilot and downstream apps can still surface the content in clear."; remediation="Configure encryption/protection (and auto-labeling) on the labels used for confidential data so the label enforces access + encryption, not just a visual marker." }
+            }
           }
         } catch { $raw.dlp_error = ($_.Exception.Message -replace "\s+"," ") }
 
