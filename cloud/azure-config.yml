@@ -11,20 +11,23 @@
 #             then "Grant admin consent for <tenant>".
 #        · InformationProtectionPolicy.Read.All   → sensitivity labels (DLP / data classification)
 #        · SecurityEvents.Read.All                → Microsoft Secure Score (endpoint / Device)
-#        · DeviceManagementConfiguration.Read.All → Intune device compliance policies
+#        · DeviceManagementConfiguration.Read.All → Intune compliance + configuration profiles
+#        · SharePointTenantSettings.Read.All      → SharePoint Restricted Search / legacy auth (Copilot oversharing)
+#        · Organization.Read.All                  → subscribed SKUs (Microsoft 365 Copilot licensing)
+#        · AuditLog.Read.All                      → unified audit log reachability (Copilot forensics)
 #
 #   2) Azure Resource Manager (ARM) — Azure RBAC role assignment.
 #      Where: Subscription → Access control (IAM) → Add role assignment →
 #             role "Reader", assign access to the app's service principal.
 #        · Reader on the subscription → Recovery Services vaults, Log Analytics
-#          workspaces, Microsoft Sentinel onboarding state.
+#          workspaces, Microsoft Sentinel onboarding state + analytics (alert) rules.
 #
 #   A missing Graph permission or IAM role degrades gracefully: that collector logs a
 #   *_error into raw{} and emits no finding (it never fails the whole scan).
 # ─────────────────────────────────────────────────────────────────────────────
 settings:
-  name: "Azure configuration posture — backups, SIEM, DLP/labeling, endpoint (MDE)"
-  description: "Read-only checks that complement AzureHound (identity graph) and Maester (Entra config) with the estate-configuration controls those two don't cover: immutable/isolated backups (ARM Recovery Services vaults), security-log centralisation (ARM Log Analytics / Microsoft Sentinel), data classification (Graph sensitivity labels) and endpoint/Defender posture (Graph Microsoft Secure Score, Device category). App-only with the same Entra service principal; ARM token for ARM, Graph token for Graph — raw REST with per-call timeouts so nothing hangs. Emits deterministic findings in the shared {title,severity,resource,description,remediation} schema under /data/config.json for the azure-exploitability orchestrator to merge + score."
+  name: "Azure configuration posture — backups, SIEM + detection coverage, DLP/oversharing, endpoint, Copilot"
+  description: "Read-only checks that complement AzureHound (identity graph) and Maester (Entra config) with the estate-configuration controls those two don't cover: immutable/isolated backups (ARM Recovery Services vaults), security-log centralisation + Sentinel detection-rule coverage (ARM Log Analytics / Microsoft Sentinel analytics rules classified against attack archetypes incl. Copilot anomaly), data classification + Microsoft 365 Copilot oversharing (Graph sensitivity labels, SharePoint Restricted Search / legacy auth), endpoint/Defender posture (Graph Microsoft Secure Score + Intune compliance & configuration profiles) and Copilot deployment + audit prerequisites (Graph subscribed SKUs, unified audit reachability). App-only with the same Entra service principal; ARM token for ARM, Graph token for Graph — raw REST with per-call timeouts so nothing hangs. Emits deterministic findings in the shared {title,severity,resource,description,remediation} schema under /data/config.json for the azure-exploitability orchestrator to merge + score."
   image: mcr.microsoft.com/powershell:latest
   files: True
   cpu: 2048
@@ -69,11 +72,30 @@ config:
           if ($wksp.Count -eq 0) {
             $findings += @{ title="No Log Analytics workspace (no SIEM)"; severity="medium"; resource="Azure Monitor / Sentinel"; description="No Log Analytics workspace exists - there is nowhere to centralise identity/endpoint/SaaS logs, so a SIEM (e.g. Microsoft Sentinel) is not deployed and breaches can go undetected for months."; remediation="Deploy a Log Analytics workspace + Microsoft Sentinel; connect Entra, Defender and O365 logs with retention and alerting." }
           } else {
-            $sentinel = $false
-            foreach ($w in $wksp) { try { if (@((Arm "https://management.azure.com$($w.id)/providers/Microsoft.SecurityInsights/onboardingStates?api-version=2023-11-01").value).Count -gt 0) { $sentinel = $true } } catch {} }
+            $sentinel = $false; $ruleNames = @()
+            foreach ($w in $wksp) {
+              try {
+                if (@((Arm "https://management.azure.com$($w.id)/providers/Microsoft.SecurityInsights/onboardingStates?api-version=2023-11-01").value).Count -gt 0) {
+                  $sentinel = $true
+                  try { $ruleNames += @((Arm "https://management.azure.com$($w.id)/providers/Microsoft.SecurityInsights/alertRules?api-version=2023-11-01").value | Where-Object { $_.properties.enabled } | ForEach-Object { $_.properties.displayName }) } catch {}
+                }
+              } catch {}
+            }
             $raw.sentinel_enabled = $sentinel
+            $raw.sentinel_enabled_rules = $ruleNames.Count
             if (-not $sentinel) {
               $findings += @{ title="Microsoft Sentinel not enabled"; severity="medium"; resource="Microsoft Sentinel"; description="A Log Analytics workspace exists but Microsoft Sentinel (SIEM/SOAR) is not onboarded, so security logs are stored but not correlated or alerted on."; remediation="Enable Microsoft Sentinel on the Log Analytics workspace and connect the security data sources." }
+            } else {
+              # Detection-rule coverage: match ENABLED analytics-rule names against high-value attack archetypes.
+              $arche = [ordered]@{ "privileged role assignment"="admin|privileg|role assign"; "MFA / auth-method tampering"="mfa|multifactor|authentication method"; "legacy authentication"="legacy auth|basic auth|imap|pop3|smtp auth"; "OAuth app consent"="oauth|app consent|application consent|illicit consent"; "anomalous sign-in / impossible travel"="impossible travel|anomal|atypical|unfamiliar sign"; "mass download / exfiltration"="mass download|exfiltrat|bulk download|large download"; "external mail forwarding"="forward|forwarding rule"; "sensitivity-label downgrade"="label downgrade|downgrade label|label chang"; "public / anonymous storage"="public access|anonymous|public storage|exposed storage"; "Microsoft Copilot anomaly"="copilot" }
+              $blob = ($ruleNames -join " || ").ToLower()
+              $missing = @(); foreach ($k in $arche.Keys) { if ($blob -notmatch $arche[$k]) { $missing += $k } }
+              $raw.sentinel_coverage_gaps = $missing
+              if ($ruleNames.Count -eq 0) {
+                $findings += @{ title="Microsoft Sentinel enabled but no analytics rules"; severity="high"; resource="Microsoft Sentinel"; description="Sentinel is onboarded but has no enabled analytics (detection) rules, so logs are collected but nothing raises an incident - detection coverage is effectively zero."; remediation="Enable Sentinel analytics rules (start with the built-in templates + Entra/Defender content hub) covering privileged-role changes, risky sign-ins, mail exfiltration and data-exposure." }
+              } elseif ($missing.Count -gt 0) {
+                $findings += @{ title="Sentinel detection coverage gaps"; severity="medium"; resource="Microsoft Sentinel ($($ruleNames.Count) enabled rules)"; description="Sentinel has $($ruleNames.Count) enabled analytics rule(s) but no enabled rule matches these high-value attack archetypes: $($missing -join '; '). These techniques would go undetected."; remediation="Add Sentinel analytics rules for the uncovered archetypes (Entra ID / Defender XABC content hub + Microsoft Copilot usage-anomaly detections)." }
+              }
             }
           }
         } catch { $raw.siem_error = ($_.Exception.Message -replace "\s+"," ") }
@@ -86,6 +108,21 @@ config:
             $findings += @{ title="No sensitivity labels (data not classified)"; severity="medium"; resource="Purview Information Protection"; description="No sensitivity labels are published, so investment/portfolio/LP data is not classified and cannot have encryption or access enforced on a label - the basis for DLP."; remediation="Publish Purview sensitivity labels (auto-label on keywords/locations) and enforce encryption/access on the label; layer DLP on top." }
           }
         } catch { $raw.dlp_error = ($_.Exception.Message -replace "\s+"," ") }
+
+        # ================= DLP (Copilot oversharing): SharePoint tenant search + legacy auth =================
+        # Microsoft 365 Copilot can surface anything a user can already reach via search; Restricted SharePoint
+        # Search is the tenant-level guardrail against over-permissive sites feeding Copilot responses.
+        try {
+          $spo = Gph "https://graph.microsoft.com/beta/admin/sharepoint/settings"
+          $raw.spo_restricted_search = $spo.isSharePointRestrictedSearchEnabled
+          $raw.spo_legacy_auth = $spo.isLegacyAuthProtocolsEnabled
+          if ($spo.isSharePointRestrictedSearchEnabled -ne $true) {
+            $findings += @{ title="SharePoint Restricted Search off (Copilot oversharing risk)"; severity="medium"; resource="SharePoint / Microsoft 365 Copilot"; description="Restricted SharePoint Search is not enabled, so Microsoft 365 Copilot and tenant-wide search can surface content from every site a user can technically reach - over-permissioned sites become data-oversharing exposure the moment Copilot is turned on."; remediation="Enable Restricted SharePoint Search (or per-site access governance + sensitivity labels) before rolling out Copilot, and run a site-permission / oversharing review." }
+          }
+          if ($spo.isLegacyAuthProtocolsEnabled -eq $true) {
+            $findings += @{ title="Legacy SharePoint authentication protocols enabled"; severity="medium"; resource="SharePoint Online"; description="Legacy (non-modern) authentication protocols are enabled for SharePoint/OneDrive, allowing app/basic-auth flows that bypass Conditional Access and MFA."; remediation="Disable legacy authentication protocols for SharePoint Online and enforce modern auth + Conditional Access." }
+          }
+        } catch { $raw.spo_error = ($_.Exception.Message -replace "\s+"," ") }
 
         # ================= ENDPOINT: Microsoft Secure Score, Device category =================
         try {
@@ -116,6 +153,44 @@ config:
             $findings += @{ title="No Intune device compliance policy"; severity="high"; resource="Microsoft Intune"; description="Intune is provisioned but no device compliance policy exists, so managed devices are not evaluated for disk encryption, screen lock/PIN, minimum OS/patch level or jailbreak - non-compliant endpoints reach company data unchecked."; remediation="Create Intune device compliance policies (disk encryption, screen lock, minimum OS/patch, block jailbroken/rooted) and enforce them via Conditional Access." }
           }
         } catch { $raw.intune_error = ($_.Exception.Message -replace "\s+"," ") }
+
+        # ================= ENDPOINT (Intune): configuration profiles + settings-catalog (hardening / ASR) =================
+        # Compliance policies only REPORT device state; configuration profiles ENFORCE hardening (ASR, encryption, firewall).
+        try {
+          $cfg  = @((Gph "https://graph.microsoft.com/v1.0/deviceManagement/deviceConfigurations").value)
+          $scat = @((Gph "https://graph.microsoft.com/beta/deviceManagement/configurationPolicies").value)
+          $raw.intune_device_configurations = $cfg.Count
+          $raw.intune_settings_catalog_policies = $scat.Count
+          if (($cfg.Count + $scat.Count) -eq 0) {
+            $findings += @{ title="No Intune device configuration profile"; severity="medium"; resource="Microsoft Intune"; description="Intune is provisioned but no device configuration profile or settings-catalog policy exists, so endpoint hardening (Defender Attack Surface Reduction rules, BitLocker/FileVault, firewall, controlled-folder-access) is not enforced - compliance policies only report state, they do not harden the device."; remediation="Deploy Intune configuration profiles / settings-catalog (or endpoint-security) policies: enable Defender ASR rules in Block mode, disk encryption, firewall and controlled folder access as a baseline." }
+          }
+        } catch { $raw.intune_config_error = ($_.Exception.Message -replace "\s+"," ") }
+
+        # ================= COPILOT: Microsoft 365 Copilot deployment + governance prerequisites =================
+        try {
+          $skus = @((Gph "https://graph.microsoft.com/v1.0/subscribedSkus").value)
+          $copilotSku = @($skus | Where-Object { $_.skuPartNumber -match "(?i)copilot" })
+          $raw.copilot_skus = @($copilotSku | ForEach-Object { $_.skuPartNumber })
+          $copilotOn = $copilotSku.Count -gt 0
+          $raw.copilot_licensed = $copilotOn
+          if ($copilotOn) {
+            $assigned = ($copilotSku | ForEach-Object { [int]$_.consumedUnits } | Measure-Object -Sum).Sum
+            $raw.copilot_assigned_seats = $assigned
+            # Copilot licensed -> the SharePoint oversharing guardrail is no longer optional.
+            if ($spo -and $spo.isSharePointRestrictedSearchEnabled -ne $true) {
+              $findings += @{ title="Microsoft 365 Copilot licensed without oversharing controls"; severity="high"; resource="Microsoft 365 Copilot ($assigned seats)"; description="Copilot is licensed ($assigned assigned seat(s)) but Restricted SharePoint Search is not enabled, so Copilot can surface over-permissioned SharePoint/OneDrive content to any licensed user - the primary Copilot data-exposure path."; remediation="Enable Restricted SharePoint Search and complete a SharePoint permission / oversharing review before broad Copilot enablement; apply sensitivity labels with encryption to sensitive sites." }
+            }
+          }
+        } catch { $raw.copilot_error = ($_.Exception.Message -replace "\s+"," ") }
+
+        # ================= AUDIT: unified audit log reachable (Copilot / M365 activity forensics) =================
+        try {
+          $null = @((Gph "https://graph.microsoft.com/v1.0/auditLogs/directoryAudits?\$top=1").value)
+          $raw.audit_reachable = $true
+        } catch {
+          $raw.audit_error = ($_.Exception.Message -replace "\s+"," "); $raw.audit_reachable = $false
+          $findings += @{ title="Unified audit log not accessible"; severity="medium"; resource="Purview Audit"; description="The directory/unified audit log could not be read, which usually means unified audit is disabled or not retained - Copilot prompt/response activity and admin actions cannot be investigated after an incident."; remediation="Enable unified audit logging in Purview (Audit Premium for Copilot interaction records + long retention)." }
+        }
 
         @{ findings = $findings; raw = $raw } | ConvertTo-Json -Depth 8 -Compress
       ' > /data/config.json 2>/data/config.err
