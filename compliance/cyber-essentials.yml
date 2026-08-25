@@ -27,6 +27,12 @@ cyber-essentials:
 
         print(f"=== Cyber Essentials Certification Check: {company} ===")
 
+        # A missing/malformed key is a CONFIG problem, not "no certification" - a 2captcha key is
+        # 32 chars. Emit UNAVAILABLE (not NO_CERTIFICATION) so a failed check never scores as a finding.
+        if not captcha_key or len(captcha_key) != 32:
+            print("UNAVAILABLE: CAPTCHA_KEY missing or malformed (need a 32-char 2captcha key) - cannot verify certification")
+            exit(0)
+
         # Step 1: Establish session with full browser headers
         s = requests.Session()
         s.headers.update({
@@ -72,7 +78,7 @@ cyber-essentials:
             print(f"Attempt {attempt + 1} failed, retrying...")
 
         if not token:
-            print("NO_CERTIFICATION: Captcha solve failed after 3 attempts")
+            print("UNAVAILABLE: captcha solve failed after 3 attempts - cannot verify certification")
             exit(0)
 
         # Step 3: Search IASME with session cookies (with retries)
@@ -102,7 +108,7 @@ cyber-essentials:
                 time.sleep(5)
 
         if data is None:
-            print(f"NO_CERTIFICATION: IASME search failed after 3 attempts")
+            print("UNAVAILABLE: IASME search failed after 3 attempts (blocked/unreachable) - cannot verify certification")
             exit(0)
 
         if data.get("success"):
