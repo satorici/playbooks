@@ -16,9 +16,10 @@ dnsreaper:
     - export DEBIAN_FRONTEND=noninteractive && apt-get update -qq && apt-get install -qy git ca-certificates >/dev/null 2>&1 && git clone --depth 1 https://github.com/punk-security/dnsReaper /opt/dnsreaper >/dev/null 2>&1 && pip install --quiet -r /opt/dnsreaper/requirements.txt
 
   test:
-    # dnsReaper prints its result line to STDERR. A clean, completed scan says exactly
-    # "We found 0 takeovers"; any confirmed takeover (N >= 1) prints a different count and fails this.
+    # dnsReaper writes its banner + result line to stderr, so merge stderr into stdout (2>&1) both for
+    # the assert and so downstream consumers that read stdout can see it. A clean, completed scan says
+    # exactly "We found 0 takeovers"; any confirmed takeover (N >= 1) prints a different count and fails.
     setSeverity: 2
-    assertStderrContains: "We found 0 takeovers"
+    assertStdoutContains: "We found 0 takeovers"
     run:
-      - cd /opt/dnsreaper && python3 main.py single --domain ${{DOMAIN}} --out-format json --out stdout
+      - cd /opt/dnsreaper && python3 main.py single --domain ${{DOMAIN}} 2>&1
