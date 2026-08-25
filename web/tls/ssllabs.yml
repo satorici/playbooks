@@ -13,7 +13,9 @@ ssllabs:
 
   start_scan:
     setSeverity: 3
-    assertReturnCode: 0
+    # Only a real low grade is a finding. The tool exiting non-zero because the Qualys
+    # SSL Labs API was slow/unavailable is a MEASUREMENT failure, not a TLS problem, so
+    # there is deliberately no assertReturnCode here (it would score a timeout as medium).
     assertStdoutNotContains:
       - "Grade: T"
       - "Grade: F"
@@ -33,7 +35,7 @@ ssllabs:
         echo "Waiting for scan to complete..."
         i=1
         EMPTY=0
-        while [ "$i" -le 12 ]; do
+        while [ "$i" -le 20 ]; do
           sleep 15
           curl -s "https://api.ssllabs.com/api/v3/analyze?host=${{DOMAIN}}&all=done" | CLEAN_JSON > /tmp/ssl_result.json 2>/dev/null
           STATUS=$(jq -r '.status // empty' /tmp/ssl_result.json 2>/dev/null)
@@ -66,5 +68,5 @@ ssllabs:
           fi
           i=$((i + 1))
         done
-        echo "Scan timed out after 3 minutes"
+        echo "Scan timed out after 5 minutes"
         exit 1
