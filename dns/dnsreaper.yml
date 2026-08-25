@@ -1,0 +1,24 @@
+settings:
+  name: "dnsReaper: subdomain takeover detection with CNAME-target verification"
+  description: "dnsReaper checks DNS records for subdomain takeover using 50+ service signatures. Unlike fingerprint-only scanners it verifies the record type AND that the CNAME actually points to the claimed provider before flagging, so a live site behind CloudFront/Netlify is not mis-reported as vulnerable - far fewer false positives."
+  mitigation: "Remove or reclaim any dangling DNS record pointing to a deprovisioned third-party service so an attacker cannot register the resource and take over the subdomain."
+  image: python:3.11-slim
+  author:
+    - https://github.com/punk-security
+  example: satori run satori://dns/dnsreaper.yml -d DOMAIN="nonexistent-app-12345.herokuapp.com" --report --output
+  # NOTE: subdomain takeover affects dangling SUBDOMAINS. Pass a discovered subdomain (or run per-subdomain
+  # from subfinder output) for a meaningful scan; an apex/main site normally has no takeover surface.
+  # dnsReaper is installed from source: its official Docker image (python:3.11-alpine) ships a broken _ssl
+  # (musl/OpenSSL symbol mismatch), so a glibc python base + git clone is used instead.
+
+dnsreaper:
+  install:
+    - export DEBIAN_FRONTEND=noninteractive && apt-get update -qq && apt-get install -qy git ca-certificates >/dev/null 2>&1 && git clone --depth 1 https://github.com/punk-security/dnsReaper /opt/dnsreaper >/dev/null 2>&1 && pip install --quiet -r /opt/dnsreaper/requirements.txt
+
+  test:
+    # dnsReaper prints its result line to STDERR. A clean, completed scan says exactly
+    # "We found 0 takeovers"; any confirmed takeover (N >= 1) prints a different count and fails this.
+    setSeverity: 2
+    assertStderrContains: "We found 0 takeovers"
+    run:
+      - cd /opt/dnsreaper && python3 main.py single --domain ${{DOMAIN}} --out-format json --out stdout
