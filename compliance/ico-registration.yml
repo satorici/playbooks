@@ -12,7 +12,7 @@ ico-registration:
 
   check_registration:
     assertStdoutContains: "ICO Registration:"
-    setSeverity: 3
+    setSeverity: 5
     run:
       - |
         echo "=== ICO Data Controller Registration Check ==="
