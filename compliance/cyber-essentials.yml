@@ -18,7 +18,7 @@ cyber-essentials:
     run:
       - |
         python3 << 'PYEOF'
-        import requests, time, json
+        import requests, time, json, os
 
         company = "${{COMPANY}}"
         captcha_key = "${{CAPTCHA_KEY}}"
@@ -45,6 +45,22 @@ cyber-essentials:
         })
         s.get(page_url)
 
+        # Per-run cost accounting: one USD amount per line in .token-usage/<INPUT NAME>, appended so
+        # every solve counts, for a parent playbook to sum. 2captcha prices each task individually;
+        # only a task that actually solved is charged, which is why this is called on success alone.
+        # Cost reporting can never break the check, hence the blanket except.
+        def record_cost(task_id):
+            try:
+                r = requests.post("https://api.2captcha.com/getTaskResult",
+                                  json={"clientKey": captcha_key, "taskId": int(task_id)}, timeout=20)
+                cost = r.json().get("cost")
+                if cost:
+                    os.makedirs("/tmp/.token-usage", exist_ok=True)
+                    with open("/tmp/.token-usage/CAPTCHA_KEY", "a") as fh:
+                        fh.write("%.6f\n" % float(cost))
+            except Exception:
+                pass
+
         # Step 2: Solve Turnstile via 2captcha (with retries)
         token = None
         for attempt in range(3):
@@ -69,6 +85,7 @@ cyber-essentials:
                 if result.get("status") == 1:
                     token = result["request"]
                     print("Turnstile solved")
+                    record_cost(task_id)
                     break
                 elif "CAPCHA_NOT_READY" not in result.get("request", ""):
                     print(f"Captcha solve failed: {result}")

@@ -92,6 +92,12 @@ breach-news:
         printf '%s' "$REQ" | curl -s --max-time 60 https://openrouter.ai/api/v1/chat/completions \
           -H "Authorization: Bearer ${{OPENROUTER}}" -H "Content-Type: application/json" -d @- > /tmp/resp.json
 
+        # Per-run cost accounting: one USD amount per line in .token-usage/<INPUT NAME>, appended so
+        # repeated calls all count, for a parent playbook to sum. OpenRouter prices every response
+        # itself (usage.cost, credits = USD 1:1), so this is what THIS run was charged.
+        mkdir -p /tmp/.token-usage
+        jq -r '.usage.cost // empty' /tmp/resp.json 2>/dev/null >> /tmp/.token-usage/OPENROUTER
+
         # Extract the model text with -j (raw); write to a file so downstream
         # jq parses from disk (no echo/quoting surprises with newlines or fences).
         jq -j '.choices[0].message.content // empty' /tmp/resp.json > /tmp/llm_raw.txt 2>/dev/null
