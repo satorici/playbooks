@@ -28,7 +28,7 @@ ransomware-check:
         A1=$(norm "$(curl -s --max-time 30 "https://api.ransomware.live/v2/searchvictims/$QC")")
         A2=$(norm "$(curl -s --max-time 30 "https://api.ransomware.live/v2/searchvictims/$BASE")")
         ALL=$(jq -n --argjson a "${A1:-[]}" --argjson b "${A2:-[]}" '$a + $b' 2>/dev/null)
-        MATCH=$(echo "$ALL" | jq --arg d "$DOMAIN" --arg b "$BASE" --arg c "$CL" '[ .[] | select( ((.domain // "")|ascii_downcase|contains($d)) or ((.domain // "")|ascii_downcase|contains($b)) or ((.victim // "")|ascii_downcase|contains($c)) ) ] | unique_by((.victim // "") + (.group // "") + (.discovered // ""))' 2>/dev/null)
+        MATCH=$(echo "$ALL" | jq --arg d "$DOMAIN" 'def host: ascii_downcase | sub("^https?://";"") | sub("/.*";""); def hit($h): ($h != "") and (($h == $d) or ($h | endswith("." + $d)) or ($d | endswith("." + $h))); [ .[] | select( hit((.domain // "") | host) or hit((.victim // "") | host) ) ] | unique_by((.victim // "") + (.group // "") + (.discovered // ""))' 2>/dev/null)
         N=$(echo "$MATCH" | jq 'length' 2>/dev/null)
         if [ "${N:-0}" -gt 0 ]; then
           echo "RANSOMWARE_VICTIM: $N incident(s) found"
