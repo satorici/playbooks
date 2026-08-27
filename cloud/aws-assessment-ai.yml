@@ -173,3 +173,17 @@ assessment:
         echo '{"error":"no cloud data collected"}' > /data/assessment.json
       fi
       cat /data/assessment.json
+
+# Per-run cost: OpenRouter prices every response it returns (`usage.cost`, credits = USD 1:1), so
+# the AI step's own response says what this run was charged — no account balance, which a
+# concurrent run would pollute. Printed as micro-dollars formatted to a fixed 6 decimals, because
+# jq renders small floats in scientific notation. Reporting only: it never fails the run.
+run-cost:
+  report:
+    assertReturnCode: 0
+    run:
+      - |
+        MICRO=$(jq -r '((.usage.cost // 0) * 1000000) | round' /data/resp.json 2>/dev/null)
+        case "$MICRO" in '' | *[!0-9]*) MICRO=0 ;; esac
+        printf 'RUN_COST_USD=%d.%06d\n' "$((MICRO / 1000000))" "$((MICRO % 1000000))"
+        exit 0

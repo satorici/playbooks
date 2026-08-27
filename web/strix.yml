@@ -99,3 +99,21 @@ strix:
   ran:
     setOutput: strix.run
     assertReturnCode: 0
+
+# Per-run cost: Strix keeps its own ledger of what every LLM call it made was charged — the
+# provider-reported figure, not an estimate — and writes it to run.json as `llm_usage.cost` (USD).
+# Printed as micro-dollars formatted to a fixed 6 decimals, because jq renders small floats in
+# scientific notation. Reporting only: a run with no ledger prints zero and never fails here.
+run-cost:
+  report:
+    assertReturnCode: 0
+    run:
+      - |
+        RJSON=$(find . -name run.json 2>/dev/null | head -1)
+        MICRO=0
+        if [ -n "$RJSON" ]; then
+          MICRO=$(jq -r '((.llm_usage.cost // 0) * 1000000) | round' "$RJSON" 2>/dev/null)
+        fi
+        case "$MICRO" in '' | *[!0-9]*) MICRO=0 ;; esac
+        printf 'RUN_COST_USD=%d.%06d\n' "$((MICRO / 1000000))" "$((MICRO % 1000000))"
+        exit 0
