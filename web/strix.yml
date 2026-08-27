@@ -6,7 +6,7 @@ settings:
   cpu: 4096
   memory: 8192
   files: true
-  example: satori run satori://web/strix.yml -d HOST="http://zero.webappsecurity.com" -d MODE="quick" -d OPENROUTER=$OPENROUTER --output --test strix:run:stdout
+  example: satori run satori://web/strix.yml -d HOST="http://zero.webappsecurity.com" -d MODE="quick" -d MODEL="" -d OPENROUTER=$OPENROUTER --output --test strix:run:stdout
   gallery:
     - https://files.catbox.moe/byf8jh.png
   redacted:
@@ -34,7 +34,8 @@ strix:
       # max_tokens:1 completion, since an .error can come back even on HTTP
       # 200) and fall back to an OpenAI model if the primary Claude one is
       # unreachable. STRIX_LLM is then set from whatever actually answered.
-      PRIMARY="anthropic/claude-sonnet-4.6"   # 1M-context + Anthropic prompt caching (Claude-specific)
+      PRIMARY="${{MODEL}}"                    # caller-chosen model (RiskPoint per-user); empty falls back to the default below
+      [ -z "$PRIMARY" ] && PRIMARY="anthropic/claude-sonnet-4.6"   # default: 1M-context + Anthropic prompt caching (Claude-specific)
       BACKUP="openai/gpt-4.1"                 # fallback: closest OpenAI tier to Sonnet 4.6 in cost + capability (strong tool-use, long context); no Anthropic 1M/caching tuning
       API="https://openrouter.ai/api/v1/chat/completions"
       ping_model() {
