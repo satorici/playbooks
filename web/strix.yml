@@ -1,6 +1,6 @@
 settings:
   name: "Strix - LLM Pentesting"
-  description: "Runs Strix (usestrix/strix), the AI-powered automated pentesting agent, entirely inside the Satori container via a custom unix_local runtime backend (from satoridev01/strix). Runs on Strix's OFFICIAL Kali sandbox image so the full toolset (agent-browser+chromium, nuclei, httpx, nmap, semgrep, ...) is present. Driven by Claude Sonnet 4.6 via OpenRouter (1M-token context to avoid mid-scan context-overflow crashes, with Anthropic prompt caching for cost). No Docker-in-Docker required."
+  description: "Runs Strix (usestrix/strix), the AI-powered automated pentesting agent, entirely inside the Satori container via a custom unix_local runtime backend (from satoridev01/strix). Runs on Strix's OFFICIAL Kali sandbox image so the full toolset (agent-browser+chromium, nuclei, httpx, nmap, semgrep, ...) is present. Model is caller-supplied via MODEL parameter (RiskPoint per-user choice). No Docker-in-Docker required."
   image: ghcr.io/usestrix/strix-sandbox:1.0.0
   timeout: 7200
   cpu: 4096
@@ -34,9 +34,8 @@ strix:
       # max_tokens:1 completion, since an .error can come back even on HTTP
       # 200) and fall back to an OpenAI model if the primary Claude one is
       # unreachable. STRIX_LLM is then set from whatever actually answered.
-      PRIMARY="${{MODEL}}"                    # caller-chosen model (RiskPoint per-user); empty falls back to the default below
-      [ -z "$PRIMARY" ] && PRIMARY="anthropic/claude-sonnet-4.6"   # default: 1M-context + Anthropic prompt caching (Claude-specific)
-      BACKUP="openai/gpt-4.1"                 # fallback: closest OpenAI tier to Sonnet 4.6 in cost + capability (strong tool-use, long context); no Anthropic 1M/caching tuning
+      PRIMARY="${{MODEL}}"
+      if [ -z "$PRIMARY" ]; then echo "[preflight] no MODEL passed — aborting"; exit 1; fi
       API="https://openrouter.ai/api/v1/chat/completions"
       ping_model() {
         MODEL="$1"; echo "[preflight] pinging $MODEL ..."
@@ -51,8 +50,7 @@ strix:
         echo "[preflight] $MODEL FAIL (http $HTTP): ${ERR:-non-200 response}"; return 1
       }
       if ping_model "$PRIMARY"; then SELECTED="openrouter/$PRIMARY"
-      elif echo "[preflight] primary unavailable, trying OpenAI backup..." && ping_model "$BACKUP"; then SELECTED="openrouter/$BACKUP"
-      else echo "[preflight] no LLM available — aborting before scan"; exit 1; fi
+      else echo "[preflight] model unavailable — aborting before scan"; exit 1; fi
       echo "[preflight] using model: $SELECTED"
       # --------------------------------------------------------------------
       export STRIX_LLM="$SELECTED"
