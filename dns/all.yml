@@ -13,14 +13,19 @@ settings:
     - https://github.com/projectdiscovery
   example: satori run satori://dns/all.yml -d DOMAIN="satori.ci" --report --output
 
+setParallelImports: true
+
 import:
   # --- Attack Surface Discovery (subdomains) ---
   - satori://dns/passive/subfinder.yml
   - satori://dns/dns-enum.yml
   - satori://dns/dnsx.yml
 
-# Unify the subdomains discovered by the three DNS sources into one clean roster.
+# Unify the subdomains into one clean roster. Only subfinder (import.0) and dnsx
+# (import.2) are referenced: the runner's ${{...}} resolver regex ([\w.]+) rejects
+# hyphens, so import.1 (dns-enum) is unreferenceable. subfinder already aggregates
+# crt.sh + many passive sources, so dns-enum's subset is covered.
 combine:
   assertReturnCode: 0
   run:
-    - printf '%s\n%s\n%s\n' "${{import.0.subfinder.test.run.stdout}}" "${{import.1.dns-enum.crt_sh_subdomains.run.stdout}}" "${{import.2.dnsx.test.run.stdout}}" | grep -oiE "([a-z0-9_-]+\.)+${{DOMAIN}}" | tr 'A-Z' 'a-z' | sort -u
+    - printf '%s\n%s\n' "${{import.0.subfinder.test.run.stdout}}" "${{import.2.dnsx.test.run.stdout}}" | grep -oiE "([a-z0-9_-]+\.)+${{DOMAIN}}" | tr 'A-Z' 'a-z' | sort -u
