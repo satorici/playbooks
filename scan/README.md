@@ -14,6 +14,8 @@ Playbooks for network port scanning, banner grabbing, service enumeration, and h
 | [masscan.yml](masscan.yml) | Masscan | Scans a target host for a specific port and rate using masscan |
 | [naabu.yml](naabu.yml) | Naabu | Port scanning tool written in Go that enumerates valid ports for hosts using fast SYN/CONNECT/UDP scans |
 | [nmap.yml](nmap.yml) | Nmap | Open-source tool used to scan IP addresses and ports in a network and detect installed applications and vulnerabilities |
+| [nmap-multi.yml](nmap-multi.yml) | Nmap (orchestrator) | Shards a host list across N cloud containers via `satori-v2 --count`, runs nmap-shard.yml on each (own egress IP), then collects and prints every shard's output. Requires ENTERPRISE plan + SATORI_TOKEN |
+| [nmap-shard.yml](nmap-shard.yml) | Nmap (shard) | v2 child launched with `--count`: each instance scans only its 1-based slice ($SATORI_COUNT/$SATORI_COUNT_INDEX) of the host list and writes nmap.txt |
 | [rustscan.yml](rustscan.yml) | RustScan | Modern port scanner that rapidly scans all 65,535 ports in approximately 3 seconds with scripting engine support |
 | [shodan.yml](shodan.yml) | Shodan | Queries the Shodan API to identify exposed services, open ports, software versions, and known CVEs on the target's infrastructure and subdomains. Requires SHODAN_API_KEY |
 | [smap.yml](smap.yml) | Smap | Port scanner built with Shodan's free API, functioning as a faster alternative to Nmap |

@@ -1,0 +1,29 @@
+settings:
+  name: "Nmap multi: orchestrate N sharded nmap scans and join their outputs"
+  description: "Launches satori://scan/nmap-shard.yml across SHARDS cloud containers using the v2 platform (--count), so each shard scans its own slice of the host list from its own egress IP. Then collects every shard's nmap.txt and prints them together. Set SHARDS to the number of hosts for a 1 host per IP fan-out."
+  image: python
+  files: true
+  redacted:
+    - SATORI_TOKEN
+  timeout: 7200
+  author:
+    - https://github.com/satorici
+  example: satori run satori://scan/nmap-multi.yml -d SATORI_TOKEN=$SATORI_TOKEN -d HOST="satori.ci\nsatori-ci.com" -d SHARDS=2 -d PORTS=1000 --output --files
+
+install:
+  assertReturnCode: 0
+  run:
+    - pip install git+https://github.com/satorici/cli-v2 --disable-pip-version-check --root-user-action=ignore > /dev/null
+    - satori-v2 config token ${{SATORI_TOKEN}}
+
+scan:
+  assertReturnCode: 0
+  run:
+    - satori-v2 run satori://scan/nmap-shard.yml --count ${{SHARDS}} -d HOST="${{HOST}}" -d PORTS="${PORTS:-1000}" --files
+
+join-scans:
+  - |
+    echo "# Joining ${{SHARDS}} shard outputs"
+    for file in *.tar.gz; do
+      tar -Oxf "$file" ./nmap.txt 2>/dev/null
+    done
