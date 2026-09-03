@@ -11,7 +11,7 @@ settings:
   author:
     - https://github.com/satorici
     - https://github.com/projectdiscovery
-  example: satori run satori://dns/all.yml -d DOMAIN="satori.ci" -d COMPANY="Satori" -d THECOMPANIESAPI="$THECOMPANIESAPI" --report --output
+  example: satori run satori://dns/all.yml -d DOMAIN="satori.ci" --report --output
 
 setParallelImports: true
 
@@ -21,11 +21,8 @@ import:
   - satori://dns/dns-enum.yml
   - satori://dns/dnsx.yml
 
-  # --- Corporate Structure & Related Entities ---
-  - satori://osint/cert-org-search.yml
-  - satori://osint/sec-subsidiaries.yml
-  - satori://osint/thecompaniesapi.yml
-# NOTE: no `combine` step here. A step referencing ${{import.N...}} outputs is
-# incompatible with setParallelImports (the cross-import refs are not wired into
-# the variable context under parallel execution — they fail with "Bad substitution").
-# Each imported source prints its own subdomains; consume them per-import.
+# Unify the subdomains discovered by the three DNS sources into one clean roster.
+combine:
+  assertReturnCode: 0
+  run:
+    - printf '%s\n%s\n%s\n' "${{import.0.subfinder.test.run.stdout}}" "${{import.1.dns-enum.crt_sh_subdomains.run.stdout}}" "${{import.2.dnsx.test.run.stdout}}" | grep -oiE "([a-z0-9_-]+\.)+${{DOMAIN}}" | tr 'A-Z' 'a-z' | sort -u
