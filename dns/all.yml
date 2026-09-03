@@ -13,8 +13,6 @@ settings:
     - https://github.com/projectdiscovery
   example: satori run satori://dns/all.yml -d DOMAIN="satori.ci" --report --output
 
-setParallelImports: true
-
 import:
   # --- Attack Surface Discovery (subdomains) ---
   - satori://dns/passive/subfinder.yml
