@@ -1,0 +1,40 @@
+settings:
+  name: "All DNS + OSINT: discover an organisation's full attack surface"
+  description: "Framework entrypoint that maps an organisation's external footprint by fanning out every subdomain and corporate-structure source in parallel: subfinder (passive OSINT subdomains), dns-enum (brute-force / crt.sh subdomains), dnsx (confirms which hosts resolve to real IPs), cert-org-search (domains registered under the same org name via certificate transparency), sec-subsidiaries (subsidiaries disclosed in SEC filings) and thecompaniesapi (corporate structure -> related entities). Imports run concurrently via setParallelImports; the final step unions and de-duplicates the discovered subdomains into one clean roster. cdncheck is intentionally excluded - it only classifies CDN/cloud origins and contributes no new subdomains."
+  mitigation: "Reconcile every domain, subdomain and related entity discovered here against your authoritative asset inventory, decommission stale or forgotten hosts, reclaim or investigate any domain you do not recognise, and ensure each live asset is patched and monitored to shrink your external attack surface."
+  image: debian
+  cpu: 4096
+  memory: 8192
+  timeout: 900
+  redacted:
+    - THECOMPANIESAPI
+  author:
+    - https://github.com/satorici
+    - https://github.com/projectdiscovery
+  example: satori run satori://dns/all.yml -d DOMAIN="satori.ci" -d COMPANY="Satori" -d THECOMPANIESAPI="$THECOMPANIESAPI" --report --output
+
+setParallelImports: true
+
+import:
+  # --- Attack Surface Discovery (subdomains) ---
+  - satori://dns/passive/subfinder.yml
+  - satori://dns/dns-enum.yml
+  - satori://dns/dnsx.yml
+
+  # --- Corporate Structure & Related Entities ---
+  - satori://osint/cert-org-search.yml
+  - satori://osint/sec-subsidiaries.yml
+  - satori://osint/thecompaniesapi.yml
+
+combine:
+  assertReturnCode: 0
+  run:
+    - |
+      echo "=== Unified subdomains for ${{DOMAIN}} (subfinder + dns-enum + dnsx) ==="
+      printf '%s\n%s\n%s\n' \
+        "${{import.0.subfinder.test.run.stdout}}" \
+        "${{import.1.dns-enum.crt_sh_subdomains.run.stdout}}" \
+        "${{import.2.dnsx.test.run.stdout}}" \
+        | grep -oiE '([a-z0-9_-]+\.)+'"${{DOMAIN}}" \
+        | tr 'A-Z' 'a-z' \
+        | sort -u

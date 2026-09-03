@@ -1,11 +1,13 @@
 settings:
   name: "TheCompaniesAPI Lookup"
-  description: "Query TheCompaniesAPI for company info by hostname/domain"
+  description: "Query TheCompaniesAPI for company info by domain"
   image: debian
-  example: satori local satori://osint/thecompaniesapi.yml -d HOST="stripe.com" -d THECOMPANIESAPI="$THECOMPANIESAPI" --test TheCompaniesAPI.run.stdout --output 2>/dev/null | jq -r .about.name
+  example: satori local satori://osint/thecompaniesapi.yml -d DOMAIN="stripe.com" -d THECOMPANIESAPI="$THECOMPANIESAPI" --test TheCompaniesAPI.lookup.run.stdout --output 2>/dev/null | jq -r .about.name
 
 TheCompaniesAPI:
   install:
     - command -v curl >/dev/null 2>&1 && command -v jq >/dev/null 2>&1 || (export DEBIAN_FRONTEND=noninteractive && apt-get update -qq && apt-get install -qy curl jq ca-certificates >>/dev/null)
-  run:
-    - 'curl -s -H "Authorization: Basic ${{THECOMPANIESAPI}}" "https://api.thecompaniesapi.com/v2/companies/${{HOST}}"'
+  lookup:
+    assertStdoutNotContains: "companyNotFound"
+    run:
+      - 'curl -s -H "Authorization: Basic ${{THECOMPANIESAPI}}" "https://api.thecompaniesapi.com/v2/companies/${{DOMAIN}}"'
