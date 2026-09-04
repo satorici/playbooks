@@ -19,7 +19,7 @@ install:
 scan:
   assertReturnCode: 0
   run:
-    - satori-v2 run satori://scan/nmap-shard.yml --count ${{SHARDS}} -d HOST="${{HOST}}" -d PORTS="${PORTS:-1000}" --files
+    - satori-v2 run satori://scan/nmap-shard.yml --count ${{SHARDS}} -d HOST="${{HOST}}" -d PORTS=${{PORTS}} --files
 
 join-scans:
   - |
