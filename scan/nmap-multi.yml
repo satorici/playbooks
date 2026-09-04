@@ -8,7 +8,7 @@ settings:
   timeout: 7200
   author:
     - https://github.com/satorici
-  example: satori run satori://scan/nmap-multi.yml -d SATORI_TOKEN=$SATORI_TOKEN -d HOST="satori.ci\nsatori-ci.com" -d SHARDS=2 -d PORTS=1000 --output --files
+  example: satori run satori://scan/nmap-multi.yml -d SATORI_TOKEN=$SATORI_TOKEN -d HOST="satori.ci\nsatori-ci.com" -d SHARDS=2 -d PORTS="1-1000" --output --files
 
 install:
   assertReturnCode: 0

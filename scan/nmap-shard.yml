@@ -1,13 +1,13 @@
 #V2
 settings:
   name: "Nmap shard: scan this instance's slice of a host list"
-  description: "Child playbook launched with --count under the v2 platform. Each instance reads $SATORI_COUNT/$SATORI_COUNT_INDEX and scans only its slice of the host list, writing results to nmap.txt for the orchestrator to collect. Number of top ports is parametrizable via PORTS (default 1000)."
+  description: "Child playbook launched with --count under the v2 platform. Each instance reads $SATORI_COUNT/$SATORI_COUNT_INDEX and scans only its slice of the host list, writing results to nmap.txt for the orchestrator to collect. PORTS is an nmap port spec passed to -p (e.g. 1-1000, 80,443, or - for all 65535)."
   image: debian
   files: true
   timeout: 3600
   author:
     - https://github.com/nmap
-  example: satori-v2 run satori://scan/nmap-shard.yml --count 2 -d HOST="satori.ci\nsatori-ci.com" -d PORTS=1000 --files
+  example: satori-v2 run satori://scan/nmap-shard.yml --count 2 -d HOST="satori.ci\nsatori-ci.com" -d PORTS="1-1000" --files
 
 install:
   - apt-get update >>/dev/null; apt-get install -qy nmap >>/dev/null
@@ -24,9 +24,9 @@ scan:
       awk "(NR - 1) % ${SATORI_COUNT:-1} == (${SATORI_COUNT_INDEX:-1} - 1)" all.txt > mine.txt
       echo "# Shard ${SATORI_COUNT_INDEX:-1}/${SATORI_COUNT:-1} - Hosts: $(wc -l < mine.txt)"
 
-      # Number of top ports to scan, passed as a Satori variable.
+      # PORTS is an nmap port spec passed to -p (e.g. 1-1000, 80,443, or - for all 65535).
       : > nmap.txt
       while read -r H; do
-        echo "===== nmap $H (shard ${SATORI_COUNT_INDEX:-1}/${SATORI_COUNT:-1}, top ${{PORTS}} ports) =====" | tee -a nmap.txt
-        nmap -Pn --top-ports ${{PORTS}} -sS -A --open "$H" | tee -a nmap.txt
+        echo "===== nmap $H (shard ${SATORI_COUNT_INDEX:-1}/${SATORI_COUNT:-1}, ports ${{PORTS}}) =====" | tee -a nmap.txt
+        nmap -Pn -p ${{PORTS}} -sS -A --open "$H" | tee -a nmap.txt
       done < mine.txt
