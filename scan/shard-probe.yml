@@ -1,0 +1,10 @@
+settings:
+  name: "Shard probe: verify 1-based sharding split"
+  description: "Applies the same awk split as nmap-shard.yml over a fixed host list to confirm each --count instance gets a distinct slice. Run with satori-v2 --count 2."
+  image: debian
+
+probe:
+  - |
+    printf '%b' "hostA\nhostB\nhostC\nhostD" | sed '/^[[:space:]]*$/d' > all.txt
+    awk "(NR - 1) % ${SATORI_COUNT:-1} == (${SATORI_COUNT_INDEX:-1} - 1)" all.txt > mine.txt
+    echo "SHARD ${SATORI_COUNT_INDEX:-1}/${SATORI_COUNT:-1} -> $(paste -sd, mine.txt)"
