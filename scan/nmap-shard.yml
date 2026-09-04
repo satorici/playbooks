@@ -29,5 +29,5 @@ scan:
       : > nmap.txt
       while read -r H; do
         echo "===== nmap $H (shard ${SATORI_COUNT_INDEX:-1}/${SATORI_COUNT:-1}, top ${PORTS} ports) =====" | tee -a nmap.txt
-        nmap --top-ports "${PORTS}" -sS -A --open "$H" | tee -a nmap.txt
+        nmap -Pn --top-ports "${PORTS}" -sS -A --open "$H" | tee -a nmap.txt
       done < mine.txt
