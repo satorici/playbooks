@@ -19,7 +19,19 @@ dnsreaper:
     # dnsReaper writes its banner + result line to stderr, so merge stderr into stdout (2>&1) both for
     # the assert and so downstream consumers that read stdout can see it. A clean, completed scan says
     # exactly "We found 0 takeovers"; any confirmed takeover (N >= 1) prints a different count and fails.
+    # DOMAIN may contain multiple newline-separated domains — run dnsReaper once per domain and
+    # report any takeover found across any of them.
     setSeverity: 2
     assertStdoutContains: "We found 0 takeovers"
     run:
-      - cd /opt/dnsreaper && python3 main.py single --domain ${{DOMAIN}} 2>&1
+      - |
+        echo 0 > /tmp/takeover_count
+        printf '%s\n' "${{DOMAIN}}" | grep -v '^[[:space:]]*$' > /tmp/domains.txt
+        while IFS= read -r domain; do
+          OUT=$(cd /opt/dnsreaper && python3 main.py single --domain "$domain" 2>&1)
+          echo "=== $domain ==="
+          echo "$OUT"
+          COUNT=$(printf '%s' "$OUT" | grep -oE 'We found [0-9]+ takeover' | grep -oE '[0-9]+' || echo 0)
+          echo $(( $(cat /tmp/takeover_count) + ${COUNT:-0} )) > /tmp/takeover_count
+        done < /tmp/domains.txt
+        echo "We found $(cat /tmp/takeover_count) takeovers across all domains"

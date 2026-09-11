@@ -1,0 +1,183 @@
+settings:
+  name: "GitHub Security Advisories: adoption across freshly-pushed repos"
+  description: "Downloads the latest GH Archive hour, extracts the unique repositories that received pushes, and reports which of them have private vulnerability reporting (GitHub security advisories) enabled. Requires a GitHub token; the REST rate limit (5000/h per token) bounds throughput, so use LIMIT to sample. Stdout lists only the repos with advisories enabled."
+  image: debian
+  author:
+    - https://github.com/satorici
+  redacted:
+    - GITHUB_TOKEN
+  example: satori run osint/github-security-advisories.yml -d GITHUB_TOKEN=$GITHUB_TOKEN -d LIMIT=100 --output
+
+gh_advisories:
+  install:
+    - command -v curl >/dev/null 2>&1 && command -v python3 >/dev/null 2>&1 || (export DEBIAN_FRONTEND=noninteractive && apt-get update -qq && apt-get install -qy --no-install-recommends curl ca-certificates python3 gzip >/dev/null 2>&1)
+
+  scan:
+    setSeverity: 3
+    assertReturnCode: 0
+    run:
+      - |
+        cat > /tmp/gh_advisories.sh <<'GHSCRIPT'
+        #!/usr/bin/env bash
+        set -euo pipefail
+        GITHUB_TOKEN="${GITHUB_TOKEN:-}"
+        LIMIT="${LIMIT:-0}"
+        LOGLEVEL=INFO
+        LOOKBACK_HOURS=12
+        WORKDIR=/tmp/gharchive
+        LOGFILE=$WORKDIR/run.log
+        MAX_RETRIES=5
+        MAX_BLOCK_WAIT=900
+        mkdir -p "$WORKDIR"
+        BLOCKS_PRIMARY=0; BLOCKS_SECONDARY=0; RETRIES_TOTAL=0; GIVEUPS=0
+        START_TS=$(date -u +%s)
+        case "$LOGLEVEL" in
+          DEBUG) LVL_MIN=0 ;; INFO) LVL_MIN=1 ;; WARN) LVL_MIN=2 ;; ERROR) LVL_MIN=3 ;;
+          *) echo "ERROR: invalid LOGLEVEL $LOGLEVEL (use DEBUG|INFO|WARN|ERROR)" >&2; exit 1 ;;
+        esac
+        _lvlno() { case "$1" in DEBUG) echo 0;; INFO) echo 1;; WARN) echo 2;; ERROR) echo 3;; esac; }
+        _ts() { date -u "+%Y-%m-%dT%H:%M:%SZ"; }
+        log() {
+          local lvl="$1"; shift
+          [ "$(_lvlno "$lvl")" -lt "$LVL_MIN" ] && return 0
+          printf "%s [%s] %s\n" "$(_ts)" "$lvl" "$*" >>"$LOGFILE"
+          case "$lvl" in
+            WARN|ERROR) printf "%s: %s\n" "$lvl" "$*" >&2 ;;
+          esac
+        }
+        debug() { log DEBUG "$@"; }
+        info()  { log INFO  "$@"; }
+        warn()  { log WARN  "$@"; }
+        err()   { log ERROR "$@"; }
+        log INFO "=== run start: LIMIT=$LIMIT LOGLEVEL=$LOGLEVEL ==="
+        TOKEN="$GITHUB_TOKEN"; TOKEN_SRC=env
+        if [ -z "$TOKEN" ] && command -v gh >/dev/null 2>&1; then
+          TOKEN="$(gh auth token 2>/dev/null || true)"; TOKEN_SRC=gh
+        fi
+        [ -n "$TOKEN" ] || { err "no token. Set GITHUB_TOKEN or run: gh auth login"; exit 1; }
+        export TOKEN
+        debug "token source: $TOKEN_SRC"
+        info "==> locating latest available GH Archive hour (lookback ${LOOKBACK_HOURS}h)"
+        HOUR=""
+        for i in $(seq 1 "$LOOKBACK_HOURS"); do
+          ts=$(date -u -v-"${i}"H +%Y-%m-%d-%-H 2>/dev/null || date -u -d "-${i} hour" +%Y-%m-%d-%-H)
+          code=$(curl -sL -o "$WORKDIR/${ts}.json.gz" -w "%{http_code}" "https://data.gharchive.org/${ts}.json.gz")
+          debug "download attempt $ts -> HTTP $code"
+          if [ "$code" = 200 ]; then HOUR="$ts"; break; fi
+          info "miss $ts ($code)"; rm -f "$WORKDIR/${ts}.json.gz"
+        done
+        [ -n "$HOUR" ] || { err "no archive hour found in last ${LOOKBACK_HOURS}h."; exit 1; }
+        info "got $HOUR ($(du -h "$WORKDIR/${HOUR}.json.gz" | cut -f1))"
+        info "==> extracting unique repos with PushEvents"
+        gzip -dc "$WORKDIR/${HOUR}.json.gz" 2>/dev/null | grep "\"type\":\"PushEvent\"" \
+          | python3 -c "import sys,json;[print(json.loads(l)[\"repo\"][\"name\"]) for l in sys.stdin]" \
+          | sort -u > "$WORKDIR/repos.txt"
+        total=$(wc -l < "$WORKDIR/repos.txt" | tr -d " ")
+        info "$total unique pushed repos"
+        [ "$LIMIT" -gt 0 ] && { head -n "$LIMIT" "$WORKDIR/repos.txt" > "$WORKDIR/repos.head" && mv "$WORKDIR/repos.head" "$WORKDIR/repos.txt"; info "limited to $LIMIT"; }
+        todo=$(wc -l < "$WORKDIR/repos.txt" | tr -d " ")
+        TMPBODY="$WORKDIR/.body.$$"
+        gh_request() {
+          local repo="$1" hdrfile="$WORKDIR/.hdr.$$"
+          H_STATUS=$(curl -s -w "%{http_code}" \
+               -H "Authorization: Bearer $TOKEN" \
+               -H "Accept: application/vnd.github+json" \
+               -H "X-GitHub-Api-Version: 2022-11-28" \
+               -D "$hdrfile" -o "$TMPBODY" \
+               "https://api.github.com/repos/$repo/private-vulnerability-reporting" \
+               2>/dev/null) || H_STATUS=000
+          H_REMAINING=$(grep -i "^x-ratelimit-remaining:" "$hdrfile" | tr -dc "0-9" || true)
+          H_RESET=$(grep -i "^x-ratelimit-reset:" "$hdrfile" | tr -dc "0-9" || true)
+          H_RETRY_AFTER=$(grep -i "^retry-after:" "$hdrfile" | tr -dc "0-9" || true)
+          rm -f "$hdrfile"
+        }
+        CHECKPOINT="$WORKDIR/.checked.csv"
+        OUTPUT="$WORKDIR/enabled.txt"
+        touch "$CHECKPOINT" "$OUTPUT"
+        FOUND=$(grep -c ",True$" "$CHECKPOINT" 2>/dev/null || true); FOUND=${FOUND:-0}
+        already=$(grep -c "," "$CHECKPOINT" 2>/dev/null || true); already=${already:-0}
+        [ "$already" -gt 0 ] && info "resuming: $already already checked, $FOUND enabled so far"
+        info "==> checking private vulnerability reporting (enabled -> $OUTPUT)"
+        n=0
+        while read -r repo; do
+          if grep -q "^${repo}," "$CHECKPOINT"; then debug "skip (cached) $repo"; continue; fi
+          n=$((n+1))
+          en=""; attempt=0
+          while :; do
+            attempt=$((attempt+1))
+            gh_request "$repo"
+            status="$H_STATUS"
+            case "$status" in
+              200)
+                en=$(python3 -c "import sys,json;print(json.load(sys.stdin)[\"enabled\"])" <"$TMPBODY" 2>/dev/null || echo parse_err)
+                [ "$en" = parse_err ] && warn "parse error for $repo body: $(tr -d "\n" <"$TMPBODY")"
+                ;;
+              404) en="n/a(404)" ;;
+              301|307|308)
+                newrepo=$(python3 - "$repo" <<"PY" 2>/dev/null
+        import sys, os, json, urllib.request
+        req = urllib.request.Request("https://api.github.com/repos/" + sys.argv[1])
+        req.add_header("Authorization", "Bearer " + os.environ["TOKEN"])
+        try:
+            with urllib.request.urlopen(req) as r:
+                print(json.load(r).get("full_name", ""))
+        except Exception:
+            pass
+        PY
+        )
+                if [ -n "$newrepo" ] && [ "$newrepo" != "$repo" ] && [ "$attempt" -lt "$MAX_RETRIES" ]; then
+                  debug "301 $repo -> $newrepo (following)"; repo="$newrepo"; continue
+                fi
+                en="n/a(301-unresolved)"; warn "301 $repo could not be resolved"
+                ;;
+              403|429)
+                if [ "${H_REMAINING:-1}" = 0 ]; then
+                  BLOCKS_PRIMARY=$((BLOCKS_PRIMARY+1))
+                  now=$(date -u +%s); wait=$(( ${H_RESET:-$now} - now + 5 )); [ "$wait" -lt 1 ] && wait=60
+                else
+                  BLOCKS_SECONDARY=$((BLOCKS_SECONDARY+1))
+                  if [ -n "${H_RETRY_AFTER:-}" ]; then wait="$H_RETRY_AFTER"; else wait=$(( attempt * attempt * 10 )); fi
+                fi
+                [ "$wait" -gt "$MAX_BLOCK_WAIT" ] && wait="$MAX_BLOCK_WAIT"
+                warn "BLOCK $status on $repo (remaining=${H_REMAINING:-?} retry-after=${H_RETRY_AFTER:-none}) attempt=$attempt; sleeping ${wait}s"
+                RETRIES_TOTAL=$((RETRIES_TOTAL+1)); sleep "$wait"
+                [ "$attempt" -lt "$MAX_RETRIES" ] && continue
+                en="blocked($status)"; GIVEUPS=$((GIVEUPS+1)); warn "gave up on $repo after $attempt attempts"
+                ;;
+              000|5*)
+                wait=$(( attempt * attempt * 3 ))
+                warn "transient HTTP $status on $repo attempt=$attempt; retry in ${wait}s"
+                RETRIES_TOTAL=$((RETRIES_TOTAL+1)); sleep "$wait"
+                [ "$attempt" -lt "$MAX_RETRIES" ] && continue
+                en="err($status)"; GIVEUPS=$((GIVEUPS+1)); warn "gave up on $repo after $attempt attempts"
+                ;;
+              *) en="n/a($status)"; warn "unexpected HTTP $status for $repo" ;;
+            esac
+            break
+          done
+          echo "$repo,$en" >> "$CHECKPOINT"
+          debug "checked $repo -> $en (http=$status remaining=${H_REMAINING:-?} attempt=$attempt)"
+          if [ "$en" = True ]; then
+            echo "$repo" >> "$OUTPUT"
+            FOUND=$((FOUND+1)); info "FOUND advisories enabled -> $repo  (#$FOUND)"
+          fi
+          if [ $(( n % 100 )) -eq 0 ]; then
+            now=$(date -u +%s); el=$(( now - START_TS )); [ "$el" -lt 1 ] && el=1
+            info "progress: $n/$todo | enabled=$FOUND | blocks=$((BLOCKS_PRIMARY+BLOCKS_SECONDARY)) retries=$RETRIES_TOTAL"
+          fi
+          if [ -n "${H_REMAINING:-}" ] && [ "${H_REMAINING:-99}" -le 2 ] 2>/dev/null; then
+            now=$(date -u +%s); wait=$(( ${H_RESET:-$now} - now + 5 )); [ "$wait" -lt 1 ] && wait=5
+            BLOCKS_PRIMARY=$((BLOCKS_PRIMARY+1))
+            warn "primary quota nearly exhausted (remaining=$H_REMAINING); sleeping ${wait}s until reset"; sleep "$wait"
+          fi
+        done < "$WORKDIR/repos.txt"
+        rm -f "$TMPBODY"
+        info "==> summary (hour $HOUR)"
+        info "checked: $(wc -l < "$CHECKPOINT" | tr -d " ") repos"
+        info "elapsed: $(( ($(date -u +%s)-START_TS)/60 ))m | advisories enabled: $FOUND"
+        info "blocks: primary=$BLOCKS_PRIMARY secondary=$BLOCKS_SECONDARY | retries=$RETRIES_TOTAL | gave-up=$GIVEUPS"
+        { echo "distribution:"; cut -d, -f2 "$CHECKPOINT" | sort | uniq -c | sort -rn; } >>"$LOGFILE"
+        log INFO "=== run end ==="
+        cat "$OUTPUT"
+        GHSCRIPT
+        GITHUB_TOKEN='${{GITHUB_TOKEN}}' LIMIT='${{LIMIT}}' bash /tmp/gh_advisories.sh

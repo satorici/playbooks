@@ -61,6 +61,8 @@ strix:
       export OPENROUTER_API_KEY="${{OPENROUTER}}"
       export STRIX_TELEMETRY=0
       export STRIX_TARGET="${{HOST}}"
+      # Optional temperature override — if not passed, litellm uses the model's default.
+      [ -n "${{TEMPERATURE}}" ] && export STRIX_TEMPERATURE="${{TEMPERATURE}}"
       export STRIX_SCAN_MODE="${{MODE}}"
       # No TTY in the container -> rich/click default to 80 cols. Widen Strix's panel output.
       export COLUMNS=200
