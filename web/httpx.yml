@@ -11,10 +11,12 @@ settings:
 
 httpx:
   install:
-    - command -v httpx >/dev/null 2>&1 || (export DEBIAN_FRONTEND=noninteractive && apt-get update -qq && apt-get install -qy curl unzip ca-certificates >>/dev/null && curl -sL https://api.github.com/repos/projectdiscovery/httpx/releases/latest | grep browser_download_url | grep 'linux_amd64\.zip"' | head -1 | cut -d'"' -f4 | xargs curl -sL -o /tmp/httpx.zip && unzip -o /tmp/httpx.zip -d /usr/local/bin/)
+    # Installed to a dedicated path and invoked by absolute path: the name "httpx"
+    # collides with the Python HTTP client's CLI, which may already be on PATH.
+    - test -x /opt/httpx/httpx || (export DEBIAN_FRONTEND=noninteractive && apt-get update -qq && apt-get install -qy curl unzip ca-certificates >>/dev/null && curl -sL https://api.github.com/repos/projectdiscovery/httpx/releases/latest | grep browser_download_url | grep 'linux_amd64\.zip"' | head -1 | cut -d'"' -f4 | xargs curl -sL -o /tmp/httpx.zip && unzip -o /tmp/httpx.zip -d /opt/httpx/)
 
 
   test:
     assertReturnCode: 0
     run:
-      - httpx -u ${{URL}} -no-color -ip -cdn -cname -stats -title -retries 3 -threads 450 -timeout 3 -location -tls-grab -csp-probe -web-server -tech-detect -content-type -response-time -content-length -follow-redirects -follow-host-redirects -silent -probe -json
+      - /opt/httpx/httpx -u ${{URL}} -no-color -ip -cdn -cname -stats -title -retries 3 -threads 450 -timeout 3 -location -tls-grab -csp-probe -web-server -tech-detect -content-type -response-time -content-length -follow-redirects -follow-host-redirects -silent -probe -json
