@@ -17,8 +17,10 @@ spotbugs:
     - |
       mvn compile -q 2>>/dev/null
       /opt/spotbugs-4.8.6/bin/spotbugs -textui -effort:max -low -pluginList /opt/spotbugs-4.8.6/plugin/findsecbugs.jar target/classes 2>/dev/null | tee /tmp/spotbugs.out
-      HIGH_COUNT=$(grep -c "^H " /tmp/spotbugs.out 2>/dev/null || echo 0)
-      MEDIUM_COUNT=$(grep -c "^M " /tmp/spotbugs.out 2>/dev/null || echo 0)
+      # grep -c prints 0 AND exits 1 on no match, so `|| echo 0` would emit a
+      # second line and make the count "0\n0" -> `[ -gt ]` dies with "Illegal number".
+      HIGH_COUNT=$(grep -c "^H " /tmp/spotbugs.out 2>/dev/null || true); HIGH_COUNT=${HIGH_COUNT:-0}
+      MEDIUM_COUNT=$(grep -c "^M " /tmp/spotbugs.out 2>/dev/null || true); MEDIUM_COUNT=${MEDIUM_COUNT:-0}
       echo "HIGH_BUGS: $HIGH_COUNT"
       echo "MEDIUM_BUGS: $MEDIUM_COUNT"
       if [ "$HIGH_COUNT" -gt 0 ]; then echo "FOUND_HIGH"; fi

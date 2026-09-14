@@ -20,7 +20,9 @@ gdpr-fines:
         TOTAL=$(wc -l < /tmp/gdpr.csv | tr -d ' ')
         echo "GDPR Enforcement Tracker: $TOTAL records loaded"
         MATCHES=$(grep -i "${{COMPANY}}" /tmp/gdpr.csv || true)
-        COUNT=$(echo "$MATCHES" | grep -c . || echo 0)
+        # grep -c prints 0 AND exits 1 on no match, so `|| echo 0` would emit a
+        # second line and make COUNT "0\n0" -> `[ -gt ]` dies with "Illegal number".
+        COUNT=$(echo "$MATCHES" | grep -c . || true); COUNT=${COUNT:-0}
         if [ -n "$MATCHES" ] && [ "$COUNT" -gt 0 ]; then
           echo "FINE_FOUND: $COUNT enforcement action(s) for ${{COMPANY}}"
           echo "$MATCHES" | while IFS=',' read -r ETID COUNTRY DATE FINE FINE_CLEAN CONTROLLER ART TYPE SOURCE; do

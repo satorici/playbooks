@@ -30,7 +30,9 @@ crest-membership:
           fi
         done
         # Re-check match outside subshell
-        MATCH_CHECK=$(echo "$NAMES" | tr '[:upper:]' '[:lower:]' | grep -ci "$COMPANY_LOWER" || echo 0)
+        # grep -c prints 0 AND exits 1 on no match, so `|| echo 0` would emit a
+        # second line and make MATCH_CHECK "0\n0" -> `[ -gt ]` dies with "Illegal number".
+        MATCH_CHECK=$(echo "$NAMES" | tr '[:upper:]' '[:lower:]' | grep -ci "$COMPANY_LOWER" || true); MATCH_CHECK=${MATCH_CHECK:-0}
         if [ "$MATCH_CHECK" -gt 0 ]; then
           echo "CREST_MEMBER: $COMPANY found in CREST Marketplace"
           echo "$NAMES" | while read name; do
