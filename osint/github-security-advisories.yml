@@ -6,7 +6,7 @@ settings:
     - https://github.com/satorici
   redacted:
     - GITHUB_TOKEN
-  example: satori run osint/github-security-advisories.yml -d GITHUB_TOKEN=$GITHUB_TOKEN -d LIMIT=100 --output
+  example: satori run osint/github-security-advisories.yml -d GITHUB_TOKEN=$GITHUB_TOKEN -d LIMIT=10000 --output
 
 gh_advisories:
   install:
