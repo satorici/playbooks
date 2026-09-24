@@ -112,3 +112,18 @@ assess:
       run:
         - |-
           jq -c '.failed_tests[]?' /data/summary.json
+
+# Deterministic findings for downstream scoring (riskpoint): normalise the failed Maester tests into
+# {findings:[{title,severity,resource,description,remediation}]} with fixed severity rules — no LLM in
+# the scored path, so the same tenant state always yields the same posture. Emitted ONLY when Maester
+# produced results (guard on total>0) so an auth/perms failure yields an error object (→ the consumer
+# fails the scan) rather than a misleading clean score.
+assessment:
+  json:
+    - |-
+      if jq -e '(.total // 0) > 0' /data/summary.json >/dev/null 2>&1; then
+        jq -c '{findings: [ .failed_tests[]? | {title:.name, severity:((.severity//"medium")|ascii_downcase|if test("critical")then"critical"elif test("high")then"high"elif test("medium|moderate")then"medium"elif test("low")then"low"elif test("info")then"info"else"medium"end), resource:("Entra ID: "+(.block//"control")), description:.name, remediation:("Remediate the failed Entra control per Maester guidance for \""+.name+"\".")} ]}' /data/summary.json > /data/assessment.json
+      else
+        echo '{"error":"no cloud data collected"}' > /data/assessment.json
+      fi
+      cat /data/assessment.json
