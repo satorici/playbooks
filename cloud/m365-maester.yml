@@ -83,7 +83,7 @@ assess:
       F=$(find /data/maester -name 'results.json' 2>/dev/null | head -1)
       [ -n "$F" ] || F=$(find /data/maester -name '*.json' 2>/dev/null | head -1)
       if [ -n "$F" ]; then
-        jq '{result: .Result, total: (.TotalCount // (.Tests | length)), passed: (.PassedCount // 0), failed: (.FailedCount // 0), skipped: (.SkippedCount // 0), notrun: ([.Tests[]? | select(.Result=="NotRun" or .Result=="Error")] | length), failed_tests: [.Tests[]? | select(.Result=="Failed") | {name: .Name, block: .Block, severity: .Severity}], categories: ([.Tests[]? | .Block] | group_by(.) | map({block: .[0], count: length})) }' "$F" > /data/summary.json 2>/dev/null || echo '{}' > /data/summary.json
+        jq '{result: .Result, total: (.TotalCount // (.Tests | length)), passed: (.PassedCount // 0), failed: (.FailedCount // 0), skipped: (.SkippedCount // 0), notrun: ([.Tests[]? | select(.Result=="NotRun" or .Result=="Error")] | length), failed_tests: [.Tests[]? | select(.Result=="Failed") | {name: .Name, block: .Block, severity: .Severity, helpUrl: ((.HelpUrl // "") | if type=="string" then . else "" end), description: ((.ResultDetail.TestDescription // "") | if type=="string" then . else "" end), result: ((.ResultDetail.TestResult // "") | if type=="string" then . else "" end)}], categories: ([.Tests[]? | .Block] | group_by(.) | map({block: .[0], count: length})) }' "$F" > /data/summary.json 2>/dev/null || echo '{}' > /data/summary.json
       else
         echo '{}' > /data/summary.json
       fi
@@ -113,16 +113,17 @@ assess:
         - |-
           jq -c '.failed_tests[]?' /data/summary.json
 
-# Deterministic findings for downstream scoring (riskpoint): normalise the failed Maester tests into
-# {findings:[{title,severity,resource,description,remediation}]} with fixed severity rules — no LLM in
-# the scored path, so the same tenant state always yields the same posture. Emitted ONLY when Maester
-# produced results (guard on total>0) so an auth/perms failure yields an error object (→ the consumer
-# fails the scan) rather than a misleading clean score.
+# Deterministic findings for downstream scoring (riskpoint): the failed Maester tests →
+# {findings:[{title,severity,resource,description,remediation}]}, no LLM (same state ⇒ same posture).
+# Severity is REMAPPED from Maester's compliance grading to exploitability: account-takeover / privilege
+# / legacy-auth stay high, hygiene (password policy, admin count, SSPR, branding) drops to low, the rest
+# downshift one band — Maester over-tags "High" by framework importance, which craters an exploitability
+# score. Description + remediation come from the test's own ResultDetail. Emitted only when total>0.
 assessment:
   json:
     - |-
       if jq -e '(.total // 0) > 0' /data/summary.json >/dev/null 2>&1; then
-        jq -c '{findings: [ .failed_tests[]? | {title:.name, severity:((.severity//"medium")|ascii_downcase|if test("critical")then"critical"elif test("high")then"high"elif test("medium|moderate")then"medium"elif test("low")then"low"elif test("info")then"info"else"medium"end), resource:("Entra ID: "+(.block//"control")), description:.name, remediation:("Remediate the failed Entra control per Maester guidance for \""+.name+"\".")} ]}' /data/summary.json > /data/assessment.json
+        jq -c '{findings: [ .failed_tests[]? | (.name) as $n | {title:.name, severity:(if ($n|test("high risk|phishing.?resistant|require.*mfa|complete multifactor|legacy (msonline|msol|auth)|permanent.*(role|assignment)|stale account|(sign.?in|user) risk polic|secure security info|voice call|sms.*voice.*email|first-party";"i")) then "high" elif ($n|test("password expiration|passwords shall not expire|password rule|password protection|global admins are designated|self.?service password reset|manage migration|do not expire passwords|branding|forms";"i")) then "low" else ((.severity // "info")|tostring|ascii_downcase|if test("critical")then"high" elif test("high")then"medium" elif test("medium|moderate")then"low" elif test("low")then"info" else "info" end) end), resource:("Entra ID: "+(.block // "control"|tostring)), description:((((.description // "")|tostring|split("####")[0] // ""|split("```")[0] // ""|gsub("^[[:space:]]+|[[:space:]]+$";"")) as $d | (if $d=="" then .name else $d end)) | .[0:500]), remediation:(((((.result // "")|tostring|gsub("^[[:space:]]+|[[:space:]]+$";"")) as $r | ($r + (if ((.helpUrl//"")|tostring)!="" then "  More: "+(.helpUrl|tostring) else "" end))) | if .=="" then "See Maester guidance for this control." else . end) | .[0:500])} ]}' /data/summary.json > /data/assessment.json
       else
         echo '{"error":"no cloud data collected"}' > /data/assessment.json
       fi
