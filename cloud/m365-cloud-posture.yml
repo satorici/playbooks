@@ -37,7 +37,7 @@ assess:
         export DEBIAN_FRONTEND=noninteractive
         apt-get update -qq >/dev/null 2>&1; apt-get install -qy python3 curl ca-certificates >/dev/null 2>&1
       fi
-      curl -fsSL https://github.com/satoridev01/cloud/archive/refs/tags/v0.1.4.tar.gz | tar xz -C /opt/cloud-posture --strip-components=1
+      curl -fsSL https://github.com/satoridev01/cloud/archive/refs/tags/v0.1.5.tar.gz | tar xz -C /opt/cloud-posture --strip-components=1
       PYTHONPATH=/opt/cloud-posture/src python3 -m cloudposture --version
 
   # ---- 1. Run the assessment. The JSON goes to /data/assessment.json, the summary to the log. ----
