@@ -113,7 +113,9 @@ merge:
               vec = weak if sev == "medium" else cvss.HARDENING
               entry["cvss"] = {"version": "3.1", "vector": vec, "score": cvss.score(vec), "rating": cvss.rating(cvss.score(vec))}
           doc["findings"].append(entry)
-      doc.setdefault("summary", {})["azureConfigFindings"] = len(config)
+      summary = doc.setdefault("summary", {})
+      summary["azureConfigFindings"] = len(config)
+      summary["findings"] = len(doc["findings"])
       json.dump(doc, open("/data/assessment.json", "w"))
       print(f"merged: {len(doc['findings'])} findings ({len(config)} from azure-config)")
       PY
