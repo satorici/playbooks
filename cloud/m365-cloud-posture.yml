@@ -1,0 +1,79 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# REQUIRED PERMISSIONS  (app-only / Entra service principal)
+#
+#   Inputs (-d):  AZURE_TENANT_ID  AZURE_CLIENT_ID  AZURE_CLIENT_SECRET
+#   From an Entra ID app registration + client secret (client-credentials auth).
+#
+#   Microsoft Graph - APPLICATION permissions, read-only (admin consent):
+#        - Application.Read.All              - AuditLog.Read.All
+#        - Directory.Read.All                - Domain.Read.All
+#        - Organization.Read.All             - Policy.Read.All
+#        - RoleAssignmentSchedule.Read.Directory
+#        - RoleManagement.Read.Directory     - User.Read.All
+#   A missing permission only marks the controls that need it "not_evaluated"
+#   (listed under permissionGaps) - it never produces a finding or fails the scan.
+# ─────────────────────────────────────────────────────────────────────────────
+settings:
+  name: "Microsoft 365 / Entra ID Security Posture (cloud-posture)"
+  description: "Runs cloud-posture (https://github.com/satoridev01/cloud), a read-only Microsoft 365 / Entra ID assessment: Conditional Access coverage, privileged access, authentication methods, applications and consent, guest settings and mail-domain DMARC/SPF. Each finding names the affected objects (policy, account, application, role, domain) with admin-centre links, explains the risk and the fix, and carries its evidence. Licence-aware (P1/P2-only checks are not applicable without the licence). Standard-library Python: runs on any image with python3."
+  image: python:3.12-slim
+  files: True
+  cpu: 1024
+  memory: 2048
+  author:
+    - https://github.com/satoridev01/cloud
+  example: satori run satori://cloud/m365-cloud-posture.yml -d AZURE_TENANT_ID=$AZURE_TENANT_ID -d AZURE_CLIENT_ID=$AZURE_CLIENT_ID -d AZURE_CLIENT_SECRET=$AZURE_CLIENT_SECRET --report --output
+  redacted:
+    - AZURE_CLIENT_ID
+    - AZURE_CLIENT_SECRET
+    - AZURE_TENANT_ID
+
+assess:
+  # ---- 0. python3 + the pinned tool release (no pip: the tool is standard-library only). ----
+  install:
+    - |-
+      mkdir -p /data /opt/cloud-posture
+      if ! command -v python3 >/dev/null 2>&1 || ! command -v curl >/dev/null 2>&1; then
+        export DEBIAN_FRONTEND=noninteractive
+        apt-get update -qq >/dev/null 2>&1; apt-get install -qy python3 curl ca-certificates >/dev/null 2>&1
+      fi
+      curl -fsSL https://github.com/satoridev01/cloud/archive/refs/tags/v0.1.0.tar.gz | tar xz -C /opt/cloud-posture --strip-components=1
+      PYTHONPATH=/opt/cloud-posture/src python3 -m cloudposture --version
+
+  # ---- 1. Run the assessment. The JSON goes to /data/assessment.json, the summary to the log. ----
+  run:
+    - |-
+      AZURE_TENANT_ID='${{AZURE_TENANT_ID}}' AZURE_CLIENT_ID='${{AZURE_CLIENT_ID}}' AZURE_CLIENT_SECRET='${{AZURE_CLIENT_SECRET}}' PYTHONPATH=/opt/cloud-posture/src python3 -m cloudposture m365 -o /data/assessment.json 2> /data/run.log; echo "RC=$?" >> /data/run.log; cat /data/run.log
+
+  # ---- 2. Guard: authentication worked and an assessment was produced. ----
+  verify_results:
+    assertReturnCode: 0
+    setSeverity: 1
+    check:
+      - |-
+        python3 -c "import json,sys; d=json.load(open('/data/assessment.json')); sys.exit(0 if isinstance(d.get('findings'), list) else 1)"
+
+  # ---- 3. Counts (always visible in --output). ----
+  counts:
+    assertReturnCode: 0
+    show:
+      - |-
+        python3 -c "import json; d=json.load(open('/data/assessment.json')); s=d.get('summary') or {}; print(d.get('error') or 'cloud-posture: %s controls | failed=%s passed=%s not_applicable=%s not_evaluated=%s errors=%s | findings=%s %s' % (s.get('controls'), s.get('failed'), s.get('passed'), s.get('notApplicable'), s.get('notEvaluated'), s.get('errors'), s.get('findings'), s.get('bySeverity')))"
+
+  # ---- 4. Findings assertion: one line per finding; fails the test when there are findings. ----
+  findings:
+    failed_controls:
+      setSeverity: 2
+      assertStdout: False
+      run:
+        - |-
+          python3 -c "import json; [print('%s | %s | %s | %s' % (f['severity'], f['id'], f['title'], f['resource'])) for f in json.load(open('/data/assessment.json')).get('findings', [])]"
+
+# The assessment document for downstream ingest (riskpoint reads this step's stdout): the tool's own
+# output, unmodified — findings already carry id, title, severity, resource, description, remediation,
+# affected objects and evidence. Without an assessment, emit an error document (no findings array),
+# which a consumer must treat as "no data collected", never as a clean tenant.
+assessment:
+  json:
+    - |-
+      if [ -s /data/assessment.json ]; then cat /data/assessment.json; else echo '{"error":"no cloud data collected"}'; fi
