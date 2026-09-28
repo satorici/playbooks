@@ -1,0 +1,138 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# REQUIRED PERMISSIONS  (app-only / Entra service principal)
+#
+#   Inputs (-d):  AZURE_TENANT_ID  AZURE_CLIENT_ID  AZURE_CLIENT_SECRET  AZURE_SUBSCRIPTION_ID
+#   One Entra ID app registration + client secret for both collectors.
+#
+#   1) Microsoft Graph - APPLICATION permissions, read-only (admin consent):
+#      cloud-posture (Entra / Microsoft 365):
+#        - Application.Read.All              - AuditLog.Read.All
+#        - DeviceManagementConfiguration.Read.All
+#        - Directory.Read.All                - Domain.Read.All
+#        - GroupMember.Read.All              - IdentityRiskyUser.Read.All
+#        - Organization.Read.All             - Policy.Read.All
+#        - RoleAssignmentSchedule.Read.Directory
+#        - RoleManagement.Read.Directory     - User.Read.All
+#      azure-config (estate): InformationProtectionPolicy.Read.All, SecurityEvents.Read.All,
+#        SharePointTenantSettings.Read.All (see cloud/azure-config.yml).
+#
+#   2) Azure RBAC: Reader on the subscription (backups, Log Analytics, Microsoft Sentinel).
+#
+#   A missing permission marks the controls that need it "not_evaluated" (cloud-posture) or
+#   skips that collector's check (azure-config) - it never fails the scan.
+# ─────────────────────────────────────────────────────────────────────────────
+settings:
+  name: "Azure + Microsoft 365 / Entra ID Security Posture (cloud-posture + azure-config)"
+  description: "Runs cloud-posture (https://github.com/satoridev01/cloud) for the Entra ID / Microsoft 365 tenant - Conditional Access coverage, privileged access, authentication methods, applications, consents and app owners, Identity Protection risk, Intune compliance, guests and DMARC/SPF, each finding naming the affected objects with a computed CVSS - and azure-config for the Azure subscription estate: backups, SIEM / Sentinel detection coverage, data classification, endpoint Secure Score, Intune profiles and Copilot oversharing. Both collectors' findings are merged into one assessment on Satori's severity scale. No LLM step."
+  image: mcr.microsoft.com/powershell:latest
+  files: True
+  cpu: 2048
+  memory: 4096
+  author:
+    - https://github.com/satoridev01/cloud
+  example: satori run satori://cloud/azure-cloud-posture.yml -d AZURE_TENANT_ID=$AZURE_TENANT_ID -d AZURE_CLIENT_ID=$AZURE_CLIENT_ID -d AZURE_CLIENT_SECRET=$AZURE_CLIENT_SECRET -d AZURE_SUBSCRIPTION_ID=$AZURE_SUBSCRIPTION_ID --report --output
+  redacted:
+    - AZURE_CLIENT_ID
+    - AZURE_CLIENT_SECRET
+    - AZURE_TENANT_ID
+    - AZURE_SUBSCRIPTION_ID
+
+import:
+  - satori://cloud/azure-config.yml
+
+assess:
+  # ---- 0. python3 + the pinned cloud-posture release (standard-library only, no pip). ----
+  install:
+    - |-
+      mkdir -p /data /opt/cloud-posture
+      if ! command -v python3 >/dev/null 2>&1 || ! command -v curl >/dev/null 2>&1; then
+        export DEBIAN_FRONTEND=noninteractive
+        apt-get update -qq >/dev/null 2>&1; apt-get install -qy python3 curl ca-certificates >/dev/null 2>&1
+      fi
+      curl -fsSL https://github.com/satoridev01/cloud/archive/refs/tags/v0.2.0.tar.gz | tar xz -C /opt/cloud-posture --strip-components=1
+      PYTHONPATH=/opt/cloud-posture/src python3 -m cloudposture --version
+
+  # ---- 1. The Entra ID / Microsoft 365 assessment. ----
+  run:
+    - |-
+      AZURE_TENANT_ID='${{AZURE_TENANT_ID}}' AZURE_CLIENT_ID='${{AZURE_CLIENT_ID}}' AZURE_CLIENT_SECRET='${{AZURE_CLIENT_SECRET}}' PYTHONPATH=/opt/cloud-posture/src python3 -m cloudposture m365 -o /data/posture.json 2> /data/run.log; echo "RC=$?" >> /data/run.log; cat /data/run.log
+
+  # ---- 2. Guard: authentication worked and an assessment was produced. ----
+  verify_results:
+    assertReturnCode: 0
+    setSeverity: 1
+    check:
+      - |-
+        python3 -c "import json,sys; d=json.load(open('/data/posture.json')); sys.exit(0 if isinstance(d.get('findings'), list) else 1)"
+
+# Merge cloud-posture's findings with azure-config's (/data/config.json, written by the imported
+# collector). azure-config findings get a stable id, a category and a CVSS, and its "high" becomes
+# medium: they are resilience and detection gaps, not a direct path to compromise, which is what high
+# means on this scale. Without a cloud-posture assessment, emit an error document (no findings array),
+# which a consumer must treat as "no data collected", never as a clean tenant.
+merge:
+  findings:
+    - |-
+      python3 - <<'PY'
+      import json, os, re, sys
+      sys.path.insert(0, "/opt/cloud-posture/src")
+      try:
+          from cloudposture import cvss
+          weak = cvss.WEAKENED_DEFENCE
+      except Exception:
+          cvss, weak = None, None
+      try:
+          doc = json.load(open("/data/posture.json"))
+      except Exception:
+          doc = {}
+      if not isinstance(doc.get("findings"), list):
+          json.dump({"error": "no cloud data collected"}, open("/data/assessment.json", "w"))
+          sys.exit(0)
+      try:
+          config = json.load(open("/data/config.json")).get("findings") or []
+      except Exception:
+          config = []
+      band = {"critical": "medium", "high": "medium", "medium": "medium", "low": "low", "info": "info"}
+      for f in config:
+          title = str(f.get("title") or "Azure configuration finding")
+          sev = band.get(str(f.get("severity") or "medium").lower(), "medium")
+          entry = {
+              "id": "AZ-CFG-" + re.sub(r"[^a-z0-9]+", "-", title.lower()).strip("-")[:48],
+              "control": "AZ-CFG",
+              "category": "Azure configuration",
+              "title": title,
+              "severity": sev,
+              "resource": str(f.get("resource") or "Azure subscription"),
+              "description": str(f.get("description") or title),
+              "remediation": str(f.get("remediation") or "Review this configuration in the Azure portal."),
+              "affected": [],
+              "evidence": {},
+              "references": [],
+          }
+          if cvss and sev in ("medium", "low"):
+              vec = weak if sev == "medium" else cvss.HARDENING
+              entry["cvss"] = {"version": "3.1", "vector": vec, "score": cvss.score(vec), "rating": cvss.rating(cvss.score(vec))}
+          doc["findings"].append(entry)
+      doc.setdefault("summary", {})["azureConfigFindings"] = len(config)
+      json.dump(doc, open("/data/assessment.json", "w"))
+      print(f"merged: {len(doc['findings'])} findings ({len(config)} from azure-config)")
+      PY
+
+  counts:
+    assertReturnCode: 0
+    show:
+      - |-
+        python3 -c "import json; d=json.load(open('/data/assessment.json')); print(d.get('error') or '%d findings: %s' % (len(d['findings']), {s: sum(1 for f in d['findings'] if f['severity']==s) for s in ('blocker','critical','high','medium','low','info')}))"
+
+  failed_controls:
+    setSeverity: 2
+    assertStdout: False
+    run:
+      - |-
+        python3 -c "import json; [print('%s | %s | %s' % (f['severity'], f['id'], f['title'])) for f in json.load(open('/data/assessment.json')).get('findings', [])]"
+
+# The document riskpoint ingests (this step's stdout).
+assessment:
+  json:
+    - |-
+      if [ -s /data/assessment.json ]; then cat /data/assessment.json; else echo '{"error":"no cloud data collected"}'; fi
