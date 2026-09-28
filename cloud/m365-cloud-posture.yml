@@ -6,7 +6,9 @@
 #
 #   Microsoft Graph - APPLICATION permissions, read-only (admin consent):
 #        - Application.Read.All              - AuditLog.Read.All
+#        - DeviceManagementConfiguration.Read.All
 #        - Directory.Read.All                - Domain.Read.All
+#        - GroupMember.Read.All              - IdentityRiskyUser.Read.All
 #        - Organization.Read.All             - Policy.Read.All
 #        - RoleAssignmentSchedule.Read.Directory
 #        - RoleManagement.Read.Directory     - User.Read.All
@@ -15,7 +17,7 @@
 # ─────────────────────────────────────────────────────────────────────────────
 settings:
   name: "Microsoft 365 / Entra ID Security Posture (cloud-posture)"
-  description: "Runs cloud-posture (https://github.com/satoridev01/cloud), a read-only Microsoft 365 / Entra ID assessment: Conditional Access coverage, privileged access, authentication methods, applications and consent, guest settings and mail-domain DMARC/SPF. Each finding names the affected objects (policy, account, application, role, domain) with admin-centre links, explains the risk and the fix, and carries its evidence. Licence-aware (P1/P2-only checks are not applicable without the licence). Standard-library Python: runs on any image with python3."
+  description: "Runs cloud-posture (https://github.com/satoridev01/cloud), a read-only Microsoft 365 / Entra ID assessment: Conditional Access coverage (incl. device-code phishing and trusted-location MFA gaps), privileged access, authentication methods, applications, consents and app owners, Identity Protection risk, Intune compliance, guest settings and mail-domain DMARC/SPF. Each finding names the affected objects (policy, account, application, role, domain) with admin-centre links, explains the risk and the fix, and carries its evidence. Licence-aware (P1/P2-only checks are not applicable without the licence). Standard-library Python: runs on any image with python3."
   image: python:3.12-slim
   files: True
   cpu: 1024
@@ -37,7 +39,7 @@ assess:
         export DEBIAN_FRONTEND=noninteractive
         apt-get update -qq >/dev/null 2>&1; apt-get install -qy python3 curl ca-certificates >/dev/null 2>&1
       fi
-      curl -fsSL https://github.com/satoridev01/cloud/archive/refs/tags/v0.1.7.tar.gz | tar xz -C /opt/cloud-posture --strip-components=1
+      curl -fsSL https://github.com/satoridev01/cloud/archive/refs/tags/v0.2.0.tar.gz | tar xz -C /opt/cloud-posture --strip-components=1
       PYTHONPATH=/opt/cloud-posture/src python3 -m cloudposture --version
 
   # ---- 1. Run the assessment. The JSON goes to /data/assessment.json, the summary to the log. ----
