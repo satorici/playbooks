@@ -94,7 +94,7 @@ config:
               if ($ruleNames.Count -eq 0) {
                 $findings += @{ title="Microsoft Sentinel enabled but no analytics rules"; severity="high"; resource="Microsoft Sentinel"; description="Sentinel is onboarded but has no enabled analytics (detection) rules, so logs are collected but nothing raises an incident - detection coverage is effectively zero."; remediation="Enable Sentinel analytics rules (start with the built-in templates + Entra/Defender content hub) covering privileged-role changes, risky sign-ins, mail exfiltration and data-exposure." }
               } elseif ($missing.Count -gt 0) {
-                $findings += @{ title="Sentinel detection coverage gaps"; severity="medium"; resource="Microsoft Sentinel ($($ruleNames.Count) enabled rules)"; description="Sentinel has $($ruleNames.Count) enabled analytics rule(s) but no enabled rule matches these high-value attack archetypes: $($missing -join '; '). These techniques would go undetected."; remediation="Add Sentinel analytics rules for the uncovered archetypes (Entra ID / Defender XABC content hub + Microsoft Copilot usage-anomaly detections)." }
+                $findings += @{ title="Sentinel detection coverage gaps"; severity="medium"; resource="Microsoft Sentinel ($($ruleNames.Count) enabled rules)"; description="Sentinel has $($ruleNames.Count) enabled analytics rule(s) but no enabled rule matches these high-value attack archetypes: $($missing -join "; "). These techniques would go undetected."; remediation="Add Sentinel analytics rules for the uncovered archetypes (Entra ID / Defender XABC content hub + Microsoft Copilot usage-anomaly detections)." }
               }
             }
           }
