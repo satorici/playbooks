@@ -35,22 +35,27 @@ email-security:
           echo "SPF: NOT FOUND - No SPF record configured"
         fi
 
+  # Anything short of p=reject on every message still delivers some spoofed mail, so only that passes.
   dmarc_check:
     setSeverity: 3
-    assertReturnCode: 0
+    assertStdoutContains: "Policy: REJECT (enforced)"
     run:
       - |
         echo "=== DMARC Record ==="
-        DMARC=$(dig +short TXT _dmarc.${{DOMAIN}} || true)
+        DMARC=$(dig +short TXT _dmarc.${{DOMAIN}} | tr -d '"' || true)
         if [ -n "$DMARC" ]; then
           echo "DMARC Found: $DMARC"
-          if echo "$DMARC" | grep -qi "p=reject"; then
-            echo "Policy: REJECT (strong) - Unauthorized mail is rejected"
-          elif echo "$DMARC" | grep -qi "p=quarantine"; then
-            echo "Policy: QUARANTINE (moderate) - Unauthorized mail goes to spam"
-          elif echo "$DMARC" | grep -qi "p=none"; then
-            echo "Policy: NONE (weak) - Monitoring only, no enforcement"
-          fi
+          # Anchored on a tag boundary, so a subdomain policy (sp=) is never read as the policy.
+          POLICY=$(echo "$DMARC" | grep -oiP '(^|;)\s*p=\K[a-z]+' | head -1 | tr 'A-Z' 'a-z')
+          PCT=$(echo "$DMARC" | grep -oiP '(^|;)\s*pct=\K[0-9]+' | head -1)
+          case "$POLICY" in
+            reject)
+              if [ -z "$PCT" ] || [ "$PCT" = "100" ]; then echo "Policy: REJECT (enforced) - Unauthorized mail is rejected"
+              else echo "Policy: REJECT on ${PCT}% only - the rest of unauthorized mail is not rejected"; fi ;;
+            quarantine) echo "Policy: QUARANTINE (moderate) - Unauthorized mail goes to spam, it is not rejected" ;;
+            none) echo "Policy: NONE (weak) - Monitoring only, no enforcement" ;;
+            *) echo "Policy: MISSING - The record has no valid p= tag" ;;
+          esac
           RUA=$(echo "$DMARC" | grep -oP 'rua=\K[^;]+' || echo "Not configured")
           echo "Reporting address (rua): $RUA"
         else
