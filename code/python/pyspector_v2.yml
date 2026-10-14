@@ -1,8 +1,9 @@
 settings:
+  image: python:3.13
   name: Pyspector v2
 
 install:
-  - apt-get update && apt-get install -y python3-pip
+  #- apt-get update && apt-get install -y python3-pip
   - pip3 install pyspector -U -q --root-user-action=ignore --disable-pip-version-check --break-system-packages
 
 test:

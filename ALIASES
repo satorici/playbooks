@@ -1,0 +1,20 @@
+pyspector:
+    - satori://code/python/pyspector.yml
+
+#subdomains:
+#    - satori://scan/subdomains.yml
+#
+#active:
+#    - satori://web/strix.yml
+#
+#passive:
+#    - satori://scan/passive.yml
+#
+#secrets:
+#    - satori://secrets/semgrep.yml
+#
+#github:
+#    - satori://code/semgrep.yml
+#
+#cloud:
+#    - satori://cloud/scan.yml
