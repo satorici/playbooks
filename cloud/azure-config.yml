@@ -12,18 +12,20 @@
 #        · InformationProtectionPolicy.Read.All   → sensitivity labels (DLP / data classification)
 #        · SecurityEvents.Read.All                → Microsoft Secure Score (endpoint / Device)
 #        · DeviceManagementConfiguration.Read.All → Intune compliance + configuration profiles
-#        · SharePointTenantSettings.Read.All      → SharePoint Restricted Search / legacy auth (Copilot oversharing)
+#        · SharePointTenantSettings.Read.All      → SharePoint legacy auth
 #        · Organization.Read.All                  → subscribed SKUs (Microsoft 365 Copilot licensing)
 #        · AuditLog.Read.All                      → unified audit log reachability (Copilot forensics)
 #
 #   2) Azure Resource Manager (ARM) — Azure RBAC role assignment.
 #      Where: Subscription → Access control (IAM) → Add role assignment →
 #             role "Reader", assign access to the app's service principal.
-#        · Reader on the subscription → Recovery Services vaults, Log Analytics
+#        · Reader on the subscription → Recovery Services and Backup vaults, Log Analytics
 #          workspaces, Microsoft Sentinel onboarding state + analytics (alert) rules.
+#      With AZURE_SUBSCRIPTION_ID empty (a Microsoft 365-only tenant) the ARM probes are skipped.
 #
-#   A missing Graph permission or IAM role degrades gracefully: that collector logs a
-#   *_error into raw{} and emits no finding (it never fails the whole scan).
+#   Every probe is listed under `checks` as pass, fail, not_applicable, not_evaluated (a missing
+#   Graph permission or IAM role, or no subscription) or error, so a probe that could not run is
+#   never read as clean; it never fails the whole scan.
 # ─────────────────────────────────────────────────────────────────────────────
 settings:
   name: "Azure configuration posture — backups, SIEM + detection coverage, DLP/oversharing, endpoint, Copilot"
@@ -43,35 +45,59 @@ config:
       AZURE_CLIENT_ID='${{AZURE_CLIENT_ID}}' AZURE_CLIENT_SECRET='${{AZURE_CLIENT_SECRET}}' AZURE_TENANT_ID='${{AZURE_TENANT_ID}}' AZURE_SUBSCRIPTION_ID='${{AZURE_SUBSCRIPTION_ID}}' pwsh -NoProfile -Command '
         $ErrorActionPreference = "Continue"; $ProgressPreference = "SilentlyContinue"
         $sub = $env:AZURE_SUBSCRIPTION_ID
-        $findings = @(); $raw = @{}
+        $findings = @(); $checks = @(); $raw = @{}
         function Tok($scope){ (Invoke-RestMethod -Method POST -TimeoutSec 25 -Uri "https://login.microsoftonline.com/$($env:AZURE_TENANT_ID)/oauth2/v2.0/token" -Body @{client_id=$env:AZURE_CLIENT_ID;client_secret=$env:AZURE_CLIENT_SECRET;grant_type="client_credentials";scope=$scope}).access_token }
-        $armH = @{ Authorization = "Bearer $(Tok "https://management.azure.com/.default")" }
-        $ghH  = @{ Authorization = "Bearer $(Tok "https://graph.microsoft.com/.default")" }
+        $ghH = @{ Authorization = "Bearer $(Tok "https://graph.microsoft.com/.default")" }
+        if ($sub) { $armH = @{ Authorization = "Bearer $(Tok "https://management.azure.com/.default")" } }
         function Arm($uri){ Invoke-RestMethod -Method GET -TimeoutSec 30 -Uri $uri -Headers $armH }
         function Gph($uri){ Invoke-RestMethod -Method GET -TimeoutSec 30 -Uri $uri -Headers $ghH }
+        # Every probe records what it concluded, so a pass is stated and a probe that could not run is
+        # never read as clean. A finding names its probe in `check`, which is its stable id downstream.
+        function Check($id, $title, $status, $reason){ $script:checks += @{ id=$id; title=$title; status=$status; reason=$reason } }
+        function Fail($id, $title, $finding){ Check $id $title "fail" $null; $finding.check = $id; $script:findings += $finding }
+        function Code($e){ try { [int]$e.Exception.Response.StatusCode } catch { 0 } }
+        # A refused read is a missing permission, a 400/404 a service not provisioned (when `$na` names it).
+        function Unobserved($probes, $e, $na){
+          $c = Code $e; $m = ($e.Exception.Message -replace "\s+"," ")
+          foreach ($p in $probes) {
+            if ($c -in 401,403) { Check $p[0] $p[1] "not_evaluated" "Missing permission: $m" }
+            elseif ($na -and $c -in 400,404) { Check $p[0] $p[1] "not_applicable" $na }
+            else { Check $p[0] $p[1] "error" $m }
+          }
+        }
+        function NoSubscription($probes){ foreach ($p in $probes) { Check $p[0] $p[1] "not_evaluated" "No Azure subscription id: this probe reads Azure Resource Manager." } }
 
-        # ================= BACKUPS: Recovery Services vaults + immutability =================
-        try {
-          $vaults = @((Arm "https://management.azure.com/subscriptions/$sub/providers/Microsoft.RecoveryServices/vaults?api-version=2023-04-01").value)
-          $raw.recovery_vaults = @($vaults | ForEach-Object { @{ name=$_.name; immutability=$_.properties.securitySettings.immutabilitySettings.state } })
+        # ================= BACKUPS: Recovery Services vaults + Backup vaults, immutability =================
+        $bk = @(@("AZ-CFG-BACKUP-VAULT","Azure backup vault exists"), @("AZ-CFG-BACKUP-LOCKED","Backup vault immutability is Locked"))
+        if (-not $sub) { NoSubscription $bk } else { try {
+          $rsv = @((Arm "https://management.azure.com/subscriptions/$sub/providers/Microsoft.RecoveryServices/vaults?api-version=2023-04-01").value)
+          $bv  = @((Arm "https://management.azure.com/subscriptions/$sub/providers/Microsoft.DataProtection/backupVaults?api-version=2023-05-01").value)
+          $vaults = @($rsv) + @($bv)
+          $raw.backup_vaults = @($vaults | ForEach-Object { @{ name=$_.name; type=$_.type; immutability=$_.properties.securitySettings.immutabilitySettings.state } })
           if ($vaults.Count -eq 0) {
-            $findings += @{ title="No Azure Recovery Services vault"; severity="high"; resource="Azure Backup"; description="No Recovery Services vault exists in the subscription - Azure-native backups are not configured (third-party M365 backup, if any, is not visible from Azure)."; remediation="Provision a Recovery Services vault, back up critical workloads, and enable immutability + soft-delete." }
+            Fail $bk[0][0] $bk[0][1] @{ title="No Azure backup vault"; severity="high"; resource="Azure Backup"; description="No Recovery Services vault or Backup vault exists in the subscription - Azure-native backups are not configured (third-party M365 backup, if any, is not visible from Azure)."; remediation="Provision a backup vault, back up critical workloads, and lock immutability with soft-delete on." }
+            Check $bk[1][0] $bk[1][1] "not_applicable" "There is no backup vault."
           } else {
-            $mutable = @($vaults | Where-Object { $_.properties.securitySettings.immutabilitySettings.state -notin @("Locked","Unlocked") })
+            Check $bk[0][0] $bk[0][1] "pass" "$($vaults.Count) vault(s)"
+            # Unlocked immutability can still be switched off by an admin, so only Locked counts.
+            $mutable = @($vaults | Where-Object { $_.properties.securitySettings.immutabilitySettings.state -ne "Locked" })
             if ($mutable.Count -gt 0) {
               $names = ($mutable | ForEach-Object { $_.name }) -join ", "
-              $findings += @{ title="Backup vault immutability not enabled"; severity="high"; resource="Recovery Services vault: $names"; description="$($mutable.Count) of $($vaults.Count) Recovery Services vault(s) do not have immutability enabled, so backups can be deleted or altered by a compromised admin - the ransomware failure mode."; remediation="Enable immutability (Unlocked, then Locked once validated) and soft-delete on every Recovery Services vault." }
-            }
+              Fail $bk[1][0] $bk[1][1] @{ title="Backup vault immutability not Locked"; severity="high"; resource="Backup vault: $names"; description="$($mutable.Count) of $($vaults.Count) backup vault(s) do not have Locked immutability, so a compromised admin can delete or alter backups (Unlocked immutability can be turned off) - the ransomware failure mode."; remediation="Enable immutability on every Recovery Services and Backup vault and lock it once validated, with soft-delete on." }
+            } else { Check $bk[1][0] $bk[1][1] "pass" "$($vaults.Count) vault(s), all Locked" }
           }
-        } catch { $raw.backups_error = ($_.Exception.Message -replace "\s+"," ") }
+        } catch { $raw.backups_error = ($_.Exception.Message -replace "\s+"," "); Unobserved $bk $_ $null } }
 
         # ================= SIEM: Log Analytics workspaces / Microsoft Sentinel =================
-        try {
+        $sm = @(@("AZ-CFG-LOG-WORKSPACE","Log Analytics workspace exists"), @("AZ-CFG-SENTINEL","Microsoft Sentinel is onboarded"), @("AZ-CFG-SENTINEL-RULES","Sentinel has enabled analytics rules"), @("AZ-CFG-SENTINEL-COVERAGE","Sentinel rules cover the high-value attack archetypes"))
+        if (-not $sub) { NoSubscription $sm } else { try {
           $wksp = @((Arm "https://management.azure.com/subscriptions/$sub/providers/Microsoft.OperationalInsights/workspaces?api-version=2022-10-01").value)
           $raw.log_analytics_workspaces = $wksp.Count
           if ($wksp.Count -eq 0) {
-            $findings += @{ title="No Log Analytics workspace (no SIEM)"; severity="medium"; resource="Azure Monitor / Sentinel"; description="No Log Analytics workspace exists - there is nowhere to centralise identity/endpoint/SaaS logs, so a SIEM (e.g. Microsoft Sentinel) is not deployed and breaches can go undetected for months."; remediation="Deploy a Log Analytics workspace + Microsoft Sentinel; connect Entra, Defender and O365 logs with retention and alerting." }
+            Fail $sm[0][0] $sm[0][1] @{ title="No Log Analytics workspace (no SIEM)"; severity="medium"; resource="Azure Monitor / Sentinel"; description="No Log Analytics workspace exists - there is nowhere to centralise identity/endpoint/SaaS logs, so a SIEM (e.g. Microsoft Sentinel) is not deployed and breaches can go undetected for months."; remediation="Deploy a Log Analytics workspace + Microsoft Sentinel; connect Entra, Defender and O365 logs with retention and alerting." }
+            foreach ($p in $sm[1..3]) { Check $p[0] $p[1] "not_applicable" "There is no Log Analytics workspace." }
           } else {
+            Check $sm[0][0] $sm[0][1] "pass" "$($wksp.Count) workspace(s)"
             $sentinel = $false; $ruleNames = @()
             foreach ($w in $wksp) {
               try {
@@ -84,54 +110,63 @@ config:
             $raw.sentinel_enabled = $sentinel
             $raw.sentinel_enabled_rules = $ruleNames.Count
             if (-not $sentinel) {
-              $findings += @{ title="Microsoft Sentinel not enabled"; severity="medium"; resource="Microsoft Sentinel"; description="A Log Analytics workspace exists but Microsoft Sentinel (SIEM/SOAR) is not onboarded, so security logs are stored but not correlated or alerted on."; remediation="Enable Microsoft Sentinel on the Log Analytics workspace and connect the security data sources." }
+              Fail $sm[1][0] $sm[1][1] @{ title="Microsoft Sentinel not enabled"; severity="medium"; resource="Microsoft Sentinel"; description="A Log Analytics workspace exists but Microsoft Sentinel (SIEM/SOAR) is not onboarded, so security logs are stored but not correlated or alerted on."; remediation="Enable Microsoft Sentinel on the Log Analytics workspace and connect the security data sources." }
+              foreach ($p in $sm[2..3]) { Check $p[0] $p[1] "not_applicable" "Microsoft Sentinel is not onboarded." }
             } else {
+              Check $sm[1][0] $sm[1][1] "pass" $null
               # Detection-rule coverage: match ENABLED analytics-rule names against high-value attack archetypes.
               $arche = [ordered]@{ "privileged role assignment"="admin|privileg|role assign"; "MFA / auth-method tampering"="mfa|multifactor|authentication method"; "legacy authentication"="legacy auth|basic auth|imap|pop3|smtp auth"; "OAuth app consent"="oauth|app consent|application consent|illicit consent"; "anomalous sign-in / impossible travel"="impossible travel|anomal|atypical|unfamiliar sign"; "mass download / exfiltration"="mass.*download|file download|exfiltrat|bulk download|large download"; "external mail forwarding"="forward|forwarding rule"; "sensitivity-label downgrade"="label downgrade|downgrade label|label chang"; "public / anonymous storage"="public access|anonymous|public storage|exposed storage"; "PIM activation off-hours"="pim|privileged identity|elevation|activation"; "BEC / mass email send"="bec|business email|mass mail|mass email|mass send"; "ransomware file pattern"="ransomware|ransom|file extension|encryption event"; "credential dump (LSASS)"="lsass|credential dump|credential theft|mimikatz"; "resource deployment spike"="deployment spike|resource deploy|cryptomin|crypto mining"; "Microsoft Copilot anomaly"="copilot" }
               $blob = ($ruleNames -join " || ").ToLower()
               $missing = @(); foreach ($k in $arche.Keys) { if ($blob -notmatch $arche[$k]) { $missing += $k } }
               $raw.sentinel_coverage_gaps = $missing
               if ($ruleNames.Count -eq 0) {
-                $findings += @{ title="Microsoft Sentinel enabled but no analytics rules"; severity="high"; resource="Microsoft Sentinel"; description="Sentinel is onboarded but has no enabled analytics (detection) rules, so logs are collected but nothing raises an incident - detection coverage is effectively zero."; remediation="Enable Sentinel analytics rules (start with the built-in templates + Entra/Defender content hub) covering privileged-role changes, risky sign-ins, mail exfiltration and data-exposure." }
-              } elseif ($missing.Count -gt 0) {
-                $findings += @{ title="Sentinel detection coverage gaps"; severity="medium"; resource="Microsoft Sentinel ($($ruleNames.Count) enabled rules)"; description="Sentinel has $($ruleNames.Count) enabled analytics rule(s) but no enabled rule matches these high-value attack archetypes: $($missing -join "; "). These techniques would go undetected."; remediation="Add Sentinel analytics rules for the uncovered archetypes (Entra ID / Defender XABC content hub + Microsoft Copilot usage-anomaly detections)." }
+                Fail $sm[2][0] $sm[2][1] @{ title="Microsoft Sentinel enabled but no analytics rules"; severity="high"; resource="Microsoft Sentinel"; description="Sentinel is onboarded but has no enabled analytics (detection) rules, so logs are collected but nothing raises an incident - detection coverage is effectively zero."; remediation="Enable Sentinel analytics rules (start with the built-in templates + Entra/Defender content hub) covering privileged-role changes, risky sign-ins, mail exfiltration and data-exposure." }
+                Check $sm[3][0] $sm[3][1] "not_applicable" "There are no enabled analytics rules."
+              } else {
+                Check $sm[2][0] $sm[2][1] "pass" "$($ruleNames.Count) enabled rule(s)"
+                if ($missing.Count -gt 0) {
+                  Fail $sm[3][0] $sm[3][1] @{ title="Sentinel detection coverage gaps"; severity="medium"; resource="Microsoft Sentinel ($($ruleNames.Count) enabled rules)"; description="Sentinel has $($ruleNames.Count) enabled analytics rule(s) but no enabled rule matches these high-value attack archetypes: $($missing -join "; "). These techniques would go undetected."; remediation="Add Sentinel analytics rules for the uncovered archetypes (Entra ID / Defender XDR content hub + Microsoft Copilot usage-anomaly detections)." }
+                } else { Check $sm[3][0] $sm[3][1] "pass" $null }
               }
             }
           }
-        } catch { $raw.siem_error = ($_.Exception.Message -replace "\s+"," ") }
+        } catch { $raw.siem_error = ($_.Exception.Message -replace "\s+"," "); Unobserved $sm $_ $null } }
 
         # ================= DLP / DATA CLASSIFICATION: sensitivity labels =================
+        $lb = @(@("AZ-CFG-LABELS","Sensitivity labels are published"), @("AZ-CFG-LABEL-PROTECTION","A sensitivity label applies protection"))
         try {
           $labels = @((Gph "https://graph.microsoft.com/beta/security/informationProtection/sensitivityLabels").value)
           $raw.sensitivity_labels = $labels.Count
           if ($labels.Count -eq 0) {
-            $findings += @{ title="No sensitivity labels (data not classified)"; severity="medium"; resource="Purview Information Protection"; description="No sensitivity labels are published, so investment/portfolio/LP data is not classified and cannot have encryption or access enforced on a label - the basis for DLP."; remediation="Publish Purview sensitivity labels (auto-label on keywords/locations) and enforce encryption/access on the label; layer DLP on top." }
+            Fail $lb[0][0] $lb[0][1] @{ title="No sensitivity labels (data not classified)"; severity="medium"; resource="Purview Information Protection"; description="No sensitivity labels are published, so investment/portfolio/LP data is not classified and cannot have encryption or access enforced on a label - the basis for DLP."; remediation="Publish Purview sensitivity labels (auto-label on keywords/locations) and enforce encryption/access on the label; layer DLP on top." }
+            Check $lb[1][0] $lb[1][1] "not_applicable" "No sensitivity labels are published."
           } else {
-            # Labels exist but do any ENFORCE protection (encryption/access)? A label without protection is a visual marker only.
+            Check $lb[0][0] $lb[0][1] "pass" "$($labels.Count) label(s)"
+            # A label without protection is a visual marker only.
             $protected = @($labels | Where-Object { $_.isActive -and $_.hasProtection })
             $raw.protected_labels = $protected.Count
             if ($protected.Count -eq 0) {
-              $findings += @{ title="Sensitivity labels apply no encryption / protection"; severity="medium"; resource="Purview Information Protection"; description="$($labels.Count) sensitivity label(s) are published but none applies encryption/protection, so labelled investment/portfolio/LP data is classified but not actually protected - Microsoft 365 Copilot and downstream apps can still surface the content in clear."; remediation="Configure encryption/protection (and auto-labeling) on the labels used for confidential data so the label enforces access + encryption, not just a visual marker." }
-            }
+              Fail $lb[1][0] $lb[1][1] @{ title="Sensitivity labels apply no encryption / protection"; severity="medium"; resource="Purview Information Protection"; description="$($labels.Count) sensitivity label(s) are published but none applies encryption/protection, so labelled investment/portfolio/LP data is classified but not actually protected - Microsoft 365 Copilot and downstream apps can still surface the content in clear."; remediation="Configure encryption/protection (and auto-labeling) on the labels used for confidential data so the label enforces access + encryption, not just a visual marker." }
+            } else { Check $lb[1][0] $lb[1][1] "pass" "$($protected.Count) protecting label(s)" }
           }
-        } catch { $raw.dlp_error = ($_.Exception.Message -replace "\s+"," ") }
+        } catch { $raw.dlp_error = ($_.Exception.Message -replace "\s+"," "); Unobserved $lb $_ "Sensitivity labels are not available on this tenant (licence)." }
 
-        # ================= DLP (Copilot oversharing): SharePoint tenant search + legacy auth =================
-        # Microsoft 365 Copilot can surface anything a user can already reach via search; Restricted SharePoint
-        # Search is the tenant-level guardrail against over-permissive sites feeding Copilot responses.
+        # ================= SharePoint tenant settings =================
+        # Restricted SharePoint Search is not a field this endpoint is known to return, so it is not judged
+        # (nor is Copilot oversharing, which rested on it) until a real read exists.
+        Check "AZ-CFG-SPO-RESTRICTED-SEARCH" "Restricted SharePoint Search is enabled" "not_evaluated" "No reliable read of this setting yet."
+        $sp = @(,@("AZ-CFG-SPO-LEGACY-AUTH","SharePoint legacy authentication is disabled"))
         try {
           $spo = Gph "https://graph.microsoft.com/beta/admin/sharepoint/settings"
-          $raw.spo_restricted_search = $spo.isSharePointRestrictedSearchEnabled
           $raw.spo_legacy_auth = $spo.isLegacyAuthProtocolsEnabled
-          if ($spo.isSharePointRestrictedSearchEnabled -ne $true) {
-            $findings += @{ title="SharePoint Restricted Search off (Copilot oversharing risk)"; severity="medium"; resource="SharePoint / Microsoft 365 Copilot"; description="Restricted SharePoint Search is not enabled, so Microsoft 365 Copilot and tenant-wide search can surface content from every site a user can technically reach - over-permissioned sites become data-oversharing exposure the moment Copilot is turned on."; remediation="Enable Restricted SharePoint Search (or per-site access governance + sensitivity labels) before rolling out Copilot, and run a site-permission / oversharing review." }
-          }
           if ($spo.isLegacyAuthProtocolsEnabled -eq $true) {
-            $findings += @{ title="Legacy SharePoint authentication protocols enabled"; severity="medium"; resource="SharePoint Online"; description="Legacy (non-modern) authentication protocols are enabled for SharePoint/OneDrive, allowing app/basic-auth flows that bypass Conditional Access and MFA."; remediation="Disable legacy authentication protocols for SharePoint Online and enforce modern auth + Conditional Access." }
-          }
-        } catch { $raw.spo_error = ($_.Exception.Message -replace "\s+"," ") }
+            Fail $sp[0][0] $sp[0][1] @{ title="Legacy SharePoint authentication protocols enabled"; severity="medium"; resource="SharePoint Online"; description="Legacy (non-modern) authentication protocols are enabled for SharePoint/OneDrive, allowing app/basic-auth flows that bypass Conditional Access and MFA."; remediation="Disable legacy authentication protocols for SharePoint Online and enforce modern auth + Conditional Access." }
+          } elseif ($spo.isLegacyAuthProtocolsEnabled -eq $false) { Check $sp[0][0] $sp[0][1] "pass" $null }
+          else { Check $sp[0][0] $sp[0][1] "not_evaluated" "The setting was not returned." }
+        } catch { $raw.spo_error = ($_.Exception.Message -replace "\s+"," "); Unobserved $sp $_ "SharePoint Online is not provisioned." }
 
         # ================= ENDPOINT: Microsoft Secure Score, Device category =================
+        $ds = @(,@("AZ-CFG-DEVICE-SECURE-SCORE","Device Secure Score is at least 50%"))
         try {
           $score = (Gph "https://graph.microsoft.com/v1.0/security/secureScores?\$top=1").value | Select-Object -First 1
           $profs = @((Gph "https://graph.microsoft.com/v1.0/security/secureScoreControlProfiles").value)
@@ -144,62 +179,64 @@ config:
             $raw.device_secure_pct = $pct
             if ($pct -lt 50) {
               $missing = @($device | Where-Object { $_.score -lt $_.total } | ForEach-Object { $_.controlName } | Select-Object -First 5) -join ", "
-              $findings += @{ title="Endpoint / Defender controls largely not implemented"; severity="high"; resource="Microsoft Defender Secure Score (Device)"; description="Device-category Secure Score is $pct% - endpoint protections (EDR onboarding, ASR, encryption, patching) are mostly not in place. Top gaps: $missing."; remediation="Roll out an endpoint baseline: Defender for Endpoint (EDR), disk encryption, auto-patching, ASR rules; raise the Device Secure Score." }
-            }
+              Fail $ds[0][0] $ds[0][1] @{ title="Endpoint / Defender controls largely not implemented"; severity="high"; resource="Microsoft Defender Secure Score (Device)"; description="Device-category Secure Score is $pct% - endpoint protections (EDR onboarding, ASR, encryption, patching) are mostly not in place. Top gaps: $missing."; remediation="Roll out an endpoint baseline: Defender for Endpoint (EDR), disk encryption, auto-patching, ASR rules; raise the Device Secure Score." }
+            } else { Check $ds[0][0] $ds[0][1] "pass" "$pct%" }
           } else {
             $raw.device_controls = 0
+            Check $ds[0][0] $ds[0][1] "not_applicable" "Secure Score has no Device controls (no Defender for Endpoint licence)."
           }
-        } catch { $raw.endpoint_error = ($_.Exception.Message -replace "\s+"," ") }
+        } catch { $raw.endpoint_error = ($_.Exception.Message -replace "\s+"," "); Unobserved $ds $_ $null }
 
         # ================= ENDPOINT (Intune): device compliance policies =================
-        # Only meaningful when Intune is provisioned (the endpoint returns 400 otherwise → caught + skipped).
+        $ic = @(,@("AZ-CFG-INTUNE-COMPLIANCE","An Intune device compliance policy exists"))
         try {
           $pols = @((Gph "https://graph.microsoft.com/v1.0/deviceManagement/deviceCompliancePolicies").value)
           $raw.intune_compliance_policies = $pols.Count
           if ($pols.Count -eq 0) {
-            $findings += @{ title="No Intune device compliance policy"; severity="high"; resource="Microsoft Intune"; description="Intune is provisioned but no device compliance policy exists, so managed devices are not evaluated for disk encryption, screen lock/PIN, minimum OS/patch level or jailbreak - non-compliant endpoints reach company data unchecked."; remediation="Create Intune device compliance policies (disk encryption, screen lock, minimum OS/patch, block jailbroken/rooted) and enforce them via Conditional Access." }
-          }
-        } catch { $raw.intune_error = ($_.Exception.Message -replace "\s+"," ") }
+            Fail $ic[0][0] $ic[0][1] @{ title="No Intune device compliance policy"; severity="high"; resource="Microsoft Intune"; description="Intune is provisioned but no device compliance policy exists, so managed devices are not evaluated for disk encryption, screen lock/PIN, minimum OS/patch level or jailbreak - non-compliant endpoints reach company data unchecked."; remediation="Create Intune device compliance policies (disk encryption, screen lock, minimum OS/patch, block jailbroken/rooted) and enforce them via Conditional Access." }
+          } else { Check $ic[0][0] $ic[0][1] "pass" "$($pols.Count) policy(ies)" }
+        } catch { $raw.intune_error = ($_.Exception.Message -replace "\s+"," "); Unobserved $ic $_ "Intune is not provisioned." }
 
         # ================= ENDPOINT (Intune): configuration profiles + settings-catalog (hardening / ASR) =================
         # Compliance policies only REPORT device state; configuration profiles ENFORCE hardening (ASR, encryption, firewall).
+        $cf = @(,@("AZ-CFG-INTUNE-CONFIG","An Intune configuration profile exists"))
         try {
           $cfg  = @((Gph "https://graph.microsoft.com/v1.0/deviceManagement/deviceConfigurations").value)
           $scat = @((Gph "https://graph.microsoft.com/beta/deviceManagement/configurationPolicies").value)
           $raw.intune_device_configurations = $cfg.Count
           $raw.intune_settings_catalog_policies = $scat.Count
           if (($cfg.Count + $scat.Count) -eq 0) {
-            $findings += @{ title="No Intune device configuration profile"; severity="medium"; resource="Microsoft Intune"; description="Intune is provisioned but no device configuration profile or settings-catalog policy exists, so endpoint hardening (Defender Attack Surface Reduction rules, BitLocker/FileVault, firewall, controlled-folder-access) is not enforced - compliance policies only report state, they do not harden the device."; remediation="Deploy Intune configuration profiles / settings-catalog (or endpoint-security) policies: enable Defender ASR rules in Block mode, disk encryption, firewall and controlled folder access as a baseline." }
-          }
-        } catch { $raw.intune_config_error = ($_.Exception.Message -replace "\s+"," ") }
+            Fail $cf[0][0] $cf[0][1] @{ title="No Intune device configuration profile"; severity="medium"; resource="Microsoft Intune"; description="Intune is provisioned but no device configuration profile or settings-catalog policy exists, so endpoint hardening (Defender Attack Surface Reduction rules, BitLocker/FileVault, firewall, controlled-folder-access) is not enforced - compliance policies only report state, they do not harden the device."; remediation="Deploy Intune configuration profiles / settings-catalog (or endpoint-security) policies: enable Defender ASR rules in Block mode, disk encryption, firewall and controlled folder access as a baseline." }
+          } else { Check $cf[0][0] $cf[0][1] "pass" "$($cfg.Count + $scat.Count) profile(s)" }
+        } catch { $raw.intune_config_error = ($_.Exception.Message -replace "\s+"," "); Unobserved $cf $_ "Intune is not provisioned." }
 
-        # ================= COPILOT: Microsoft 365 Copilot deployment + governance prerequisites =================
+        # ================= COPILOT: licensing (its oversharing judgement waits on Restricted Search, above) =================
+        $cp = @(,@("AZ-CFG-COPILOT-OVERSHARING","Microsoft 365 Copilot has oversharing controls"))
         try {
           $skus = @((Gph "https://graph.microsoft.com/v1.0/subscribedSkus").value)
           $copilotSku = @($skus | Where-Object { $_.skuPartNumber -match "(?i)copilot" })
           $raw.copilot_skus = @($copilotSku | ForEach-Object { $_.skuPartNumber })
-          $copilotOn = $copilotSku.Count -gt 0
-          $raw.copilot_licensed = $copilotOn
-          if ($copilotOn) {
-            $assigned = ($copilotSku | ForEach-Object { [int]$_.consumedUnits } | Measure-Object -Sum).Sum
-            $raw.copilot_assigned_seats = $assigned
-            # Copilot licensed -> the SharePoint oversharing guardrail is no longer optional.
-            if ($spo -and $spo.isSharePointRestrictedSearchEnabled -ne $true) {
-              $findings += @{ title="Microsoft 365 Copilot licensed without oversharing controls"; severity="high"; resource="Microsoft 365 Copilot ($assigned seats)"; description="Copilot is licensed ($assigned assigned seat(s)) but Restricted SharePoint Search is not enabled, so Copilot can surface over-permissioned SharePoint/OneDrive content to any licensed user - the primary Copilot data-exposure path."; remediation="Enable Restricted SharePoint Search and complete a SharePoint permission / oversharing review before broad Copilot enablement; apply sensitivity labels with encryption to sensitive sites." }
-            }
-          }
-        } catch { $raw.copilot_error = ($_.Exception.Message -replace "\s+"," ") }
+          $raw.copilot_licensed = $copilotSku.Count -gt 0
+          if ($copilotSku.Count -gt 0) {
+            $raw.copilot_assigned_seats = ($copilotSku | ForEach-Object { [int]$_.consumedUnits } | Measure-Object -Sum).Sum
+            Check $cp[0][0] $cp[0][1] "not_evaluated" "Rests on Restricted SharePoint Search, which has no reliable read yet."
+          } else { Check $cp[0][0] $cp[0][1] "not_applicable" "Microsoft 365 Copilot is not licensed." }
+        } catch { $raw.copilot_error = ($_.Exception.Message -replace "\s+"," "); Unobserved $cp $_ $null }
 
-        # ================= AUDIT: unified audit log reachable (Copilot / M365 activity forensics) =================
+        # ================= AUDIT: directory audit log readable (M365 activity forensics) =================
+        $au = @(,@("AZ-CFG-AUDIT","The directory audit log is readable"))
         try {
           $null = @((Gph "https://graph.microsoft.com/v1.0/auditLogs/directoryAudits?\$top=1").value)
           $raw.audit_reachable = $true
+          Check $au[0][0] $au[0][1] "pass" $null
         } catch {
           $raw.audit_error = ($_.Exception.Message -replace "\s+"," "); $raw.audit_reachable = $false
-          $findings += @{ title="Unified audit log not accessible"; severity="medium"; resource="Purview Audit"; description="The directory/unified audit log could not be read, which usually means unified audit is disabled or not retained - Copilot prompt/response activity and admin actions cannot be investigated after an incident."; remediation="Enable unified audit logging in Purview (Audit Premium for Copilot interaction records + long retention)." }
+          # A refused read says nothing about the log; anything else is the log itself being unavailable.
+          if ((Code $_) -in 401,403) { Unobserved $au $_ $null }
+          else { Fail $au[0][0] $au[0][1] @{ title="Unified audit log not accessible"; severity="medium"; resource="Purview Audit"; description="The directory/unified audit log could not be read, which usually means unified audit is disabled or not retained - Copilot prompt/response activity and admin actions cannot be investigated after an incident."; remediation="Enable unified audit logging in Purview (Audit Premium for Copilot interaction records + long retention)." } }
         }
 
-        @{ findings = $findings; raw = $raw } | ConvertTo-Json -Depth 8 -Compress
+        @{ findings = $findings; checks = $checks; raw = $raw } | ConvertTo-Json -Depth 8 -Compress
       ' > /data/config.json 2>/data/config.err
       echo "CONFIG_RC=$?"; echo "===CONFIG_JSON==="; cat /data/config.json; echo; echo "===ERR==="; cat /data/config.err 2>/dev/null
 
