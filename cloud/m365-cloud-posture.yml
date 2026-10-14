@@ -12,6 +12,7 @@
 #        - Organization.Read.All             - Policy.Read.All
 #        - RoleAssignmentSchedule.Read.Directory
 #        - RoleManagement.Read.Directory     - User.Read.All
+#        - SharePointTenantSettings.Read.All (sharing scope, from v0.3.0)
 #   A missing permission only marks the controls that need it "not_evaluated"
 #   (listed under permissionGaps) - it never produces a finding or fails the scan.
 # ─────────────────────────────────────────────────────────────────────────────
@@ -39,7 +40,7 @@ assess:
         export DEBIAN_FRONTEND=noninteractive
         apt-get update -qq >/dev/null 2>&1; apt-get install -qy python3 curl ca-certificates >/dev/null 2>&1
       fi
-      curl -fsSL https://github.com/satoridev01/cloud/archive/refs/tags/v0.2.0.tar.gz | tar xz -C /opt/cloud-posture --strip-components=1
+      curl -fsSL https://github.com/satoridev01/cloud/archive/refs/tags/v0.3.0.tar.gz | tar xz -C /opt/cloud-posture --strip-components=1
       PYTHONPATH=/opt/cloud-posture/src python3 -m cloudposture --version
 
   # ---- 1. Run the assessment. The JSON goes to /data/assessment.json, the summary to the log. ----
