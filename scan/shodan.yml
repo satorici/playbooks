@@ -12,6 +12,8 @@ settings:
 shodan:
   install:
     - command -v dig >/dev/null 2>&1 && command -v jq >/dev/null 2>&1 || (export DEBIAN_FRONTEND=noninteractive && apt-get update -qq && apt-get install -qy curl jq python3 dnsutils ca-certificates >>/dev/null)
+    # Without a key every lookup comes back empty, which would read as nothing exposed.
+    - '[ -n "${{SHODAN_API_KEY}}" ] || { echo "SHODAN_API_KEY is not set"; exit 1; }'
 
   scan:
     setSeverity: 2
@@ -57,3 +59,16 @@ shodan:
         done
 
         echo "=== Scan complete ==="
+
+  # Remote administration, file sharing and databases have no business facing the internet.
+  exposed_ports:
+    setSeverity: 2
+    assertStdoutNotContains: "RISKY_PORT"
+    run:
+      - |
+        set +f
+        for F in /tmp/shodan_*.json; do
+          [ -s "$F" ] || continue
+          jq -r '.ip_str as $ip | (.hostnames // [] | join(",")) as $h | .data[]? | select(.port as $p | [21,23,135,139,445,1433,1521,2375,3306,3389,5432,5900,5984,6379,9200,9300,11211,27017] | index($p)) | "RISKY_PORT: \(.port)/\(.transport) \(.product // "unknown") on \($ip) \($h)"' "$F" 2>/dev/null
+        done
+        echo "=== Exposed-port review complete ==="
