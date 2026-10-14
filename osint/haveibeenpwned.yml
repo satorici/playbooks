@@ -5,13 +5,16 @@ settings:
   image: debian
   author:
     - https://github.com/satorici
-  example: satori run satori://osint/haveibeenpwned.yml -d DOMAIN="linkedin.com" -d COMPANY="LinkedIn" -d HIBP_API_KEY="your_key" --report --output
+  example: satori run satori://osint/haveibeenpwned.yml -d DOMAIN="linkedin.com" -d COMPANY="LinkedIn" -d HIBP_API_KEY="your_key" -d HUNTER_API_KEY="your_key" --report --output
   redacted:
     - HIBP_API_KEY
+    - HUNTER_API_KEY
 
 haveibeenpwned:
   install:
     - command -v curl >/dev/null 2>&1 && command -v jq >/dev/null 2>&1 || (export DEBIAN_FRONTEND=noninteractive && apt-get update -qq && apt-get install -qy curl jq ca-certificates >>/dev/null)
+    # Without a key every lookup is refused, which would read as no breach.
+    - '[ -n "${{HIBP_API_KEY}}" ] || { echo "HIBP_API_KEY is not set"; exit 1; }'
 
   domain_breaches:
     setSeverity: 2
@@ -52,3 +55,29 @@ haveibeenpwned:
         else
           echo "No public breach history found for ${{COMPANY}}"
         fi
+
+  # A breach of ANOTHER site that held staff addresses is a credential-stuffing source for this company,
+  # so the addresses Hunter.io publishes for the domain are looked up one by one. Addresses are masked
+  # in the output: the count and the breaches are the finding, not who.
+  staff_credentials:
+    setSeverity: 2
+    assertStdoutNotContains: "STAFF_CREDENTIALS_EXPOSED"
+    run:
+      - |
+        echo "=== HIBP staff address check: ${{DOMAIN}} ==="
+        EMAILS=$(curl -s "https://api.hunter.io/v2/domain-search?domain=${{DOMAIN}}&api_key=${{HUNTER_API_KEY}}&limit=10" | jq -r '.data.emails[]?.value' 2>/dev/null)
+        if [ -z "${{HUNTER_API_KEY}}" ]; then echo "Not checked: HUNTER_API_KEY is not set"; exit 0; fi
+        if [ -z "$EMAILS" ]; then echo "No published staff addresses to check"; exit 0; fi
+        EXPOSED=0; CHECKED=0
+        for E in $EMAILS; do
+          CHECKED=$((CHECKED+1))
+          # The lowest paid tier allows 10 lookups a minute.
+          [ "$CHECKED" -gt 1 ] && sleep 7
+          R=$(curl -s -H "hibp-api-key: ${{HIBP_API_KEY}}" -H "user-agent: Satori-CI" "https://haveibeenpwned.com/api/v3/breachedaccount/$E?truncateResponse=false")
+          NAMES=$(echo "$R" | jq -r 'if type == "array" then [.[] | select(.DataClasses | index("Passwords")) | .Name] | join(", ") else "" end' 2>/dev/null)
+          MASKED=$(echo "$E" | sed -E 's/^(.).*@/\1***@/')
+          if [ -n "$NAMES" ]; then EXPOSED=$((EXPOSED+1)); echo "  $MASKED: passwords exposed in $NAMES"; fi
+        done
+        echo "Staff addresses checked: $CHECKED, with passwords in a breach: $EXPOSED"
+        [ "$EXPOSED" -gt 0 ] && echo "STAFF_CREDENTIALS_EXPOSED: $EXPOSED of $CHECKED published staff addresses had passwords in another site's breach"
+        exit 0
