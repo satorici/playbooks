@@ -2,7 +2,8 @@
 # REQUIRED PERMISSIONS  (app-only / Entra service principal)
 #
 #   Inputs (-d):  AZURE_TENANT_ID  AZURE_CLIENT_ID  AZURE_CLIENT_SECRET  AZURE_SUBSCRIPTION_ID
-#   One Entra ID app registration + client secret for both collectors.
+#   One Entra ID app registration + client secret for both collectors. AZURE_SUBSCRIPTION_ID may be
+#   empty for a Microsoft 365-only tenant: azure-config then runs its Graph probes alone.
 #
 #   1) Microsoft Graph - APPLICATION permissions, read-only (admin consent):
 #      cloud-posture (Entra / Microsoft 365):
@@ -18,8 +19,8 @@
 #
 #   2) Azure RBAC: Reader on the subscription (backups, Log Analytics, Microsoft Sentinel).
 #
-#   A missing permission marks the controls that need it "not_evaluated" (cloud-posture) or
-#   skips that collector's check (azure-config) - it never fails the scan.
+#   A missing permission marks the controls that need it "not_evaluated", in both collectors - it
+#   never fails the scan.
 # ─────────────────────────────────────────────────────────────────────────────
 settings:
   name: "Azure + Microsoft 365 / Entra ID Security Posture (cloud-posture + azure-config)"
@@ -66,10 +67,9 @@ assess:
         python3 -c "import json,sys; d=json.load(open('/data/posture.json')); sys.exit(0 if isinstance(d.get('findings'), list) else 1)"
 
 # Merge cloud-posture's findings with azure-config's (/data/config.json, written by the imported
-# collector). azure-config findings get a stable id, a category and a CVSS, and its "high" becomes
-# medium: they are resilience and detection gaps, not a direct path to compromise, which is what high
-# means on this scale. Without a cloud-posture assessment, emit an error document (no findings array),
-# which a consumer must treat as "no data collected", never as a clean tenant.
+# collector). azure-config findings keep their severity and take their probe as a stable id, and its
+# probes join cloud-posture's `controls`. Without a cloud-posture assessment, emit an error document
+# (no findings array), which a consumer must treat as "no data collected", never as a clean tenant.
 merge:
   findings:
     - |-
@@ -89,16 +89,18 @@ merge:
           json.dump({"error": "no cloud data collected"}, open("/data/assessment.json", "w"))
           sys.exit(0)
       try:
-          config = json.load(open("/data/config.json")).get("findings") or []
+          collected = json.load(open("/data/config.json"))
       except Exception:
-          config = []
-      band = {"critical": "medium", "high": "medium", "medium": "medium", "low": "low", "info": "info"}
+          collected = {}
+      config = collected.get("findings") or []
       for f in config:
           title = str(f.get("title") or "Azure configuration finding")
-          sev = band.get(str(f.get("severity") or "medium").lower(), "medium")
+          sev = str(f.get("severity") or "medium").lower()
+          sev = sev if sev in ("blocker", "critical", "high", "medium", "low", "info") else "medium"
+          check = str(f.get("check") or "AZ-CFG-" + re.sub(r"[^a-z0-9]+", "-", title.lower()).strip("-")[:48])
           entry = {
-              "id": "AZ-CFG-" + re.sub(r"[^a-z0-9]+", "-", title.lower()).strip("-")[:48],
-              "control": "AZ-CFG",
+              "id": check,
+              "control": check,
               "category": "Azure configuration",
               "title": title,
               "severity": sev,
@@ -113,6 +115,10 @@ merge:
               vec = weak if sev == "medium" else cvss.HARDENING
               entry["cvss"] = {"version": "3.1", "vector": vec, "score": cvss.score(vec), "rating": cvss.rating(cvss.score(vec))}
           doc["findings"].append(entry)
+      doc.setdefault("controls", []).extend(
+          {"id": c.get("id"), "title": c.get("title"), "category": "Azure configuration", "status": c.get("status") or "error",
+           **({"reason": c["reason"]} if c.get("reason") else {})}
+          for c in collected.get("checks") or [] if c.get("id"))
       summary = doc.setdefault("summary", {})
       summary["azureConfigFindings"] = len(config)
       summary["findings"] = len(doc["findings"])
