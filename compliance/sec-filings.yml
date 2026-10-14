@@ -9,6 +9,8 @@ settings:
 sec-filings:
   install:
     - command -v curl >/dev/null 2>&1 && command -v jq >/dev/null 2>&1 || (export DEBIAN_FRONTEND=noninteractive && apt-get update -qq && apt-get install -qy curl jq ca-certificates >>/dev/null)
+    # Unreachable EDGAR fails the install, so the recipe reads as not run rather than as no disclosure.
+    - curl -sf -o /dev/null -H "User-Agent: Satori-CI satori@satori.ci" "https://efts.sec.gov/LATEST/search-index?q=%22cybersecurity%22&forms=8-K"
 
   search_8k_incidents:
     setSeverity: 2
@@ -23,20 +25,23 @@ sec-filings:
         echo "8-K filings mentioning ${{COMPANY}} since Dec 2023: $COUNT"
         echo "$RESULT" | jq -r '.hits.hits[]._source | "Date: \(.file_date) | Company: \(.display_names[0] // "N/A") | Form: \(.form // "N/A") | Items: \(.items // [] | join(", ")) | Filing: https://www.sec.gov/Archives/edgar/data/\(.ciks[0])/\(.adsh | gsub("-";""))/\(.adsh).txt"' 2>/dev/null | head -20
 
+  # A disclosed incident is an 8-K under Item 1.05 FILED BY the company: one that merely names it (a
+  # vendor's, a customer's) is not its incident.
   search_cyber_8k:
     setSeverity: 1
     assertStdoutNotContains: "CYBER_INCIDENT_DISCLOSED"
     run:
       - |
-        echo "=== SEC 8-K Cybersecurity Incident Disclosure ==="
+        echo "=== SEC 8-K Item 1.05 (Material Cybersecurity Incident) Disclosures ==="
         ENCODED=$(echo "${{COMPANY}}" | sed 's/ /+/g')
-        RESULT=$(curl -s "https://efts.sec.gov/LATEST/search-index?q=%22${ENCODED}%22+%22cybersecurity+incident%22&forms=8-K&dateRange=custom&startdt=2023-12-01" \
+        RESULT=$(curl -s "https://efts.sec.gov/LATEST/search-index?q=%22${ENCODED}%22+%22Item+1.05%22&forms=8-K&dateRange=custom&startdt=2023-12-01" \
           -H "User-Agent: Satori-CI satori@satori.ci")
-        COUNT=$(echo "$RESULT" | jq '.hits.total.value // 0')
-        echo "8-K cyber incident filings found: $COUNT"
+        OWN=$(echo "$RESULT" | jq -c --arg c "$(echo "${{COMPANY}}" | tr 'A-Z' 'a-z')" '[.hits.hits[]?._source | select((.items // []) | index("1.05")) | select(any(.display_names[]?; ascii_downcase | contains($c)))]' 2>/dev/null || echo '[]')
+        COUNT=$(echo "$OWN" | jq 'length')
+        echo "Item 1.05 8-K filings by ${{COMPANY}}: $COUNT"
         if [ "$COUNT" -gt 0 ]; then
-          echo "$RESULT" | jq -r '.hits.hits[]._source | "Date: \(.file_date) | Company: \(.display_names[0] // "N/A") | Items: \(.items // [] | join(", "))"' 2>/dev/null | head -10
-          echo "CYBER_INCIDENT_DISCLOSED: ${{COMPANY}} has disclosed cybersecurity incidents via SEC 8-K"
+          echo "$OWN" | jq -r '.[] | "Date: \(.file_date) | Company: \(.display_names[0] // "N/A") | Items: \(.items // [] | join(", ")) | Filing: https://www.sec.gov/Archives/edgar/data/\(.ciks[0])/\(.adsh | gsub("-";""))/\(.adsh).txt"' | head -10
+          echo "CYBER_INCIDENT_DISCLOSED: ${{COMPANY}} has disclosed a material cybersecurity incident via SEC 8-K Item 1.05"
         fi
 
   search_10k_risk:
