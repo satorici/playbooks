@@ -52,7 +52,9 @@ assess:
 
   # ---- 2. Prowler: compliance / CIS (all regions, every check and severity). The AI context gets the
   # FAILs aggregated by check; every result, passes included, goes to /data/prowler_results.json for
-  # the scored assessment, outside /data/out so it never reaches the AI. ----
+  # the scored assessment, outside /data/out so it never reaches the AI. The assessment lists one
+  # finding per failing check with every resource under it: a check failing on each of 1,500 task
+  # definition revisions is one defect, not 1,500. ----
   prowler:
     - /opt/pw/bin/prowler -v > /data/prowler_version.txt 2>/dev/null || true
     - /opt/pw/bin/prowler aws -M json-ocsf -o /data/prowler --log-level ERROR > /data/prowler_run.log 2>&1; echo "PROWLER_RC=$?" >> /data/prowler_run.log; { echo "--- ls /data/prowler ---"; ls -laR /data/prowler; } >> /data/prowler_run.log 2>&1
@@ -167,7 +169,7 @@ assessment:
       if jq -e '[.scoutsuite, .prowler, .iam_risk, .privesc, .guardduty, .securityhub, .access_analyzer] | map(length) | add > 0' /data/out/merged.json >/dev/null 2>&1; then
         jq -c --slurpfile pr /data/prowler_results.json --rawfile pv /data/prowler_version.txt '($pr[0] // []) as $results | {findings: (
           [ .scoutsuite[]? | {title:.finding, severity:(if .level=="danger" then "high" else "medium" end), resource:(.service//"aws"), description:((.flagged|tostring)+" flagged item(s) in "+(.service//"aws")+"."), remediation:("Remediate the flagged "+(.service//"aws")+" configuration per the ScoutSuite finding.")} ]
-          + [ $results[] | select(.status == "FAIL") | {id:(.check+"|"+.resource), control:.check, title:.title, severity:((.severity//"high")|ascii_downcase|if test("critical")then"critical"elif test("high")then"high"elif test("medium")then"medium"elif test("low")then"low"else"info"end), resource:(if .resource == "" then "aws" else .resource end), description:(if .detail == "" then "This resource failed the check." else .detail end), remediation:"Fix the failed CIS/compliance check per Prowler guidance."} ]
+          + [ $results | map(select(.status == "FAIL")) | group_by(.check)[] | {id:.[0].check, control:.[0].check, title:.[0].title, severity:((.[0].severity//"high")|ascii_downcase|if test("critical")then"critical"elif test("high")then"high"elif test("medium")then"medium"elif test("low")then"low"else"info"end), resource:(if .[0].resource == "" then "aws" else .[0].resource end), description:((length|tostring)+" resource(s) fail this check. "+(if .[0].detail == "" then "" else .[0].detail end)), affected:[.[] | {type:"aws", id:(if .resource == "" then "aws" else .resource end), name:(if .resource == "" then "aws" else .resource end)} + (if .detail == "" then {} else {detail:{detail:.detail}} end)], remediation:"Fix the failed CIS/compliance check per Prowler guidance."} ]
           + [ .iam_risk[]? | {title:.finding, severity:(if .type=="managed_policy_admin" then "critical" else "medium" end), resource:(.name//"aws"), description:(.finding+" ("+(.name//"")+")."), remediation:(if .type=="managed_policy_admin" then "Scope this policy down from Action:* on Resource:* to least privilege." else "Replace inline user policies with managed, least-privilege policies." end)} ]
           + [ .privesc[]? | {title:("Privilege escalation: "+(.policy//"policy")), severity:"high", resource:(.policy//"aws"), description:("Enables: "+((.privesc_methods//[])|join(", "))+"."), remediation:"Remove the privilege-escalation paths this policy enables and apply least privilege."} ]
           + [ .guardduty[]? | {title:(.title//"GuardDuty finding"), severity:(if (.severity//0)>=7 then "high" elif (.severity//0)>=4 then "medium" else "low" end), resource:(.type//"aws"), description:(.type//""), remediation:"Investigate and remediate this GuardDuty finding."} ]
