@@ -70,6 +70,16 @@ strix:
       export STRIX_SCAN_MODE="${{MODE}}"
       # No TTY in the container -> rich/click default to 80 cols. Widen Strix's panel output.
       export COLUMNS=200
+      # Audit trail of every command the agent runs, echoed live: a file is lost when the step dies (4 h
+      # cap, stray SIGTERM), but the runner keeps the stdout a killed step already wrote.
+      export STRIX_EXEC_LOG=/tmp/strix_exec.log; : > "$STRIX_EXEC_LOG"; SEEN=0
+      exec_trail() {
+        NOW=$(stat -c %s "$STRIX_EXEC_LOG" 2>/dev/null || echo 0)
+        if [ "$NOW" -gt "$SEEN" ]; then
+          tail -c +$((SEEN + 1)) "$STRIX_EXEC_LOG" | head -c $((NOW - SEEN)) | tr -cd '\11\12\40-\176' | cut -c1-240 | head -n 200 | sed "s/^/$(date +%T) [exec] /"
+          SEEN=$NOW
+        fi
+      }
       # Make the image npm-global tools (agent-browser) reachable
       export PATH="/home/pentester/.npm-global/bin:/home/pentester/go/bin:/home/pentester/.local/bin:$PATH"
       # Run from the runner CWD (captured dir) so artifacts are retrievable with --files.
@@ -84,7 +94,9 @@ strix:
       # propagate strix's real exit code (0=clean, 2=vulns, 1=crash).
       setsid -w python3 /tmp/strix_local_backend.py > /tmp/strix_out.txt 2>&1 &
       SPID=$!
+      while kill -0 "$SPID" 2>/dev/null; do sleep 3; exec_trail; done
       wait "$SPID"; RC=$?
+      exec_trail
       grep -v 'Provider List: https' /tmp/strix_out.txt
       echo; echo "==================== ALL VULNERABILITIES (vulnerabilities.json) ===================="
       VJSON=$(find . -name vulnerabilities.json 2>/dev/null | head -1)
