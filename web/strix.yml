@@ -23,6 +23,10 @@ strix:
     # (needed by agents.items, absent <=2.22), old enough that cache_write_tokens
     # is still optional (becomes required at 2.45). 2.40.0 is the newest that fits.
     - pip install "openai==2.40.0" -q --break-system-packages --root-user-action=ignore
+    # litellm 1.106.0 (2026-10-18) imports mcp>=2.2 (CacheableResult) on every call that carries
+    # tools, yet lists mcp only as an optional extra, so pip keeps the mcp 1.x openai-agents needs
+    # (<2) and every Strix LLM call dies with ImportError. 1.105.x is the last that works with it.
+    - pip install "litellm<1.106" -q --break-system-packages --root-user-action=ignore
     # The local-backend fix — tracks main (repo is in active development; we control it).
     - curl -sL https://raw.githubusercontent.com/satoridev01/strix/main/strix_local_backend.py -o /tmp/strix_local_backend.py
 
