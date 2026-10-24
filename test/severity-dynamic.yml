@@ -1,0 +1,28 @@
+settings:
+  name: "Test: Dynamic Severity"
+  description: "Validates that setSeverity accepts a path.stdout reference and the analyzer resolves it at report time."
+  image: satori
+  author:
+    - https://github.com/satorici
+  example: satori local satori://test/severity-dynamic.yml --report
+
+# Deterministic case: severity is derived from a fixed echo.
+severity:
+  - echo 3
+
+deterministic:
+  setSeverity: severity.stdout
+  cmd:
+    - echo Output
+  assertReturnCode: 0
+
+# Random case (Fernando's original example): exercises the dynamic path
+# without coupling the test to a specific severity value.
+randomSeverity:
+  - bash -c "echo $((RANDOM % 6))"
+
+random:
+  setSeverity: randomSeverity.stdout
+  cmd:
+    - echo Output
+  assertReturnCode: 0

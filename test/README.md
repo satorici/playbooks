@@ -7,6 +7,7 @@ Utility playbooks for testing Satori functionality.
 | Playbook | Tool | Description |
 |----------|------|-------------|
 | [severity.yml](severity.yml) | Severity Test | Validates severity level assertions from Blocker (0) to Informational (5) |
+| [severity-dynamic.yml](severity-dynamic.yml) | Dynamic Severity | Validates that `setSeverity: <path>.stdout` is resolved at report time from the referenced command's stdout |
 
 ## Usage
 
