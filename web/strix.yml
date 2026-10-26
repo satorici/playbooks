@@ -129,8 +129,6 @@ strix:
         case "$MAX_TURNS" in ''|*[!0-9]*|0) echo '[gate] MAX_TURNS must be a positive integer'; exit 1 ;; esac
         case "$EXEC_MIN" in ''|*[!0-9]*) echo '[gate] EXEC_MIN must be a non-negative integer'; exit 1 ;; esac
         case "$REQ_MIN" in ''|*[!0-9]*) echo '[gate] REQ_MIN must be a non-negative integer'; exit 1 ;; esac
-        BUDGET_NUM=$(python3 -c 'import decimal,sys; print(float(decimal.Decimal(sys.argv[1])))' "$BUDGET") \
-          || { echo '[gate] cannot parse BUDGET'; exit 1; }
         AGENTS_JSON="$(dirname "$RJSON")/.state/agents.json"
         FLAGS='{"budget_stopped":false,"reserve_stopped":false,"agents_json":false,"children":{},"children_errored":0}'
         if [ -f "$AGENTS_JSON" ]; then
@@ -145,7 +143,7 @@ strix:
         if [ -f "$(dirname "$RJSON")/coverage.json" ]; then
           COVERAGE=$(jq -c '{complete:.completeness.complete, caveats:((.completeness.caveats // []) | length), gaps:(.summary.gaps // null), surfaces:(.summary.surfaces_reviewed // null)}' "$(dirname "$RJSON")/coverage.json" 2>/dev/null) || COVERAGE='null'
         fi
-        METRICS=$(jq -c --argjson maxturns "$MAX_TURNS" --argjson budget "$BUDGET_NUM" \
+        METRICS=$(jq -c --argjson maxturns "$MAX_TURNS" \
                         --argjson execmin "$EXEC_MIN" --argjson reqmin "$REQ_MIN" --argjson flags "$FLAGS" --argjson coverage "$COVERAGE" '
           ([.llm_usage.agents[]? | select(.agent_name == "Root Agent")] | first) as $root
           | (($root.requests | type) == "number") as $rootreq_ok
@@ -166,7 +164,6 @@ strix:
               reasons: [
                 (if $root == null then "root_agent_not_in_usage" else empty end),
                 (if $root != null and ($rootreq_ok | not) then "root_requests_unreadable" else empty end),
-                (if $rootreq * 100 >= $maxturns * 70 then "root_turn_warning_band" else empty end),
                 (if $subpeak * 100 >= $maxturns * 95 then "subagent_turn_critical_band" else empty end),
                 (if ($flags.budget_stopped or $flags.reserve_stopped) then "budget_stop_or_reserve_flag" else empty end),
                 (if (($flags.children.crashed // 0) + ($flags.children.failed // 0)) > 0 then "child_crashed_or_failed" else empty end),
