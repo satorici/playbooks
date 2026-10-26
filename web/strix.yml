@@ -168,7 +168,6 @@ strix:
                 (if $root != null and ($rootreq_ok | not) then "root_requests_unreadable" else empty end),
                 (if $rootreq * 100 >= $maxturns * 70 then "root_turn_warning_band" else empty end),
                 (if $subpeak * 100 >= $maxturns * 95 then "subagent_turn_critical_band" else empty end),
-                (if $cost > 0 and $cost >= $budget * 0.70 then "budget_warning_band" else empty end),
                 (if ($flags.budget_stopped or $flags.reserve_stopped) then "budget_stop_or_reserve_flag" else empty end),
                 (if (($flags.children.crashed // 0) + ($flags.children.failed // 0)) > 0 then "child_crashed_or_failed" else empty end),
                 (if (($flags.children.running // 0) + ($flags.children.waiting // 0) + ($flags.children.budget_paused // 0)) > 0 then "child_still_active" else empty end),
