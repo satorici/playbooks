@@ -75,7 +75,7 @@ strix:
 
       echo "[scan] model=$MODEL mode=$MODE max_budget_usd=$BUDGET"
       : > /tmp/strix_out.txt
-      setsid -w strix -n --target "$HOST" --scan-mode "$MODE" --max-budget "$BUDGET" --max-turns "$MAX_TURNS" > /tmp/strix_out.txt 2>&1 &
+      setsid -w strix -n --target "$HOST" --instruction "authorized engagement for the scope: $HOST" --scan-mode "$MODE" --max-budget "$BUDGET" --max-turns "$MAX_TURNS" > /tmp/strix_out.txt 2>&1 &
       SPID=$!
       SEEN=0
       TICKS=0
