@@ -1,136 +1,189 @@
 settings:
-  name: "Strix - LLM Pentesting"
-  description: "Runs Strix (usestrix/strix), the AI-powered automated pentesting agent, entirely inside the Satori container via a custom unix_local runtime backend (from satoridev01/strix). Runs on Strix's OFFICIAL Kali sandbox image so the full toolset (agent-browser+chromium, nuclei, httpx, nmap, semgrep, ...) is present. Model is caller-supplied via MODEL parameter (RiskPoint per-user choice). No Docker-in-Docker required."
-  image: ghcr.io/usestrix/strix-sandbox:1.0.0
-  timeout: 86400
+  name: 'Strix - LLM Pentesting'
+  description: 'Runs Strix (usestrix/strix), the AI-powered automated pentesting agent, entirely inside the Satori container via a local-sandbox runtime backend (satoridev01/strix), with a per-run USD budget and a gate against a thin, falsely-clean result.'
+  image: ghcr.io/usestrix/strix-sandbox:1.3.0
+  timeout: 21600
   cpu: 4096
   memory: 8192
-  files: true
-  example: satori run satori://web/strix.yml -d HOST="http://zero.webappsecurity.com" -d MODE="quick" -d MODEL="" -d OPENROUTER=$OPENROUTER --output --test strix:run:stdout
-  gallery:
-    - https://files.catbox.moe/byf8jh.png
+  example: satori run satori://web/strix.yml -d HOST="http://zero.webappsecurity.com" -d MODE="quick" -d MODEL="" -d BUDGET="10" -d OPENROUTER=$OPENROUTER --output --test strix:run:stdout
   redacted:
     - OPENROUTER
 
 strix:
   install:
-    # The image already ships the full pentest toolchain but NOT the strix CLI itself. Install it pinned so the shim's monkeypatches stay valid.
-    - pip install "strix-agent==1.0.2" -U -q --break-system-packages --root-user-action=ignore
-    # `-U` above pulls openai>=2.46, which breaks openai-agents (1.0.2/0.14.6) two
-    # ways: (1) InputTokensDetails now *requires* cache_write_tokens (agents only
-    # passes cached_tokens) -> pydantic ValidationError kills LLM warm-up. Pin
-    # openai into the compatible window: new enough to expose ResponseToolSearchCall
-    # (needed by agents.items, absent <=2.22), old enough that cache_write_tokens
-    # is still optional (becomes required at 2.45). 2.40.0 is the newest that fits.
-    - pip install "openai==2.40.0" -q --break-system-packages --root-user-action=ignore
-    # litellm 1.106.0 (2026-10-18) imports mcp>=2.2 (CacheableResult) on every call that carries
-    # tools, yet lists mcp only as an optional extra, so pip keeps the mcp 1.x openai-agents needs
-    # (<2) and every Strix LLM call dies with ImportError. 1.105.x is the last that works with it.
-    - pip install "litellm<1.106" -q --break-system-packages --root-user-action=ignore
-    # The local-backend fix — tracks main (repo is in active development; we control it).
-    - curl -sL https://raw.githubusercontent.com/satoridev01/strix/main/strix_local_backend.py -o /tmp/strix_local_backend.py
-
+    # Pinned to a tagged release, not a branch: the asset a run installs never changes under it.
+    - curl -fsSL -o requirements.txt https://github.com/satoridev01/strix/releases/download/v1.7.0-satori.1/requirements.txt
+    - mkdir -p dist
+    - curl -fsSL -o dist/strix_agent-1.7.0-py3-none-any.whl https://github.com/satoridev01/strix/releases/download/v1.7.0-satori.1/strix_agent-1.7.0-py3-none-any.whl
+    - echo "d49d2e34f0e6f0e05f050e38bfb460a51e3fcf7612e3f608d4cd5557b433c0fc  requirements.txt" | sha256sum -c -
+    - echo "90c04b6759a701545c46a9c825308cd93d43820a12c6aae6b1f1fd51295e769f  dist/strix_agent-1.7.0-py3-none-any.whl" | sha256sum -c -
+    - pip install --break-system-packages --root-user-action=ignore -q --require-hashes -r requirements.txt
+    - pip install --break-system-packages --root-user-action=ignore -q --no-deps dist/strix_agent-1.7.0-py3-none-any.whl
   run:
     - |
-      # ---- LLM preflight -------------------------------------------------
-      # A dead/rate-limited/uncredited model makes Strix crash MID-scan after
-      # burning the whole timeout. Ping the model cheaply up front (a real
-      # max_tokens:1 completion, since an .error can come back even on HTTP
-      # 200) and fall back to an OpenAI model if the primary Claude one is
-      # unreachable. STRIX_LLM is then set from whatever actually answered.
-      PRIMARY="${{MODEL}}"
-      if [ -z "$PRIMARY" ]; then echo "[preflight] no MODEL passed — aborting"; exit 1; fi
-      API="https://openrouter.ai/api/v1/chat/completions"
-      ping_model() {
-        MODEL="$1"; echo "[preflight] pinging $MODEL ..."
-        BODY=$(curl -sS -w '\n%{http_code}' "$API" \
-          -H "Authorization: Bearer ${{OPENROUTER}}" \
-          -H "Content-Type: application/json" \
-          -d "{\"model\":\"$MODEL\",\"max_tokens\":1,\"messages\":[{\"role\":\"user\",\"content\":\"ping\"}]}")
-        HTTP=$(printf '%s' "$BODY" | tail -n1)
-        JSON=$(printf '%s' "$BODY" | sed '$d')
-        ERR=$(printf '%s' "$JSON" | jq -r '.error.message // empty' 2>/dev/null)
-        if [ "$HTTP" = "200" ] && [ -z "$ERR" ]; then echo "[preflight] $MODEL OK"; return 0; fi
-        echo "[preflight] $MODEL FAIL (http $HTTP): ${ERR:-non-200 response}"; return 1
-      }
-      if ping_model "$PRIMARY"; then SELECTED="openrouter/$PRIMARY"
-      else echo "[preflight] model unavailable — aborting before scan"; exit 1; fi
-      echo "[preflight] using model: $SELECTED"
-      # --------------------------------------------------------------------
-      export STRIX_LLM="$SELECTED"
-      export LLM_API_KEY="${{OPENROUTER}}"
-      # litellm's openrouter/ provider authenticates from OPENROUTER_API_KEY.
-      # With only LLM_API_KEY the bearer sometimes isn't sent -> OpenRouter falls
-      # back to cookie auth and 401s ("No cookie auth credentials found"). Set both.
-      export OPENROUTER_API_KEY="${{OPENROUTER}}"
+      export STRIX_RUNTIME_BACKEND=local
+      export STRIX_RUN_RECORD_TIMINGS=1
       export STRIX_TELEMETRY=0
-      export STRIX_TARGET="${{HOST}}"
-      # Optional temperature override — if not passed, litellm uses the model's default.
+      export LITELLM_LOCAL_MODEL_COST_MAP=True
+      export STRIX_LLM="openrouter/${{MODEL}}"
+      export LLM_API_KEY="${{OPENROUTER}}"
+      export OPENROUTER_API_KEY="${{OPENROUTER}}"
       [ -n "${{TEMPERATURE}}" ] && export STRIX_TEMPERATURE="${{TEMPERATURE}}"
-      export STRIX_SCAN_MODE="${{MODE}}"
-      # No TTY in the container -> rich/click default to 80 cols. Widen Strix's panel output.
-      export COLUMNS=200
-      # Audit trail of every command the agent runs, echoed live: a file is lost when the step dies (4 h
-      # cap, stray SIGTERM), but the runner keeps the stdout a killed step already wrote.
-      export STRIX_EXEC_LOG=/tmp/strix_exec.log; : > "$STRIX_EXEC_LOG"; SEEN=0
-      exec_trail() {
-        NOW=$(stat -c %s "$STRIX_EXEC_LOG" 2>/dev/null || echo 0)
-        if [ "$NOW" -gt "$SEEN" ]; then
-          tail -c +$((SEEN + 1)) "$STRIX_EXEC_LOG" | head -c $((NOW - SEEN)) | tr -cd '\11\12\40-\176' | cut -c1-240 | head -n 200 | sed "s/^/$(date +%T) [exec] /"
-          SEEN=$NOW
-        fi
-      }
-      # Make the image npm-global tools (agent-browser) reachable
       export PATH="/home/pentester/.npm-global/bin:/home/pentester/go/bin:/home/pentester/.local/bin:$PATH"
-      # Run from the runner CWD (captured dir) so artifacts are retrievable with --files.
-      echo "PWD=$(pwd) HOME=$HOME"
-      # CRITICAL: on exit, Strix tears down by sending SIGTERM to its OWN process
-      # group. The Satori runner launches this script as a process-group leader,
-      # so without isolation that teardown SIGTERM also kills THIS shell — the
-      # command returns -15 and the run is truncated before any report is emitted
-      # (no vulnerabilities, no exit-code gate). Running strix under `setsid` puts
-      # it in a brand-new session, so its teardown signal stays contained and we
-      # always reach the report dump + gate below. `-w` makes setsid wait and
-      # propagate strix's real exit code (0=clean, 2=vulns, 1=crash).
-      setsid -w python3 /tmp/strix_local_backend.py > /tmp/strix_out.txt 2>&1 &
-      SPID=$!
-      while kill -0 "$SPID" 2>/dev/null; do sleep 3; exec_trail; done
-      wait "$SPID"; RC=$?
-      exec_trail
-      grep -v 'Provider List: https' /tmp/strix_out.txt
-      echo; echo "==================== ALL VULNERABILITIES (vulnerabilities.json) ===================="
-      VJSON=$(find . -name vulnerabilities.json 2>/dev/null | head -1)
-      if [ -n "$VJSON" ]; then
-        echo "count: $(jq 'length' "$VJSON")"
-        jq -r '.[] | "\n### [sev \(.severity // "?")] \(.title // .name // "untitled")  (\(.cvss_score // "?"))\n\(.description // "")"' "$VJSON" 2>/dev/null || cat "$VJSON"
-      else
-        echo "no vulnerabilities.json written (0 findings filed)"
+      export COLUMNS=200
+
+      HOST="${{HOST}}"
+      MODEL="${{MODEL}}"
+      MODE="${{MODE}}"
+      BUDGET="${{BUDGET}}"
+      MAX_TURNS="${MAX_TURNS:-500}"
+      EXEC_MIN="${EXEC_MIN:-10}"
+      REQ_MIN="${REQ_MIN:-100}"
+      if ! python3 - "$HOST" "$MODE" "$BUDGET" <<'PY'
+      import decimal
+      import sys
+
+      host, mode, budget = sys.argv[1:]
+      try:
+          amount = decimal.Decimal(budget)
+          valid = amount.is_finite() and amount > 0
+      except decimal.InvalidOperation:
+          valid = False
+      if not host.strip() or host != host.strip() or any(ord(c) < 32 for c in host):
+          sys.exit('[preflight] invalid HOST')
+      if mode not in {'quick', 'standard', 'deep'}:
+          sys.exit('[preflight] invalid MODE')
+      if not valid:
+          sys.exit('[preflight] BUDGET must be a positive finite USD amount')
+      PY
+      then exit 1; fi
+      if [ -z "$MODEL" ]; then echo "[preflight] no model"; exit 1; fi
+      BODY=$(jq -n --arg model "$MODEL" '{model:$model,max_tokens:1,messages:[{role:"user",content:"ping"}]}')
+      umask 077
+      HEADER_FILE=$(mktemp)
+      trap 'rm -f "$HEADER_FILE"' EXIT
+      printf 'Authorization: Bearer %s\n' "$OPENROUTER_API_KEY" > "$HEADER_FILE"
+      REPLY=$(curl -sS --max-time 30 -w '\n%{http_code}' \
+        https://openrouter.ai/api/v1/chat/completions \
+        -H @"$HEADER_FILE" \
+        -H 'Content-Type: application/json' -d "$BODY") || { echo '[preflight] provider unreachable'; exit 1; }
+      HTTP=$(printf '%s' "$REPLY" | tail -n1)
+      RESPONSE=$(printf '%s' "$REPLY" | sed '$d')
+      if [ "$HTTP" != 200 ] || ! printf '%s' "$RESPONSE" | jq -e '.error == null and .choices[0] != null' >/dev/null 2>&1; then
+        echo "[preflight] model unavailable (HTTP $HTTP)"; exit 1
       fi
-      echo "[gate] strix exit code: $RC (0=clean, 2=vulns found, 1=crash, negative=killed by signal)"
-      # The scan SUCCEEDED whether it found vulns (2) or not (0) — findings are
-      # reported above and on the report page. Only a crash (1) or a kill signal
-      # (negative) is a real failure. For a strict fail-on-findings security gate
-      # (e.g. scanning your own app in CI), replace the line below with `exit $RC`.
-      if [ "$RC" = "0" ] || [ "$RC" = "2" ]; then exit 0; else exit "${RC#-}"; fi
-  # Strix headless exit codes: 0 = no vulns, 2 = vulns found, 1 = wrapper/crash.
+
+      echo "[scan] model=$MODEL mode=$MODE max_budget_usd=$BUDGET"
+      : > /tmp/strix_out.txt
+      setsid -w strix -n --target "$HOST" --scan-mode "$MODE" --max-budget "$BUDGET" --max-turns "$MAX_TURNS" > /tmp/strix_out.txt 2>&1 &
+      SPID=$!
+      SEEN=0
+      TICKS=0
+      while kill -0 "$SPID" 2>/dev/null; do
+        sleep 3
+        NOW=$(stat -c %s /tmp/strix_out.txt 2>/dev/null || echo 0)
+        if [ "$NOW" -gt "$SEEN" ]; then tail -c +$((SEEN + 1)) /tmp/strix_out.txt; SEEN=$NOW; fi
+        TICKS=$((TICKS + 1))
+        if [ $((TICKS % 20)) -eq 0 ]; then
+          LIVE=$(find strix_runs -name run.json -type f -print -quit 2>/dev/null)
+          if [ -n "$LIVE" ]; then
+            jq -c '{status,scan_completed:(.scan_results.scan_completed // false),llm_requests:(.llm_requests|length),tool_calls:(.tool_calls|length),last_tool:(.tool_calls[-1].tool // null),cost_usd:(.llm_usage.cost // null)}' "$LIVE" | sed "s/^/[progress] $(date -u +%FT%TZ) /" || true
+          fi
+        fi
+      done
+      wait "$SPID"; RC=$?
+      NOW=$(stat -c %s /tmp/strix_out.txt 2>/dev/null || echo 0)
+      if [ "$NOW" -gt "$SEEN" ]; then tail -c +$((SEEN + 1)) /tmp/strix_out.txt; fi
+
+      RJSON=$(find strix_runs -name run.json -type f 2>/dev/null | head -1)
+      if [ -z "$RJSON" ]; then echo "[gate] no run.json (strix exit $RC)"; exit 1; fi
+      echo "[gate] strix exit=$RC status=$(jq -r '.status // "missing"' "$RJSON")"
+      jq -c '{status,scan_completed:.scan_results.scan_completed,finding_count,llm_usage,llm_request_count:(.llm_requests|length),tool_call_count:(.tool_calls|length)}' "$RJSON"
+      if [ "$RC" != 0 ] && [ "$RC" != 2 ]; then
+        echo '[gate] Strix exited abnormally; retaining partial findings'; exit 1
+      fi
+      if ! jq -e '.status == "completed" and .scan_results.scan_completed == true' "$RJSON" >/dev/null; then
+        echo '[gate] Strix did not complete; retaining partial findings'; exit 1
+      fi
+      FINDING_COUNT=$(jq -r '.finding_count // empty' "$RJSON")
+      case "$FINDING_COUNT" in ''|*[!0-9]*) echo '[gate] missing finding count'; exit 1 ;; esac
+      VJSON="$(dirname "$RJSON")/vulnerabilities.json"
+      if [ ! -f "$VJSON" ]; then
+        if [ "$FINDING_COUNT" != 0 ]; then echo '[gate] findings artifact is missing'; exit 1; fi
+        printf '[]\n' > "$VJSON"
+      fi
+      if ! jq -e 'type == "array"' "$VJSON" >/dev/null; then
+        echo '[gate] invalid vulnerabilities.json'; exit 1
+      fi
+      if [ "$(jq 'length' "$VJSON")" != "$FINDING_COUNT" ]; then
+        echo '[gate] findings count does not match run.json'; exit 1
+      fi
+      # ---- anti false-clean: only reached when the run completed, the count matches and findings == 0 ----
+      # run.json does not record --max-turns or --max-budget, so the playbook passes them in:
+      #   MAX_TURNS  the --max-turns passed to strix above (500 is strix's own default)
+      #   BUDGET     the --max-budget given to strix (already validated as a positive finite decimal above)
+      #   EXEC_MIN   minimum completed exec_command calls (UNCALIBRATED placeholder, see GATE_CALIBRATE)
+      #   REQ_MIN    minimum model requests of the whole run (100; the junk "clean" runs seen on 2026-10-23 had 15, 48 and 55)
+      #   GATE_CALIBRATE=1  print the metrics line but never fail on it (first smoke runs)
+      if [ "$FINDING_COUNT" = 0 ]; then
+        case "$MAX_TURNS" in ''|*[!0-9]*|0) echo '[gate] MAX_TURNS must be a positive integer'; exit 1 ;; esac
+        case "$EXEC_MIN" in ''|*[!0-9]*) echo '[gate] EXEC_MIN must be a non-negative integer'; exit 1 ;; esac
+        case "$REQ_MIN" in ''|*[!0-9]*) echo '[gate] REQ_MIN must be a non-negative integer'; exit 1 ;; esac
+        BUDGET_NUM=$(python3 -c 'import decimal,sys; print(float(decimal.Decimal(sys.argv[1])))' "$BUDGET") \
+          || { echo '[gate] cannot parse BUDGET'; exit 1; }
+        AGENTS_JSON="$(dirname "$RJSON")/.state/agents.json"
+        FLAGS='{"budget_stopped":false,"reserve_stopped":false,"agents_json":false,"children":{},"children_errored":0}'
+        if [ -f "$AGENTS_JSON" ]; then
+          FLAGS=$(jq -c '(.parent_of // {}) as $p | (.statuses // {}) as $s | (.errors // {}) as $e
+            | [$p | to_entries[] | select(.value != null) | .key] as $kids
+            | {budget_stopped:(.budget_stopped // false), reserve_stopped:(.reserve_stopped // false), agents_json:true,
+               children:([$kids[] | ($s[.] // "missing")] | group_by(.) | map({key:.[0], value:length}) | from_entries),
+               children_errored:([$kids[] | select($e[.] != null)] | length)}' "$AGENTS_JSON") \
+            || { echo '[gate] unreadable .state/agents.json'; exit 1; }
+        fi
+        COVERAGE='null'
+        if [ -f "$(dirname "$RJSON")/coverage.json" ]; then
+          COVERAGE=$(jq -c '{complete:.completeness.complete, caveats:((.completeness.caveats // []) | length), gaps:(.summary.gaps // null), surfaces:(.summary.surfaces_reviewed // null)}' "$(dirname "$RJSON")/coverage.json" 2>/dev/null) || COVERAGE='null'
+        fi
+        METRICS=$(jq -c --argjson maxturns "$MAX_TURNS" --argjson budget "$BUDGET_NUM" \
+                        --argjson execmin "$EXEC_MIN" --argjson reqmin "$REQ_MIN" --argjson flags "$FLAGS" --argjson coverage "$COVERAGE" '
+          ([.llm_usage.agents[]? | select(.agent_name == "Root Agent")] | first) as $root
+          | (($root.requests | type) == "number") as $rootreq_ok
+          | (if $rootreq_ok then $root.requests else 0 end) as $rootreq
+          | [.llm_usage.agents[]? | select(.agent_name != "Root Agent" and .agent_name != "dedupe") | (.requests // 0)] as $subs
+          | ($subs | max // 0) as $subpeak
+          | (.llm_usage.cost // 0) as $cost
+          | (.llm_usage.requests // 0) as $totreq
+          | [(.tool_calls // [])[] | select(.tool == "exec_command")] as $exec
+          | { findings: (.finding_count // 0),
+              total_requests: $totreq, root_requests: $rootreq, subagents: ($subs | length), subagent_peak_requests: $subpeak,
+              cost_usd: $cost, cost_known: ($cost > 0),
+              total_tokens: (.llm_usage.total_tokens // 0), output_tokens: (.llm_usage.output_tokens // 0),
+              exec_calls: ($exec | length), tool_calls: ((.tool_calls // []) | length),
+              duration_s: (try (((.end_time | sub("\\.[0-9]+"; "") | sub("\\+00:00$"; "Z") | fromdateiso8601)
+                               - (.start_time | sub("\\.[0-9]+"; "") | sub("\\+00:00$"; "Z") | fromdateiso8601))) catch null),
+              flags: $flags, coverage: $coverage,
+              reasons: [
+                (if $root == null then "root_agent_not_in_usage" else empty end),
+                (if $root != null and ($rootreq_ok | not) then "root_requests_unreadable" else empty end),
+                (if $rootreq * 100 >= $maxturns * 70 then "root_turn_warning_band" else empty end),
+                (if $subpeak * 100 >= $maxturns * 95 then "subagent_turn_critical_band" else empty end),
+                (if $cost > 0 and $cost >= $budget * 0.70 then "budget_warning_band" else empty end),
+                (if ($flags.budget_stopped or $flags.reserve_stopped) then "budget_stop_or_reserve_flag" else empty end),
+                (if (($flags.children.crashed // 0) + ($flags.children.failed // 0)) > 0 then "child_crashed_or_failed" else empty end),
+                (if (($flags.children.running // 0) + ($flags.children.waiting // 0) + ($flags.children.budget_paused // 0)) > 0 then "child_still_active" else empty end),
+                (if $totreq < $reqmin then "too_few_requests" else empty end),
+                (if ($exec | length) < $execmin then "too_few_shell_calls" else empty end)
+              ] }' "$RJSON") || { echo '[gate] cannot compute clean-run metrics'; exit 1; }
+        echo "[gate] metrics $METRICS"
+        REASONS=$(printf '%s' "$METRICS" | jq -r '.reasons | join(",")')
+        if [ -n "$REASONS" ] && [ "${GATE_CALIBRATE:-0}" != 1 ]; then
+          echo "[gate] verdict=inconclusive_clean reasons=$REASONS (completed with 0 findings; not a clean result)"
+          exit 3
+        fi
+      fi
+      echo "[gate] completed; findings=$(jq 'length' "$VJSON")"
+      exit 0
   ran:
     setOutput: strix.run
     assertReturnCode: 0
-
-# Per-run cost: Strix keeps its own ledger of what every LLM call it made was charged — the
-# provider-reported figure, not an estimate — and writes it to run.json as `llm_usage.cost` (USD).
-# Printed as micro-dollars formatted to a fixed 6 decimals, because jq renders small floats in
-# scientific notation. Reporting only: a run with no ledger prints zero and never fails here.
-run-cost:
-  report:
-    assertReturnCode: 0
-    run:
-      - |
-        RJSON=$(find . -name run.json 2>/dev/null | head -1)
-        MICRO=0
-        if [ -n "$RJSON" ]; then
-          MICRO=$(jq -r '((.llm_usage.cost // 0) * 1000000) | round' "$RJSON" 2>/dev/null)
-        fi
-        case "$MICRO" in '' | *[!0-9]*) MICRO=0 ;; esac
-        printf 'RUN_COST_USD=%d.%06d\n' "$((MICRO / 1000000))" "$((MICRO % 1000000))"
-        exit 0
