@@ -75,8 +75,7 @@ haveibeenpwned:
           [ "$CHECKED" -gt 1 ] && sleep 7
           R=$(curl -s -H "hibp-api-key: ${{HIBP_API_KEY}}" -H "user-agent: Satori-CI" "https://haveibeenpwned.com/api/v3/breachedaccount/$E?truncateResponse=false")
           NAMES=$(echo "$R" | jq -r 'if type == "array" then [.[] | select(.DataClasses | index("Passwords")) | .Name] | join(", ") else "" end' 2>/dev/null)
-          MASKED=$(echo "$E" | sed -E 's/^(.).*@/\1***@/')
-          if [ -n "$NAMES" ]; then EXPOSED=$((EXPOSED+1)); echo "  $MASKED: passwords exposed in $NAMES"; fi
+          if [ -n "$NAMES" ]; then EXPOSED=$((EXPOSED+1)); echo "  $E: passwords exposed in $NAMES"; fi
         done
         echo "Staff addresses checked: $CHECKED, with passwords in a breach: $EXPOSED"
         [ "$EXPOSED" -gt 0 ] && echo "STAFF_CREDENTIALS_EXPOSED: $EXPOSED of $CHECKED published staff addresses had passwords in another site's breach"
