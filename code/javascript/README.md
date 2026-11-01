@@ -7,6 +7,7 @@ Security analysis, dependency checking, and linting playbooks for JavaScript pro
 | Playbook | Tool | Description |
 |----------|------|-------------|
 | [dependencycheck.yml](dependencycheck.yml) | OWASP DependencyCheck | Multi-language Software Composition Analysis (SCA) tool that verifies publicly disclosed vulnerabilities in project dependencies |
+| [jsspector.yml](jsspector.yml) | JSSpector | Taint analysis from request, socket, IPC and message inputs to command/code injection, SQL, path traversal, SSRF, XSS and prototype pollution sinks |
 | [npmaudit.yml](npmaudit.yml) | NPM Audit | Checks for known vulnerabilities in npm dependencies |
 | [retirejs.yml](retirejs.yml) | Retire.js | Detects JavaScript libraries and Node.js modules with known vulnerabilities |
 | [semgrep.yml](semgrep.yml) | Semgrep | Static code analysis focused on JavaScript security patterns |
