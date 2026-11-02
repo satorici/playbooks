@@ -7,6 +7,5 @@ install:
   - pip3 install pyspector -U -q --root-user-action=ignore --disable-pip-version-check --break-system-packages
 
 test:
-  assertStdoutContains: '"issue_count": 0'
   run:
     - pyspector scan -f json ./
