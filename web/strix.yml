@@ -12,9 +12,9 @@ settings:
 strix:
   install:
     # Pinned to a tagged release, not a branch: the asset a run installs never changes under it.
-    - curl -fsSL -o requirements.txt https://github.com/satoridev01/strix/releases/download/v1.7.0-satori.1/requirements.txt
+    - curl -fsSL -o requirements.txt https://github.com/satoridev01/strix/releases/download/v1.7.0-satori.4/requirements.txt
     - mkdir -p dist
-    - curl -fsSL -o dist/strix_agent-1.7.0-py3-none-any.whl https://github.com/satoridev01/strix/releases/download/v1.7.0-satori.1/strix_agent-1.7.0-py3-none-any.whl
+    - curl -fsSL -o dist/strix_agent-1.7.0-py3-none-any.whl https://github.com/satoridev01/strix/releases/download/v1.7.0-satori.4/strix_agent-1.7.0-py3-none-any.whl
     - echo "d49d2e34f0e6f0e05f050e38bfb460a51e3fcf7612e3f608d4cd5557b433c0fc  requirements.txt" | sha256sum -c -
     - echo "90c04b6759a701545c46a9c825308cd93d43820a12c6aae6b1f1fd51295e769f  dist/strix_agent-1.7.0-py3-none-any.whl" | sha256sum -c -
     - pip install --break-system-packages --root-user-action=ignore -q --require-hashes -r requirements.txt
