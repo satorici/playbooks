@@ -1,10 +1,32 @@
 settings:
-  image: rust
+  image: node:24-bookworm
   name: JSSpector
+  cpu: 4096
+  memory: 8192
+  timeout: 7200
+  redacted:
+    - SATORI_TOKEN
+    - GITHUB_TOKEN
+    - OPENROUTER_API_KEY
 
 install:
-  - command -v jsspector >/dev/null || [ -x "$HOME/.cargo/bin/jsspector" ] || cargo install --git https://github.com/satoridev01/JSSpector --locked jsspector -q
+  - apt-get update -qq && apt-get install -y -qq build-essential ca-certificates curl git jq libssl-dev pkg-config python3
+  - curl --proto '=https' --tlsv1.2 -fsS https://sh.rustup.rs | sh -s -- -y --profile minimal
+  - PATH="$HOME/.cargo/bin:$PATH" cargo install --git https://github.com/satoridev01/JSSpector --rev cf6c042 --locked jsspector -q
+  - npm install --global @anthropic-ai/claude-code@2.1.319
 
 test:
   run:
-    - sh -c 'PATH="$HOME/.cargo/bin:$PATH" jsspector scan --json ./'
+    - |
+      export PATH="$HOME/.cargo/bin:$PATH"
+      export SATORI_TOKEN="${{SATORI_TOKEN}}"
+      export GITHUB_TOKEN="${{GITHUB_TOKEN}}"
+      export ANTHROPIC_BASE_URL="https://openrouter.ai/api"
+      export ANTHROPIC_AUTH_TOKEN="${{OPENROUTER_API_KEY}}"
+      export ANTHROPIC_API_KEY=""
+      callback_url="$(curl --fail --silent --show-error --request POST \
+        --header "Authorization: Bearer $SATORI_TOKEN" \
+        https://api-v2.satori.ci/callbacks | jq --raw-output .url)"
+      JSS_VERIFY_RUNTIME=local \
+      JSS_VERIFY_CALLBACK_URL="$callback_url" \
+      jsspector scan . --verify=strict --format json
