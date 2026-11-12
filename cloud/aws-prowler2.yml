@@ -36,5 +36,11 @@ prowler:
     run:
       - export AWS_ACCESS_KEY_ID=${{AWS_ACCESS_KEY}}; export AWS_SECRET_ACCESS_KEY=${{AWS_SECRET_KEY}}; export AWS_EC2_METADATA_DISABLED=true; export PROWLER_VERIFY_ALLOWED_ACCOUNT_IDS=${{AWS_ACCOUNT_ID}}; /home/prowler/.venv/bin/prowler aws -M json-ocsf -o ./output -F report --region us-east-1 --verify --ignore-exit-code-3 --log-level ERROR
     result:
-      - cat ./output/report.ocsf.json
+      - |
+        /home/prowler/.venv/bin/python -c 'import json,sys;g=dict();o=["Critical","High","Medium","Low","Informational"]
+        for x in json.load(open(sys.argv[1])):
+            if x.get("status_code")!="FAIL":continue
+            k=x["metadata"]["event_code"];e=g.setdefault(k,dict(id=k,title=x["finding_info"]["title"],severity=x["severity"],count=0,resources=[],description=x.get("risk_details","")[:400]));e["count"]+=1;len(e["resources"])<5 and e["resources"].append((x.get("resources") or [dict()])[0].get("uid"))
+        for e in sorted(g.values(),key=lambda e:o.index(e["severity"]) if e["severity"] in o else 9):print(json.dumps(e))' ./output/report.ocsf.json
+
 
