@@ -1,7 +1,8 @@
 # ─────────────────────────────────────────────────────────────────────────────
 # REQUIRED PERMISSIONS  (AWS IAM access keys)
 #
-#   Inputs (-d):  AWS_ACCESS_KEY  AWS_SECRET_KEY   (scans us-east-1 only)
+#   Inputs (-d):  AWS_ACCESS_KEY  AWS_SECRET_KEY  AWS_ACCOUNT_ID
+#                  (scans us-east-1 only)
 #   Programmatic access keys of a dedicated read-only IAM user (or assumed role).
 #
 #   Attach these AWS managed policies to that IAM principal  (IAM -> Users -> <user> ->
@@ -10,11 +11,14 @@
 #        - arn:aws:iam::aws:policy/job-function/ViewOnlyAccess
 #   Prowler's documented read-only baseline; a few checks need small extra grants -
 #   see the AWS "Requirements" page at https://docs.prowler.com
+#
+#   AWS_ACCOUNT_ID is a fail-closed allowlist for dynamic verification. Verification
+#   only runs when the authenticated account matches this exact account ID.
 # ─────────────────────────────────────────────────────────────────────────────
 settings:
   name: "Prowler (satoridev01 fork): AWS Security Best Practices Assessment Tool"
   description: "Prowler is an open-source security tool to perform AWS security best practices assessments, audits, incident response, continuous monitoring, hardening and forensics readiness. It contains hundreds of controls covering CIS, PCI-DSS, ISO27001, GDPR, HIPAA, FFIEC, SOC2, AWS FTR, ENS and custom security frameworks."
-  image: python:3.12
+  image: ghcr.io/satoridev01/prowler:aws-poc-verification
   files: True
   author:
     - https://github.com/prowler-cloud/prowler
@@ -24,13 +28,10 @@ settings:
   redacted:
     - AWS_ACCESS_KEY
     - AWS_SECRET_KEY
-  example: satori run satori://cloud/aws-prowler2.yml -d AWS_ACCESS_KEY=key -d AWS_SECRET_KEY=secret --report --output
+  example: satori run satori://cloud/aws-prowler2.yml -d AWS_ACCESS_KEY=key -d AWS_SECRET_KEY=secret -d AWS_ACCOUNT_ID=123456789012 --report --output
 
 prowler:
-  install:
-    - pip install -q --disable-pip-version-check --root-user-action=ignore git+https://github.com/satoridev01/prowler
-
   test:
-    assertReturnCodeNot: 137
+    assertReturnCode: 0
     run:
-      - export AWS_ACCESS_KEY_ID=${{AWS_ACCESS_KEY}}; export AWS_SECRET_ACCESS_KEY=${{AWS_SECRET_KEY}}; prowler aws --region us-east-1 -o prowler_output --log-level ERROR
+      - export AWS_ACCESS_KEY_ID=${{AWS_ACCESS_KEY}}; export AWS_SECRET_ACCESS_KEY=${{AWS_SECRET_KEY}}; export AWS_EC2_METADATA_DISABLED=true; export PROWLER_VERIFY_ALLOWED_ACCOUNT_IDS=${{AWS_ACCOUNT_ID}}; /home/prowler/.venv/bin/prowler aws --region us-east-1 --verify --ignore-exit-code-3 -o prowler_output --log-level ERROR
