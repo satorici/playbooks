@@ -3,7 +3,7 @@ settings:
   name: JSSpector
 
 install:
-  - command -v jsspector >/dev/null || [ -x "$HOME/.cargo/bin/jsspector" ] || cargo install --git https://github.com/satoridev01/JSSpector --locked jsspector -q
+  - command -v jsspector >/dev/null || [ -x "$HOME/.cargo/bin/jsspector" ] || cargo install --git https://github.com/satoridev01/JSSpector --locked jsspector
 
 test:
   run:
