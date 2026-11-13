@@ -38,9 +38,9 @@ prowler:
     # Trimmed OCSF records as JSON Lines, in the shape Satori's `prowler` parser claims
     # (metadata.product.name, metadata.event_code, finding_info.title). Only FAILs are printed:
     #   - a FAIL whose verification ran (verified / not_reproduced / error) is one line per
-    #     resource and keeps unmapped.verification;
-    #   - every other FAIL is grouped by check: a top-level `count` and up to 5 `resources`
-    #     (a check with a single failing resource stays a per-resource line).
+    #     resource and keeps unmapped.verification, which Satori turns into exploitability;
+    #   - every other FAIL is grouped by check: a top-level `count` and up to 5 distinct
+    #     `resources` (a check with a single failing resource stays a per-resource line).
     # PoC stdout/stderr are printed only for `risk: passive` verifiers.
     result:
       - |
@@ -72,6 +72,18 @@ prowler:
         for g in groups.values():
             e=g[0]
             if len(g)>1:
-                e["count"]=len(g);e["resources"]=[r for i in g for r in i["resources"]][:5];e.pop("status_detail")
+                seen=dict()
+                for i in g:
+                    for r in i["resources"]:seen.setdefault(r.get("uid"),r)
+                e["count"]=len(g);e["resources"]=list(seen.values())[:5];e.pop("status_detail")
             single.append(e)
         for e in sorted(single,key=lambda e:o.index(e["severity"]) if e["severity"] in o else 9):print(json.dumps(e))' ./output/report.ocsf.json
+      # How many FAILs the fork verified, by outcome (`none` = no verification block at all).
+      - |
+        /home/prowler/.venv/bin/python -c 'import json,sys,collections
+        c=collections.Counter()
+        for x in json.load(open(sys.argv[1])):
+            if x.get("status_code")!="FAIL":continue
+            u=x.get("unmapped");v=u.get("verification") if isinstance(u,dict) else None
+            c[str(v.get("outcome")) if isinstance(v,dict) else "none"]+=1
+        print("FAIL findings by verification outcome:",", ".join(k+"="+str(n) for k,n in sorted(c.items())) or "no FAIL findings")' ./output/report.ocsf.json
