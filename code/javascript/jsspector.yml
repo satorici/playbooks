@@ -1,5 +1,5 @@
 settings:
-  image: rust
+  image: public.ecr.aws/docker/library/rust
   name: JSSpector
 
 install:
