@@ -35,12 +35,43 @@ prowler:
     assertReturnCode: 0
     run:
       - export AWS_ACCESS_KEY_ID=${{AWS_ACCESS_KEY}}; export AWS_SECRET_ACCESS_KEY=${{AWS_SECRET_KEY}}; export AWS_EC2_METADATA_DISABLED=true; export PROWLER_VERIFY_ALLOWED_ACCOUNT_IDS=${{AWS_ACCOUNT_ID}}; /home/prowler/.venv/bin/prowler aws -M json-ocsf -o ./output -F report --region us-east-1 --verify --ignore-exit-code-3 --log-level ERROR
+    # Trimmed OCSF records as JSON Lines, in the shape Satori's `prowler` parser claims
+    # (metadata.product.name, metadata.event_code, finding_info.title). Only FAILs are printed:
+    #   - a FAIL whose verification ran (verified / not_reproduced / error) is one line per
+    #     resource and keeps unmapped.verification;
+    #   - every other FAIL is grouped by check: a top-level `count` and up to 5 `resources`
+    #     (a check with a single failing resource stays a per-resource line).
+    # PoC stdout/stderr are printed only for `risk: passive` verifiers.
     result:
       - |
-        /home/prowler/.venv/bin/python -c 'import json,sys;g=dict();o=["Critical","High","Medium","Low","Informational"]
+        /home/prowler/.venv/bin/python -c 'import json,sys
+        o=["Critical","High","Medium","Low","Informational"];ran=("verified","not_reproduced","error");single=[];groups=dict()
+        def cut(v,n=500):
+            return v[:n] if isinstance(v,str) else None
+        def res(x):
+            return [dict(uid=r.get("uid"),name=r.get("name"),region=r.get("region")) for r in (x.get("resources") or []) if isinstance(r,dict)][:1]
+        def slim(x):
+            m=x.get("remediation") if isinstance(x.get("remediation"),dict) else dict()
+            return dict(metadata=dict(product=dict(name="Prowler"),event_code=x["metadata"]["event_code"]),finding_info=dict(title=x["finding_info"]["title"]),severity=x.get("severity"),status_code="FAIL",status_detail=cut(x.get("status_detail")),risk_details=cut(x.get("risk_details")),resources=res(x),remediation=dict(desc=cut(m.get("desc")),references=[u for u in (m.get("references") or []) if isinstance(u,str)][:1]))
+        def verification(x):
+            u=x.get("unmapped");v=u.get("verification") if isinstance(u,dict) else None
+            if not isinstance(v,dict) or v.get("outcome") not in ran:return None
+            v=dict(v);p=v.get("poc")
+            if isinstance(p,dict):
+                p=dict(p);v["poc"]=p
+                for k in ("stdout","stderr"):
+                    if v.get("risk")=="passive" and isinstance(p.get(k),str):p[k]=p[k][:2000]
+                    else:p.pop(k,None)
+            return v
         for x in json.load(open(sys.argv[1])):
             if x.get("status_code")!="FAIL":continue
-            k=x["metadata"]["event_code"];e=g.setdefault(k,dict(id=k,title=x["finding_info"]["title"],severity=x["severity"],count=0,resources=[],description=x.get("risk_details","")[:400]));e["count"]+=1;len(e["resources"])<5 and e["resources"].append((x.get("resources") or [dict()])[0].get("uid"))
-        for e in sorted(g.values(),key=lambda e:o.index(e["severity"]) if e["severity"] in o else 9):print(json.dumps(e))' ./output/report.ocsf.json
-
-
+            e=slim(x);v=verification(x)
+            if v:
+                e["unmapped"]=dict(verification=v);single.append(e);continue
+            g=groups.setdefault(e["metadata"]["event_code"],[]);g.append(e)
+        for g in groups.values():
+            e=g[0]
+            if len(g)>1:
+                e["count"]=len(g);e["resources"]=[r for i in g for r in i["resources"]][:5];e.pop("status_detail")
+            single.append(e)
+        for e in sorted(single,key=lambda e:o.index(e["severity"]) if e["severity"] in o else 9):print(json.dumps(e))' ./output/report.ocsf.json
