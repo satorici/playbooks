@@ -14,6 +14,10 @@
 #
 #   AWS_ACCOUNT_ID is a fail-closed allowlist for dynamic verification. Verification
 #   only runs when the authenticated account matches this exact account ID.
+#
+#   PROWLER_VERIFY_ENRICH=0 disables the nuclei/cloudfox enrichers: Satori's own
+#   issue ingestion drops the `enrichment` field, so running them here costs time
+#   for data nobody can see. They stay on by default in the fork for local runs.
 # ─────────────────────────────────────────────────────────────────────────────
 settings:
   name: "Prowler (satoridev01 fork): AWS Security Best Practices Assessment Tool"
@@ -34,7 +38,7 @@ prowler:
   test:
     assertReturnCode: 0
     run:
-      - export AWS_ACCESS_KEY_ID=${{AWS_ACCESS_KEY}}; export AWS_SECRET_ACCESS_KEY=${{AWS_SECRET_KEY}}; export AWS_EC2_METADATA_DISABLED=true; export PROWLER_VERIFY_ALLOWED_ACCOUNT_IDS=${{AWS_ACCOUNT_ID}}; /home/prowler/.venv/bin/prowler aws -M json-ocsf -o ./output -F report --region us-east-1 --verify --ignore-exit-code-3 --log-level ERROR
+      - export AWS_ACCESS_KEY_ID=${{AWS_ACCESS_KEY}}; export AWS_SECRET_ACCESS_KEY=${{AWS_SECRET_KEY}}; export AWS_EC2_METADATA_DISABLED=true; export PROWLER_VERIFY_ALLOWED_ACCOUNT_IDS=${{AWS_ACCOUNT_ID}}; export PROWLER_VERIFY_ENRICH=0; /home/prowler/.venv/bin/prowler aws -M json-ocsf -o ./output -F report --region us-east-1 --verify --ignore-exit-code-3 --log-level ERROR
     # Trimmed OCSF records as JSON Lines, in the shape Satori's `prowler` parser claims
     # (metadata.product.name, metadata.event_code, finding_info.title). Only FAILs are printed:
     #   - a FAIL whose verification ran (verified / not_reproduced / error) is one line per
