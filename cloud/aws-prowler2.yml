@@ -41,7 +41,7 @@ prowler:
     #     resource and keeps unmapped.verification;
     #   - every other FAIL is grouped by check: a top-level `count` and up to 5 `resources`
     #     (a check with a single failing resource stays a per-resource line).
-    # PoC stdout/stderr are printed only for `risk: passive` verifiers.
+    # PoC stdout/stderr are kept for every verifier, cut to 2000 characters each.
     result:
       - |
         /home/prowler/.venv/bin/python -c 'import json,sys
@@ -60,7 +60,7 @@ prowler:
             if isinstance(p,dict):
                 p=dict(p);v["poc"]=p
                 for k in ("stdout","stderr"):
-                    if v.get("risk")=="passive" and isinstance(p.get(k),str):p[k]=p[k][:2000]
+                    if isinstance(p.get(k),str):p[k]=p[k][:2000]
                     else:p.pop(k,None)
             return v
         for x in json.load(open(sys.argv[1])):
