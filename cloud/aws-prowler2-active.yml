@@ -1,0 +1,113 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# REQUIRED PERMISSIONS  (AWS IAM access keys)
+#
+#   This is aws-prowler2.yml plus the fork's one ACTIVE adapter: PacuPrivescAdapter.
+#   For iam_policy_allows_privilege_escalation / iam_inline_policy_allows_privilege_escalation
+#   findings, it attaches the flagged policy to a disposable TARGET user, runs
+#   pacu's own iam__privesc_scan --scan-only (detection only, never attempts the
+#   escalation) as that target, detaches the policy in all cases, then
+#   independently re-verifies the detach against AWS. Separate opt-in file, not
+#   folded into aws-prowler2.yml, because every ${{VAR}} below becomes a REQUIRED
+#   parameter the moment it's referenced -- adding these to the base playbook
+#   would break every existing call that only passes the 3 base params.
+#
+#   Inputs (-d):
+#     AWS_ACCESS_KEY / AWS_SECRET_KEY   read-only scan identity (same as aws-prowler2.yml:
+#                                        SecurityAudit + ViewOnlyAccess)
+#     AWS_ACCOUNT_ID                    fail-closed allowlist (scans/verifies only this account)
+#     AWS_OPERATOR_ACCESS_KEY / AWS_OPERATOR_SECRET_KEY
+#                                        the OPERATOR: attaches/detaches the flagged policy on
+#                                        the target user. Needs iam:ListAttachedUserPolicies,
+#                                        iam:AttachUserPolicy, iam:DetachUserPolicy -- AWSGoat's
+#                                        own deployer identity (AdministratorAccess) covers this.
+#     AWS_TARGET_ACCESS_KEY / AWS_TARGET_SECRET_KEY
+#                                        the TARGET: a disposable IAM user with NO privesc path
+#                                        of its own (baseline SecurityAudit + ViewOnlyAccess only).
+#                                        pacu runs AS this principal.
+#     AWS_TARGET_USER_NAME              that IAM user's name (not a secret), e.g.
+#                                        awsgoat-privesc-test-user
+#
+#   Known risk, accepted for a disposable/isolated lab account: `satori-v2 --json
+#   report <id>` returns every -d value in plaintext in job.parameters regardless
+#   of `redacted:` below (a Satori platform bug, not a playbook bug) -- so the
+#   operator key is readable by anyone in the org who can open the report. Only
+#   point this at an account where that's acceptable. AWS_OPERATOR_* never needs
+#   more than attach/detach + list on one user; do not reuse a key with broader
+#   admin scope than that if the account isn't fully disposable.
+# ─────────────────────────────────────────────────────────────────────────────
+settings:
+  name: "Prowler (satoridev01 fork): AWS assessment + active pacu privesc verification"
+  description: "aws-prowler2.yml plus the fork's active pacu adapter: for IAM policies Prowler flags as privilege-escalation-capable, attaches the policy to a disposable target user, runs pacu's iam__privesc_scan --scan-only (detection only) as that user, detaches it, and verifies the detach independently. Needs an operator identity that can attach/detach IAM policies on the target, on top of the base read-only scan identity."
+  image: ghcr.io/satoridev01/prowler:aws-poc-verification
+  files: True
+  author:
+    - https://github.com/prowler-cloud/prowler
+    - https://github.com/satoridev01/prowler
+    - https://github.com/RhinoSecurityLabs/pacu
+  gallery:
+    - https://files.catbox.moe/xsbsqj.png
+  redacted:
+    - AWS_ACCESS_KEY
+    - AWS_SECRET_KEY
+    - AWS_OPERATOR_ACCESS_KEY
+    - AWS_OPERATOR_SECRET_KEY
+    - AWS_TARGET_ACCESS_KEY
+    - AWS_TARGET_SECRET_KEY
+  example: satori run satori://cloud/aws-prowler2-active.yml -d AWS_ACCESS_KEY=key -d AWS_SECRET_KEY=secret -d AWS_ACCOUNT_ID=123456789012 -d AWS_OPERATOR_ACCESS_KEY=key -d AWS_OPERATOR_SECRET_KEY=secret -d AWS_TARGET_ACCESS_KEY=key -d AWS_TARGET_SECRET_KEY=secret -d AWS_TARGET_USER_NAME=privesc-test-user --report --output
+
+prowler:
+  test:
+    run:
+      - |
+        mkdir -p ~/.aws
+        cat > ~/.aws/credentials <<'CREDS'
+        [operator]
+        aws_access_key_id = ${{AWS_OPERATOR_ACCESS_KEY}}
+        aws_secret_access_key = ${{AWS_OPERATOR_SECRET_KEY}}
+
+        [target]
+        aws_access_key_id = ${{AWS_TARGET_ACCESS_KEY}}
+        aws_secret_access_key = ${{AWS_TARGET_SECRET_KEY}}
+        CREDS
+        chmod 600 ~/.aws/credentials
+        export AWS_ACCESS_KEY_ID=${{AWS_ACCESS_KEY}}; export AWS_SECRET_ACCESS_KEY=${{AWS_SECRET_KEY}}; export AWS_EC2_METADATA_DISABLED=true; export PROWLER_VERIFY_ALLOWED_ACCOUNT_IDS=${{AWS_ACCOUNT_ID}}; export PROWLER_VERIFY_ENRICH=0; export PROWLER_VERIFY_ACTIVE=1; export PROWLER_VERIFY_ACTIVE_OPERATOR_PROFILE=operator; export PROWLER_VERIFY_ACTIVE_TARGET_PROFILE=target; export PROWLER_VERIFY_ACTIVE_TARGET_USER=${{AWS_TARGET_USER_NAME}}; /home/prowler/.venv/bin/prowler aws -M json-ocsf -o ./output -F report --region us-east-1 --verify --ignore-exit-code-3 --log-level ERROR
+    # Trimmed OCSF records as JSON Lines, in the shape Satori's `prowler` parser claims
+    # (metadata.product.name, metadata.event_code, finding_info.title). Only FAILs are printed:
+    #   - a FAIL whose verification ran (verified / not_reproduced / error) is one line per
+    #     resource and keeps unmapped.verification;
+    #   - every other FAIL is grouped by check: a top-level `count` and up to 5 `resources`
+    #     (a check with a single failing resource stays a per-resource line).
+    # PoC stdout/stderr are kept for every verifier, cut to 2000 characters each.
+    result:
+      - |
+        /home/prowler/.venv/bin/python -c 'import json,sys
+        o=["Critical","High","Medium","Low","Informational"];ran=("verified","not_reproduced","error");single=[];groups=dict()
+        def cut(v,n=500):
+            return v[:n] if isinstance(v,str) else None
+        def res(x):
+            return [dict(uid=r.get("uid"),name=r.get("name"),region=r.get("region")) for r in (x.get("resources") or []) if isinstance(r,dict)][:1]
+        def slim(x):
+            m=x.get("remediation") if isinstance(x.get("remediation"),dict) else dict()
+            return dict(metadata=dict(product=dict(name="Prowler"),event_code=x["metadata"]["event_code"]),finding_info=dict(title=x["finding_info"]["title"]),severity=x.get("severity"),status_code="FAIL",status_detail=cut(x.get("status_detail")),risk_details=cut(x.get("risk_details")),resources=res(x),remediation=dict(desc=cut(m.get("desc")),references=[u for u in (m.get("references") or []) if isinstance(u,str)][:1]))
+        def verification(x):
+            u=x.get("unmapped");v=u.get("verification") if isinstance(u,dict) else None
+            if not isinstance(v,dict) or v.get("outcome") not in ran:return None
+            v=dict(v);p=v.get("poc")
+            if isinstance(p,dict):
+                p=dict(p);v["poc"]=p
+                for k in ("stdout","stderr"):
+                    if isinstance(p.get(k),str):p[k]=p[k][:2000]
+                    else:p.pop(k,None)
+            return v
+        for x in json.load(open(sys.argv[1])):
+            if x.get("status_code")!="FAIL":continue
+            e=slim(x);v=verification(x)
+            if v:
+                e["unmapped"]=dict(verification=v);single.append(e);continue
+            g=groups.setdefault(e["metadata"]["event_code"],[]);g.append(e)
+        for g in groups.values():
+            e=g[0]
+            if len(g)>1:
+                e["count"]=len(g);e["resources"]=[r for i in g for r in i["resources"]][:5];e.pop("status_detail")
+            single.append(e)
+        for e in sorted(single,key=lambda e:o.index(e["severity"]) if e["severity"] in o else 9):print(json.dumps(e))' ./output/report.ocsf.json
