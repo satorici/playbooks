@@ -1,10 +1,31 @@
 settings:
-  image: public.ecr.aws/docker/library/rust
+  image: node:24-bookworm
   name: JSSpector
+  cpu: 4096
+  memory: 8192
+  timeout: 7200
 
+# JSSpector finds attacker-controlled data reaching dangerous sinks and confirms each finding by
+# running the application: in a disposable Docker container when Docker is available (a local run
+# with `satori local`), otherwise inside this job itself (`--local`, the cloud job), where the
+# backing services an application needs (MongoDB, Redis) are provisioned on demand. The JSON report
+# carries each finding's `exploitation` and `poc`, the scanned `git` revision and, for every
+# verified finding, a `fix`: a change proven to stop the exploit while a benign request keeps its
+# behavior, with the change as a unified diff. Fixes come from an LLM CLI, so they are proven where
+# one is available (a local run); elsewhere `fix` says why there is none.
 install:
-  - command -v jsspector >/dev/null || [ -x "$HOME/.cargo/bin/jsspector" ] || cargo install --git https://github.com/satoridev01/JSSpector --locked jsspector
+  setShell: true
+  run:
+    - command -v lsof >/dev/null 2>&1 || { apt-get update -qq && apt-get install -y -qq lsof; }
+    - command -v jsspector >/dev/null 2>&1 || [ -x "$HOME/.cargo/bin/jsspector" ] || { command -v cargo >/dev/null 2>&1 || curl --proto '=https' --tlsv1.2 -fsS https://sh.rustup.rs | sh -s -- -y --profile minimal --no-modify-path; PATH="$HOME/.cargo/bin:$PATH" cargo install --git https://github.com/satoridev01/JSSpector --locked jsspector -q; }
 
 test:
+  setShell: true
   run:
-    - sh -c 'PATH="$HOME/.cargo/bin:$PATH" jsspector scan --json ./'
+    - |
+      export PATH="$HOME/.cargo/bin:$PATH"
+      if docker info >/dev/null 2>&1; then
+        jsspector scan . --verify --format json
+      else
+        jsspector scan . --verify --local --format json
+      fi
