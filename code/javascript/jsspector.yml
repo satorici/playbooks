@@ -1,9 +1,20 @@
 settings:
   image: node:24-bookworm
   name: JSSpector
-  cpu: 4096
-  memory: 8192
-  timeout: 7200
+  cpu: 8192
+  memory: 16384
+  timeout: 1800
+  redacted:
+    - OPENROUTER
+
+# Defaults keep the shared playbook deterministic and use the application's normal environment.
+# A run or repository Saved input may opt into an LLM model or a benchmark runtime profile.
+OPENROUTER:
+  - - ""
+MODEL:
+  - - ""
+JSS_VERIFY_NODE_ENV:
+  - - ""
 
 # JSSpector finds attacker-controlled data reaching dangerous sinks and confirms each finding by
 # running the application: in a disposable Docker container when Docker is available (a local run
@@ -11,21 +22,40 @@ settings:
 # backing services an application needs (MongoDB, Redis) are provisioned on demand. The JSON report
 # carries each finding's `exploitation` and `poc`, the scanned `git` revision and, for every
 # verified finding, a `fix`: a change proven to stop the exploit while a benign request keeps its
-# behavior, with the change as a unified diff. Fixes come from an LLM CLI, so they are proven where
-# one is available (a local run); elsewhere `fix` says why there is none.
+# behavior, with the change as a unified diff. Exact fixes learned from earlier proofs are replayed
+# deterministically first; an LLM CLI is an optional fallback, and its candidate must pass the same
+# exploit and benign controls before it is reported as proven.
 install:
   setShell: true
+  setShellQuoteInputs: true
   run:
-    - command -v lsof >/dev/null 2>&1 || { apt-get update -qq && apt-get install -y -qq lsof; }
-    - command -v jsspector >/dev/null 2>&1 || [ -x "$HOME/.cargo/bin/jsspector" ] || { command -v cargo >/dev/null 2>&1 || curl --proto '=https' --tlsv1.2 -fsS https://sh.rustup.rs | sh -s -- -y --profile minimal --no-modify-path; PATH="$HOME/.cargo/bin:$PATH" cargo install --git https://github.com/satoridev01/JSSpector --locked jsspector -q; }
+    - command -v lsof >/dev/null 2>&1 && command -v g++ >/dev/null 2>&1 || { apt-get update -qq && apt-get install -y -qq lsof build-essential python3; }
+    - command -v cargo >/dev/null 2>&1 || curl --proto '=https' --tlsv1.2 -fsS https://sh.rustup.rs | sh -s -- -y --profile minimal --no-modify-path
+    - PATH="$HOME/.cargo/bin:$PATH" cargo install --root "$HOME/.jsspector" --git https://github.com/satoridev01/JSSpector --rev 815e58e159d5fd271c4433cf69eb7d67dcf2bf01 --locked --force jsspector -q
+    - '[ -z ${{OPENROUTER}} ] || npm install -g @anthropic-ai/claude-code@2.1.330 >/dev/null 2>&1'
 
 test:
   setShell: true
+  setShellQuoteInputs: true
   run:
     - |
-      export PATH="$HOME/.cargo/bin:$PATH"
-      if docker info >/dev/null 2>&1; then
-        jsspector scan . --verify --format json
-      else
-        jsspector scan . --verify --local --format json
+      export PATH="$HOME/.jsspector/bin:$HOME/.cargo/bin:$PATH"
+      export OPENROUTER=${{OPENROUTER}}
+      export JSS_VERIFY_NODE_ENV=${{JSS_VERIFY_NODE_ENV}}
+      VERIFY_LOCAL=""
+      docker info >/dev/null 2>&1 || VERIFY_LOCAL="--local"
+      jsspector scan . --verify=strict $VERIFY_LOCAL --verify-until-first --no-fix-llm --allow-incomplete --format json
+    - |
+      export PATH="$HOME/.jsspector/bin:$HOME/.cargo/bin:$PATH"
+      export OPENROUTER=${{OPENROUTER}}
+      export JSS_VERIFY_NODE_ENV=${{JSS_VERIFY_NODE_ENV}}
+      FIX_MODEL=${{MODEL}}
+      VERIFY_LOCAL=""
+      docker info >/dev/null 2>&1 || VERIFY_LOCAL="--local"
+      if [ -n "$FIX_MODEL" ] && [ -z "$OPENROUTER" ]; then
+        echo "MODEL requires the OPENROUTER Saved secret" >&2
+        exit 2
+      fi
+      if [ -n "$FIX_MODEL" ]; then
+        jsspector scan . --verify=strict $VERIFY_LOCAL --allow-incomplete --fix-model "$FIX_MODEL" --format json
       fi
