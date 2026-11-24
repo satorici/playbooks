@@ -56,4 +56,4 @@ test:
       export PATH="$HOME/.jsspector/bin:$HOME/.cargo/bin:$PATH"
       VERIFY_LOCAL=""
       docker info >/dev/null 2>&1 || VERIFY_LOCAL="--local"
-      jsspector scan . --verify=strict $VERIFY_LOCAL --verify-until-first --no-fix-llm --allow-incomplete --format json
+      jsspector scan . --verify=strict $VERIFY_LOCAL --no-fix-llm --allow-incomplete --format json
