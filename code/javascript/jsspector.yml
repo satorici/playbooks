@@ -8,14 +8,11 @@ settings:
     - OPENROUTER
 
 # Defaults keep the shared playbook deterministic and use the application's normal environment.
-# A run or repository Saved input may opt into an LLM model or a benchmark runtime profile.
+# A run or repository Saved input may opt into an LLM model.
 OPENROUTER:
   - - ""
 MODEL:
   - - ""
-JSS_VERIFY_NODE_ENV:
-  - - ""
-
 # JSSpector finds attacker-controlled data reaching dangerous sinks and confirms each finding by
 # running the application: in a disposable Docker container when Docker is available (a local run
 # with `satori local`), otherwise inside this job itself (`--local`, the cloud job), where the
@@ -29,9 +26,36 @@ install:
   setShell: true
   setShellQuoteInputs: true
   run:
-    - command -v lsof >/dev/null 2>&1 && command -v g++ >/dev/null 2>&1 || { apt-get update -qq && apt-get install -y -qq lsof build-essential python3; }
-    - command -v cargo >/dev/null 2>&1 || curl --proto '=https' --tlsv1.2 -fsS https://sh.rustup.rs | sh -s -- -y --profile minimal --no-modify-path
-    - PATH="$HOME/.cargo/bin:$PATH" cargo install --root "$HOME/.jsspector" --git https://github.com/satoridev01/JSSpector --rev 815e58e159d5fd271c4433cf69eb7d67dcf2bf01 --locked --force jsspector -q
+    - command -v lsof >/dev/null 2>&1 && command -v g++ >/dev/null 2>&1 && command -v curl >/dev/null 2>&1 && command -v xz >/dev/null 2>&1 || { apt-get update -qq && apt-get install -y -qq ca-certificates curl xz-utils lsof build-essential python3; }
+    - |
+      set -eu
+      JSSPECTOR_VERSION=0.1.1
+      case "$(uname -m)" in
+        x86_64|amd64)
+          JSSPECTOR_TARGET=x86_64-unknown-linux-gnu
+          JSSPECTOR_SHA256=6d01307d90903108a15beabaf2280bff62acd3062bcb020ecdea8cd795775daf
+          ;;
+        aarch64|arm64)
+          JSSPECTOR_TARGET=aarch64-unknown-linux-gnu
+          JSSPECTOR_SHA256=22089301de3cf70a0dbf3ab2517326f8fef317e383703462a109ba19f3e89096
+          ;;
+        *)
+          echo "unsupported JSSpector architecture: $(uname -m)" >&2
+          exit 2
+          ;;
+      esac
+      JSSPECTOR_ARCHIVE="jsspector-${JSSPECTOR_TARGET}.tar.xz"
+      JSSPECTOR_TMP="$(mktemp -d)"
+      curl --proto '=https' --tlsv1.2 -fsSL \
+        "https://github.com/satoridev01/JSSpector/releases/download/v${JSSPECTOR_VERSION}/${JSSPECTOR_ARCHIVE}" \
+        -o "${JSSPECTOR_TMP}/${JSSPECTOR_ARCHIVE}"
+      printf '%s  %s\n' "$JSSPECTOR_SHA256" "${JSSPECTOR_TMP}/${JSSPECTOR_ARCHIVE}" | sha256sum -c -
+      tar -xJf "${JSSPECTOR_TMP}/${JSSPECTOR_ARCHIVE}" -C "$JSSPECTOR_TMP"
+      mkdir -p "$HOME/.jsspector/bin"
+      install -m 0755 \
+        "${JSSPECTOR_TMP}/jsspector-${JSSPECTOR_TARGET}/jsspector" \
+        "$HOME/.jsspector/bin/jsspector"
+      "$HOME/.jsspector/bin/jsspector" --version
     - '[ -z ${{OPENROUTER}} ] || npm install -g @anthropic-ai/claude-code@2.1.330 >/dev/null 2>&1'
 
 test:
@@ -41,14 +65,12 @@ test:
     - |
       export PATH="$HOME/.jsspector/bin:$HOME/.cargo/bin:$PATH"
       export OPENROUTER=${{OPENROUTER}}
-      export JSS_VERIFY_NODE_ENV=${{JSS_VERIFY_NODE_ENV}}
       VERIFY_LOCAL=""
       docker info >/dev/null 2>&1 || VERIFY_LOCAL="--local"
       jsspector scan . --verify=strict $VERIFY_LOCAL --verify-until-first --no-fix-llm --allow-incomplete --format json
     - |
       export PATH="$HOME/.jsspector/bin:$HOME/.cargo/bin:$PATH"
       export OPENROUTER=${{OPENROUTER}}
-      export JSS_VERIFY_NODE_ENV=${{JSS_VERIFY_NODE_ENV}}
       FIX_MODEL=${{MODEL}}
       VERIFY_LOCAL=""
       docker info >/dev/null 2>&1 || VERIFY_LOCAL="--local"
