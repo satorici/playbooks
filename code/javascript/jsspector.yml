@@ -21,15 +21,15 @@ install:
     - command -v lsof >/dev/null 2>&1 && command -v g++ >/dev/null 2>&1 && command -v curl >/dev/null 2>&1 && command -v xz >/dev/null 2>&1 || { apt-get update -qq && apt-get install -y -qq ca-certificates curl xz-utils lsof build-essential python3; }
     - |
       set -eu
-      JSSPECTOR_VERSION=0.1.1
+      JSSPECTOR_VERSION=0.1.2
       case "$(uname -m)" in
         x86_64|amd64)
           JSSPECTOR_TARGET=x86_64-unknown-linux-gnu
-          JSSPECTOR_SHA256=6d01307d90903108a15beabaf2280bff62acd3062bcb020ecdea8cd795775daf
+          JSSPECTOR_SHA256=cd6b9ba8452973d1347c4559fb81b92ea4de5d5f4a5e79919d9be6a3a5903df0
           ;;
         aarch64|arm64)
           JSSPECTOR_TARGET=aarch64-unknown-linux-gnu
-          JSSPECTOR_SHA256=22089301de3cf70a0dbf3ab2517326f8fef317e383703462a109ba19f3e89096
+          JSSPECTOR_SHA256=842071b24701e417c91aa2c53e54bb437c8a9d92e4f3d044f6e1c97a627eda45
           ;;
         *)
           echo "unsupported JSSpector architecture: $(uname -m)" >&2
