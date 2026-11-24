@@ -4,15 +4,7 @@ settings:
   cpu: 8192
   memory: 16384
   timeout: 1800
-  redacted:
-    - OPENROUTER
 
-# Defaults keep the shared playbook deterministic and use the application's normal environment.
-# A run or repository Saved input may opt into an LLM model.
-OPENROUTER:
-  - - ""
-MODEL:
-  - - ""
 # JSSpector finds attacker-controlled data reaching dangerous sinks and confirms each finding by
 # running the application: in a disposable Docker container when Docker is available (a local run
 # with `satori local`), otherwise inside this job itself (`--local`, the cloud job), where the
@@ -56,28 +48,12 @@ install:
         "${JSSPECTOR_TMP}/jsspector-${JSSPECTOR_TARGET}/jsspector" \
         "$HOME/.jsspector/bin/jsspector"
       "$HOME/.jsspector/bin/jsspector" --version
-    - '[ -z ${{OPENROUTER}} ] || npm install -g @anthropic-ai/claude-code@2.1.330 >/dev/null 2>&1'
 
 test:
   setShell: true
-  setShellQuoteInputs: true
   run:
     - |
       export PATH="$HOME/.jsspector/bin:$HOME/.cargo/bin:$PATH"
-      export OPENROUTER=${{OPENROUTER}}
       VERIFY_LOCAL=""
       docker info >/dev/null 2>&1 || VERIFY_LOCAL="--local"
       jsspector scan . --verify=strict $VERIFY_LOCAL --verify-until-first --no-fix-llm --allow-incomplete --format json
-    - |
-      export PATH="$HOME/.jsspector/bin:$HOME/.cargo/bin:$PATH"
-      export OPENROUTER=${{OPENROUTER}}
-      FIX_MODEL=${{MODEL}}
-      VERIFY_LOCAL=""
-      docker info >/dev/null 2>&1 || VERIFY_LOCAL="--local"
-      if [ -n "$FIX_MODEL" ] && [ -z "$OPENROUTER" ]; then
-        echo "MODEL requires the OPENROUTER Saved secret" >&2
-        exit 2
-      fi
-      if [ -n "$FIX_MODEL" ]; then
-        jsspector scan . --verify=strict $VERIFY_LOCAL --allow-incomplete --fix-model "$FIX_MODEL" --format json
-      fi

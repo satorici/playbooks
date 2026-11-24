@@ -1,0 +1,37 @@
+settings:
+  name: JSSpector AI
+  redacted:
+    - OPENROUTER
+
+# The ordinary JSSpector playbook is deliberately parameter-free so it can be added to a repository
+# with one click. This explicit variant runs that deterministic verification first, then lets a model
+# propose additional fix candidates. JSSpector still accepts a candidate only after reproducing the
+# exploit, applying the change and passing the benign control.
+OPENROUTER:
+  - - ""
+MODEL:
+  - - ""
+
+import:
+  - satori://code/javascript/jsspector.yml
+
+ai_install:
+  setShell: true
+  setShellQuoteInputs: true
+  run:
+    - |
+      test -n ${{OPENROUTER}} || { echo "JSSpector AI requires the OPENROUTER Saved secret" >&2; exit 2; }
+      test -n ${{MODEL}} || { echo "JSSpector AI requires MODEL" >&2; exit 2; }
+      npm install -g @anthropic-ai/claude-code@2.1.330 >/dev/null 2>&1
+
+ai:
+  setShell: true
+  setShellQuoteInputs: true
+  run:
+    - |
+      export PATH="$HOME/.jsspector/bin:$HOME/.cargo/bin:$PATH"
+      export OPENROUTER=${{OPENROUTER}}
+      FIX_MODEL=${{MODEL}}
+      VERIFY_LOCAL=""
+      docker info >/dev/null 2>&1 || VERIFY_LOCAL="--local"
+      jsspector scan . --verify=strict $VERIFY_LOCAL --allow-incomplete --fix-model "$FIX_MODEL" --format json
