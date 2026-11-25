@@ -1,19 +1,11 @@
 settings:
   image: node:24-bookworm
   name: JSSpector
+  description: "JSSpector finds attacker-controlled data reaching dangerous sinks and confirms each finding by running the application: in a disposable Docker container when Docker is available (a local run with `satori local`), otherwise inside this job itself (`--local`, the cloud job), where the backing services an application needs (MongoDB, Redis) are provisioned on demand. The JSON report carries each finding's `exploitation` and `poc`, the scanned `git` revision and, for every verified finding, a `fix`: a change proven to stop the exploit while a benign request keeps its behavior, with the change as a unified diff. Exact fixes learned from earlier proofs are replayed deterministically first; an LLM CLI is an optional fallback, and its candidate must pass the same exploit and benign controls before it is reported as proven."
   cpu: 8192
   memory: 16384
-  timeout: 1800
+  timeout: 3600
 
-# JSSpector finds attacker-controlled data reaching dangerous sinks and confirms each finding by
-# running the application: in a disposable Docker container when Docker is available (a local run
-# with `satori local`), otherwise inside this job itself (`--local`, the cloud job), where the
-# backing services an application needs (MongoDB, Redis) are provisioned on demand. The JSON report
-# carries each finding's `exploitation` and `poc`, the scanned `git` revision and, for every
-# verified finding, a `fix`: a change proven to stop the exploit while a benign request keeps its
-# behavior, with the change as a unified diff. Exact fixes learned from earlier proofs are replayed
-# deterministically first; an LLM CLI is an optional fallback, and its candidate must pass the same
-# exploit and benign controls before it is reported as proven.
 install:
   setShell: true
   setShellQuoteInputs: true
