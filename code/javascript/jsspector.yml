@@ -47,7 +47,6 @@ install:
       install -m 0755 \
         "${JSSPECTOR_TMP}/jsspector-${JSSPECTOR_TARGET}/jsspector" \
         "$HOME/.jsspector/bin/jsspector"
-      "$HOME/.jsspector/bin/jsspector" --version
 
 test:
   setShell: true
@@ -55,6 +54,7 @@ test:
   run:
     - |
       export PATH="$HOME/.jsspector/bin:$HOME/.cargo/bin:$PATH"
+      jsspector --version
       VERIFY_LOCAL=""
       docker info >/dev/null 2>&1 || VERIFY_LOCAL="--local"
       jsspector scan . --verify=strict $VERIFY_LOCAL --no-fix-llm --allow-incomplete --format json
