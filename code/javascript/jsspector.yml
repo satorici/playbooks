@@ -21,15 +21,15 @@ install:
     - command -v lsof >/dev/null 2>&1 && command -v g++ >/dev/null 2>&1 && command -v curl >/dev/null 2>&1 && command -v xz >/dev/null 2>&1 || { apt-get update -qq && apt-get install -y -qq ca-certificates curl xz-utils lsof build-essential python3; }
     - |
       set -eu
-      JSSPECTOR_VERSION=0.1.3
+      JSSPECTOR_VERSION=0.1.0
       case "$(uname -m)" in
         x86_64|amd64)
           JSSPECTOR_TARGET=x86_64-unknown-linux-gnu
-          JSSPECTOR_SHA256=3d552dfa6181c5c146c07fbf51d0390e9bde88b521a53b46de01e062c3d0aa80
+          JSSPECTOR_SHA256=dadd0fac979be8711fdd5063f9ef4e6a0535290eae85822ed60281f2eeea3264
           ;;
         aarch64|arm64)
           JSSPECTOR_TARGET=aarch64-unknown-linux-gnu
-          JSSPECTOR_SHA256=67ac615e77e8e2b6d81dfa12ba83fe7857a9d4ef389ceb95c3e0fc1c58b18c85
+          JSSPECTOR_SHA256=6ff0718da6dd9a02a2df731fdd9062df7d4d576b68e60df87ff86c260d2321ee
           ;;
         *)
           echo "unsupported JSSpector architecture: $(uname -m)" >&2
@@ -49,8 +49,14 @@ install:
         "$HOME/.jsspector/bin/jsspector"
       "$HOME/.jsspector/bin/jsspector" --version
 
+verify_install:
+  assertReturnCode: 0
+  run:
+    - '"$HOME/.jsspector/bin/jsspector" --version'
+
 test:
   setShell: true
+  assertReturnCode: 0
   run:
     - |
       export PATH="$HOME/.jsspector/bin:$HOME/.cargo/bin:$PATH"
