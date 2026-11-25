@@ -18,7 +18,7 @@ install:
   setShell: true
   setShellQuoteInputs: true
   run:
-    - command -v lsof >/dev/null 2>&1 && command -v g++ >/dev/null 2>&1 && command -v curl >/dev/null 2>&1 && command -v xz >/dev/null 2>&1 || { apt-get update -qq && apt-get install -y -qq ca-certificates curl xz-utils lsof build-essential python3; }
+    - command -v lsof >/dev/null 2>&1 && command -v g++ >/dev/null 2>&1 && command -v curl >/dev/null 2>&1 && command -v xz >/dev/null 2>&1 || { export DEBIAN_FRONTEND=noninteractive DEBCONF_NOWARNINGS=yes; apt-get update -qq && apt-get install -y -qq ca-certificates curl xz-utils lsof build-essential python3; }
     - |
       set -eu
       JSSPECTOR_VERSION=0.1.0
