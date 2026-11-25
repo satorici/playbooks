@@ -49,11 +49,6 @@ install:
         "$HOME/.jsspector/bin/jsspector"
       "$HOME/.jsspector/bin/jsspector" --version
 
-verify_install:
-  assertReturnCode: 0
-  run:
-    - '"$HOME/.jsspector/bin/jsspector" --version'
-
 test:
   setShell: true
   assertReturnCode: 0
