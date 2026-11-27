@@ -33,5 +33,13 @@ ai:
       export OPENROUTER=${{OPENROUTER}}
       FIX_MODEL=${{MODEL}}
       VERIFY_LOCAL=""
-      docker info >/dev/null 2>&1 || VERIFY_LOCAL="--local"
+      if ! docker info >/dev/null 2>&1; then
+        if [ -f /.dockerenv ] || [ "${JSS_VERIFY_DISPOSABLE:-}" = "1" ]; then
+          export JSS_VERIFY_DISPOSABLE=1
+          VERIFY_LOCAL="--local"
+        else
+          echo "JSSpector refuses to run untrusted repository code on the host; start Docker" >&2
+          exit 2
+        fi
+      fi
       jsspector scan . --verify=strict $VERIFY_LOCAL --allow-incomplete --fix-model "$FIX_MODEL" --format json
